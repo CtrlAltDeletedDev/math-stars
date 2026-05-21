@@ -2,6 +2,7 @@
   "expo": {
     "name": "Math Stars",
     "slug": "math-stars",
+    "owner": "tyr4el",
     "version": "1.0.0",
     "scheme": "mathstars",
     "orientation": "portrait",
@@ -34,10 +35,16 @@
     ],
     "updates": {
       "enabled": true,
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/c64c4b99-6dbc-4ccc-a356-21f49e2d1c42"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c64c4b99-6dbc-4ccc-a356-21f49e2d1c42"
+      }
     }
   }
 }
