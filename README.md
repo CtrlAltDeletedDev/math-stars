@@ -1,94 +1,71 @@
 # Math Stars ⭐
 
-A math learning app built for kids going into 1st grade.
+A math learning app built for kids going into 1st grade. Runs on iPad via Expo Go.
 
 ---
 
-## How to run on her iPad (no computer needed)
+## How to run on her iPad
 
-You'll use **GitHub Codespaces** (a computer in the cloud) to run the app, and **Expo Go** on her iPad to play it. Since everything runs on the iPad, you can't scan a QR code — instead you'll copy a URL directly into Expo Go.
-
----
-
-### One-time setup (do this once)
-
-**On the iPad:**
-
-1. Open the **App Store** and install **Expo Go** (free, by Expo Project)
-
-2. Open **Safari** and go to your GitHub account — sign in if needed
+The app is published to Expo's servers. Expo Go on the iPad downloads it from there — no computer, no server, no tunnel needed.
 
 ---
 
-### Every time you want to play
+### One-time setup
 
-**Step 1 — Open the Codespace**
+**On the iPad — install Expo Go:**
+1. Open the App Store
+2. Search **Expo Go** (by Expo Project) and install it — it's free
 
-1. Go to this repo on GitHub in Safari on the iPad
-2. Tap the green **Code** button
-3. Tap the **Codespaces** tab
-4. Tap **Create codespace** (first time) or tap your existing codespace to reopen it
-5. Wait for it to finish loading — you'll see a terminal at the bottom
+**Somewhere with a terminal (Codespace, any computer, etc.):**
 
-> The first time takes about 2 minutes. After that it opens in about 30 seconds.
+```bash
+npm install -g eas-cli
+eas login
+```
+
+This will ask for your Expo username and password. Sign up free at **expo.dev** if you don't have an account.
+
+```bash
+eas update:configure
+```
+
+This links the project to your Expo account. It will add a `projectId` to `app.json` — commit and push that change.
+
+```bash
+eas update --branch production --message "first release"
+```
+
+This uploads the app to Expo's servers. When it finishes it will print something like:
+
+```
+🚀 Published!
+https://expo.dev/accounts/YOUR_USERNAME/projects/math-stars/updates/...
+```
 
 ---
 
-**Step 2 — Start the app**
+### Opening the app on the iPad
 
-Tap the terminal at the bottom of the screen and type:
-
-```
-npx expo start --tunnel
-```
-
-Then tap the **return** key. Wait about 30 seconds.
-
----
-
-**Step 3 — Copy the URL**
-
-Look for a line in the terminal that starts with:
-
-```
-› Metro waiting on exp://
-```
-
-It will look something like:
-
-```
-› Metro waiting on exp://abc12345.anonymous.19000.exp.direct
-```
-
-**Long-press that URL and copy it.**
-
----
-
-**Step 4 — Open the app in Expo Go**
-
-1. Switch to the **Expo Go** app on the iPad
-2. Tap **"Enter URL manually"** (at the bottom of the home screen)
-3. Paste the URL you copied
+1. Open **Expo Go** on the iPad
+2. Tap **"Enter URL manually"** at the bottom of the screen
+3. Type: `exp://exp.host/@YOUR_USERNAME/math-stars`
+   - Replace `YOUR_USERNAME` with your Expo username
 4. Tap **Connect**
-5. The app will load in a few seconds 🎉
+5. The app loads! 🎉
+
+Bookmark this screen in Expo Go — next time she just taps it from the recent list.
 
 ---
 
-**Step 5 — When she's done playing**
+### Updating the app after making changes
 
-Go back to Safari and close the Codespace tab. This stops the server and saves your free hours.
+Any time you change the code, just run:
 
-> GitHub gives **60 free hours per month** — that's 2 hours every day with room to spare.
+```bash
+eas update --branch production --message "what changed"
+```
 
----
-
-### If the URL disappears from the terminal
-
-Scroll up in the terminal — it stays there. Or press `s` in the terminal to show it again.
-
-### If the app won't connect
-
-Make sure the Codespace tab is still open in Safari in the background. If you closed it, go back to GitHub → Code → Codespaces → tap your codespace to reopen it, then run `npx expo start --tunnel` again.
+Expo Go will automatically pick up the new version next time it opens.
 
 ---
 
@@ -96,12 +73,18 @@ Make sure the Codespace tab is still open in Safari in the background. If you cl
 
 | Category | Levels |
 |---|---|
-| ➕ Adding & Taking Away | Add to 5 → Add to 10 → Add to 20 → Subtract → Mixed |
+| ➕ Adding & Taking Away | Add to 5 → 10 → 20 → Subtract → Word problems |
 | 🔢 Counting & Numbers | Count objects → Order numbers → Compare bigger/smaller |
 | 🔷 Shapes & Patterns | Basic shapes → More shapes → Patterns |
-| 🚀 Skip Counting | Count by 2s → 5s → 10s → ×2 table → ×5 table → ×10 table |
+| 🚀 Skip Counting | By 2s → 5s → 10s → ×2 table → ×5 table → ×10 table |
+| 🕐 Telling Time | O'clock → Half past → Mixed |
 
-- Score **80% or higher** to pass a level and unlock the next one
-- Earn **1–3 stars** per level (60% / 80% / 90%)
-- Questions you get wrong come back sooner (spaced repetition)
-- Daily play streaks tracked with 🔥
+**Features:**
+- Pick an animal friend who cheers you on (cat, unicorn, frog, bunny, dog, bear)
+- 🔊 Speaker button on every question — tap to hear it read aloud
+- 💡 Hints appear after wrong answers
+- ⭐ Earn stars, unlock 13 achievement badges
+- 🛍️ Spend stars in the shop to unlock background themes
+- 🔥 Daily streak tracking
+- Score 80%+ to pass a level and unlock the next one
+- Wrong answers come back sooner (spaced repetition)

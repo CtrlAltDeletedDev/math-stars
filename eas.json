@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/schema.json",
+  "cli": {
+    "version": ">= 16.0.0"
+  },
+  "update": {
+    "channel": "production"
+  }
+}
