@@ -1,0 +1,77 @@
+import { useState, useRef } from 'react';
+import { Question, SRSCard } from '@/types';
+import { Level } from '@/types';
+import { buildSession } from '@/engine/sessionBuilder';
+import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
+
+interface SessionState {
+  questions: Question[];
+  currentIndex: number;
+  correctCount: number;
+  streak: number;
+  results: { questionId: string; correct: boolean }[];
+  srsUpdates: SRSCard[];
+  isComplete: boolean;
+}
+
+export function useGameSession(level: Level, srsCards: Record<string, SRSCard>) {
+  const questions = useRef<Question[]>(buildSession(level, srsCards));
+
+  const [state, setState] = useState<SessionState>({
+    questions: questions.current,
+    currentIndex: 0,
+    correctCount: 0,
+    streak: 0,
+    results: [],
+    srsUpdates: [],
+    isComplete: false,
+  });
+
+  const currentQuestion = state.questions[state.currentIndex];
+
+  function recordAnswer(selectedChoice: string): boolean {
+    const question = currentQuestion;
+    if (!question) return false;
+
+    const correct = selectedChoice === question.correctAnswer;
+
+    const existingCard = srsCards[question.id] ?? createNewSRSCard(question.id);
+    const updatedCard = updateSRSCard(existingCard, correct);
+
+    setState((prev) => {
+      const newCorrectCount = prev.correctCount + (correct ? 1 : 0);
+      const newStreak = correct ? prev.streak + 1 : 0;
+      const isLast = prev.currentIndex >= prev.questions.length - 1;
+
+      return {
+        ...prev,
+        correctCount: newCorrectCount,
+        streak: newStreak,
+        results: [...prev.results, { questionId: question.id, correct }],
+        srsUpdates: [...prev.srsUpdates, updatedCard],
+        isComplete: isLast,
+      };
+    });
+
+    return correct;
+  }
+
+  function advance() {
+    setState((prev) => ({
+      ...prev,
+      currentIndex: Math.min(prev.currentIndex + 1, prev.questions.length - 1),
+    }));
+  }
+
+  return {
+    currentQuestion,
+    currentIndex: state.currentIndex,
+    totalQuestions: state.questions.length,
+    correctCount: state.correctCount,
+    streak: state.streak,
+    isComplete: state.isComplete,
+    srsUpdates: state.srsUpdates,
+    recordAnswer,
+    advance,
+  };
+}
