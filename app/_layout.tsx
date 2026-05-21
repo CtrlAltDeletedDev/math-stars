@@ -4,7 +4,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { StyleSheet, View, Text } from 'react-native';
 import { ProgressProvider } from '@/store/useProgress';
-import '../src/global.css';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
