@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, {
@@ -6,14 +6,17 @@ import Animated, {
   withDelay,
   withSequence,
   withSpring,
-  withTiming,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { BackgroundGradient } from '@/components/ui/BackgroundGradient';
 import { BigButton } from '@/components/ui/BigButton';
+import { BadgeModal } from '@/components/ui/BadgeModal';
 import { calculateStars, didPassLevel } from '@/engine/scoring';
 import { getCategoryById, getLevelById } from '@/data/categories';
 import { useProgress } from '@/store/useProgress';
+import { getCharacterEmoji } from '@/data/characters';
+import { BADGES } from '@/data/badges';
+import { BadgeEarned } from '@/types';
 
 function AnimatedStar({ delay, earned }: { delay: number; earned: boolean }) {
   const scale = useSharedValue(0);
@@ -42,11 +45,12 @@ function AnimatedStar({ delay, earned }: { delay: number; earned: boolean }) {
 }
 
 export default function CelebrationScreen() {
-  const { categoryId, levelId, correct, total } = useLocalSearchParams<{
+  const { categoryId, levelId, correct, total, badges } = useLocalSearchParams<{
     categoryId: string;
     levelId: string;
     correct: string;
     total: string;
+    badges: string;
   }>();
   const router = useRouter();
   const { progress } = useProgress();
@@ -57,8 +61,15 @@ export default function CelebrationScreen() {
   const stars = calculateStars(score);
   const passed = didPassLevel(score);
 
+  const badgeIds = badges ? badges.split(',').filter(Boolean) : [];
+  const newBadges: BadgeEarned[] = badgeIds.map((id) => ({ badgeId: id, earnedAt: Date.now() }));
+  const [pendingBadges, setPendingBadges] = useState<BadgeEarned[]>(newBadges);
+
   const category = getCategoryById(categoryId);
-  const level = getLevelById(levelId);
+
+  const characterDisplay = progress.characterId
+    ? getCharacterEmoji(progress.characterId, progress.totalStars)
+    : null;
 
   const titleScale = useSharedValue(0);
   useEffect(() => {
@@ -78,17 +89,13 @@ export default function CelebrationScreen() {
   const levelProgress = progress.categories[categoryId]?.levels[levelId];
   const nextLevelUnlocked = passed && levelProgress?.status === 'completed';
 
-  function handlePlayAgain() {
-    router.replace(`/game/${categoryId}/${levelId}`);
-  }
-
-  function handleHome() {
-    router.replace('/');
-  }
-
   return (
     <BackgroundGradient colors={bgColors}>
       <View style={styles.container}>
+        {characterDisplay && (
+          <Text style={styles.character}>{characterDisplay}</Text>
+        )}
+
         <Animated.View style={titleStyle}>
           <Text style={styles.title}>
             {passed ? '🎉 Level Complete!' : '💪 Good Try!'}
@@ -101,9 +108,7 @@ export default function CelebrationScreen() {
           <AnimatedStar delay={900} earned={stars >= 3} />
         </View>
 
-        <Text style={styles.score}>
-          {correctCount} / {totalCount} correct!
-        </Text>
+        <Text style={styles.score}>{correctCount} / {totalCount} correct!</Text>
         <Text style={styles.percent}>{Math.round(score * 100)}%</Text>
 
         {passed && nextLevelUnlocked && (
@@ -111,30 +116,44 @@ export default function CelebrationScreen() {
             <Text style={styles.unlockText}>🔓 Next level unlocked!</Text>
           </View>
         )}
-
         {!passed && (
           <Text style={styles.encouragement}>
             Get 8 out of 10 to unlock the next level!
           </Text>
         )}
 
+        {badgeIds.length > 0 && (
+          <View style={styles.badgePreview}>
+            <Text style={styles.badgePreviewText}>
+              🏅 {badgeIds.length} new badge{badgeIds.length > 1 ? 's' : ''}!
+            </Text>
+          </View>
+        )}
+
         <View style={styles.buttons}>
           <BigButton
             label="Play Again 🔄"
-            onPress={handlePlayAgain}
+            onPress={() => router.replace(`/game/${categoryId}/${levelId}`)}
             color="#fff"
             textColor="#2D3436"
             style={styles.btn}
           />
           <BigButton
             label="Home 🏠"
-            onPress={handleHome}
+            onPress={() => router.replace('/')}
             color="rgba(255,255,255,0.3)"
             textColor="#fff"
             style={styles.btn}
           />
         </View>
       </View>
+
+      {pendingBadges.length > 0 && (
+        <BadgeModal
+          badges={pendingBadges}
+          onDismiss={() => setPendingBadges((prev) => prev.slice(1))}
+        />
+      )}
     </BackgroundGradient>
   );
 }
@@ -144,61 +163,41 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
+    gap: 16,
     paddingHorizontal: 24,
   },
+  character: { fontSize: 64 },
   title: {
     fontFamily: 'Nunito-ExtraBold',
-    fontSize: 40,
+    fontSize: 38,
     color: '#fff',
     textAlign: 'center',
   },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  star: {
-    fontSize: 56,
-  },
-  starEmpty: {
-    opacity: 0.4,
-  },
-  score: {
-    fontFamily: 'Nunito-ExtraBold',
-    fontSize: 36,
-    color: '#fff',
-  },
-  percent: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 22,
-    color: 'rgba(255,255,255,0.85)',
-  },
+  starsRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  star: { fontSize: 56 },
+  starEmpty: { opacity: 0.4 },
+  score: { fontFamily: 'Nunito-ExtraBold', fontSize: 34, color: '#fff' },
+  percent: { fontFamily: 'Nunito-Bold', fontSize: 20, color: 'rgba(255,255,255,0.85)' },
   unlockBadge: {
     backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
-  unlockText: {
-    fontFamily: 'Nunito-ExtraBold',
-    fontSize: 22,
-    color: '#fff',
-  },
+  unlockText: { fontFamily: 'Nunito-ExtraBold', fontSize: 20, color: '#fff' },
   encouragement: {
     fontFamily: 'Nunito-Bold',
-    fontSize: 18,
+    fontSize: 17,
     color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
   },
-  buttons: {
-    gap: 12,
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 8,
+  badgePreview: {
+    backgroundColor: 'rgba(255,215,0,0.3)',
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
   },
-  btn: {
-    width: '80%',
-    minHeight: 64,
-  },
+  badgePreviewText: { fontFamily: 'Nunito-ExtraBold', fontSize: 18, color: '#fff' },
+  buttons: { gap: 12, width: '100%', alignItems: 'center', marginTop: 4 },
+  btn: { width: '80%', minHeight: 60 },
 });

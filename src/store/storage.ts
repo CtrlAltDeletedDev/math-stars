@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProgress, CategoryProgress, LevelState } from '@/types';
 import { CATEGORIES } from '@/data/categories';
 
-const STORAGE_KEY = '@mathstars/progress_v1';
-const CURRENT_VERSION = 1;
+const STORAGE_KEY = '@mathstars/progress_v2';
+const CURRENT_VERSION = 2;
 
 export async function loadProgress(): Promise<UserProgress | null> {
   try {
@@ -57,10 +57,16 @@ export function buildInitialProgress(): UserProgress {
   return {
     version: CURRENT_VERSION,
     totalStars: 0,
+    spendableStars: 0,
     currentStreak: 0,
     longestStreak: 0,
     lastPlayedDate: '',
     categories,
     srsCards: {},
+    characterId: null,
+    earnedBadges: [],
+    purchasedItems: [],
+    activeTheme: 'sky',
+    consecutiveCorrect: 0,
   };
 }

@@ -7,10 +7,13 @@ import { QuestionCard } from '@/components/game/QuestionCard';
 import { AnswerGrid } from '@/components/game/AnswerGrid';
 import { FeedbackOverlay } from '@/components/game/FeedbackOverlay';
 import { StreakBar } from '@/components/game/StreakBar';
+import { HintBubble } from '@/components/game/HintBubble';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useProgress } from '@/store/useProgress';
 import { useGameSession } from '@/hooks/useGameSession';
 import { getCategoryById, getLevelById } from '@/data/categories';
+import { getCharacter } from '@/data/characters';
+import { getTheme } from '@/data/shop';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 
 export default function GameScreen() {
@@ -20,13 +23,18 @@ export default function GameScreen() {
 
   const category = getCategoryById(categoryId);
   const level = getLevelById(levelId);
+  const character = progress.characterId ? getCharacter(progress.characterId) : null;
+  const characterName = character?.name ?? 'You';
+  const theme = getTheme(progress.activeTheme);
 
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const session = useGameSession(level!, progress.srsCards);
+  const session = useGameSession(level!, progress.srsCards, characterName);
 
   useEffect(() => {
     return () => {
@@ -49,11 +57,19 @@ export default function GameScreen() {
     setSelectedChoice(choice);
     setLastCorrect(correct);
     setFeedbackVisible(true);
+    setShowHint(false);
+
+    const newConsec = correct ? consecutiveCorrect + 1 : 0;
+    setConsecutiveCorrect(newConsec);
 
     if (correct) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      // Show hint after wrong answer if one exists
+      if (session.currentQuestion?.hint) {
+        setTimeout(() => setShowHint(true), 400);
+      }
     }
 
     feedbackTimer.current = setTimeout(() => {
@@ -64,6 +80,7 @@ export default function GameScreen() {
   function dismissFeedback() {
     setFeedbackVisible(false);
     setSelectedChoice(null);
+    setShowHint(false);
 
     if (session.isComplete) {
       handleSessionComplete();
@@ -73,9 +90,16 @@ export default function GameScreen() {
   }
 
   function handleSessionComplete() {
-    recordLevelComplete(levelId, session.correctCount, session.totalQuestions, session.srsUpdates);
+    const newBadges = recordLevelComplete(
+      levelId,
+      session.correctCount,
+      session.totalQuestions,
+      session.srsUpdates,
+      consecutiveCorrect,
+    );
+
     router.replace(
-      `/celebration/${categoryId}/${levelId}?correct=${session.correctCount}&total=${session.totalQuestions}`,
+      `/celebration/${categoryId}/${levelId}?correct=${session.correctCount}&total=${session.totalQuestions}&badges=${newBadges.map((b) => b.badgeId).join(',')}`,
     );
   }
 
@@ -88,6 +112,9 @@ export default function GameScreen() {
           <Text style={styles.quitText}>✕</Text>
         </Pressable>
         <ProgressBar current={session.currentIndex} total={session.totalQuestions} />
+        {character && (
+          <Text style={styles.characterEmoji}>{character.emoji}</Text>
+        )}
       </View>
 
       <StreakBar streak={session.streak} />
@@ -95,6 +122,9 @@ export default function GameScreen() {
       <View style={styles.content}>
         {session.currentQuestion && (
           <QuestionCard question={session.currentQuestion} />
+        )}
+        {session.currentQuestion?.hint && (
+          <HintBubble hint={session.currentQuestion.hint} visible={showHint} />
         )}
       </View>
 
@@ -114,6 +144,7 @@ export default function GameScreen() {
         visible={feedbackVisible}
         correct={lastCorrect}
         onDismiss={dismissFeedback}
+        characterEmoji={character?.emoji}
       />
     </BackgroundGradient>
   );
@@ -136,17 +167,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  quitText: {
-    fontSize: 20,
-    color: '#fff',
-    fontFamily: 'Nunito-Bold',
-  },
+  quitText: { fontSize: 20, color: '#fff', fontFamily: 'Nunito-Bold' },
+  characterEmoji: { fontSize: 28 },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
-  answers: {
-    paddingBottom: 24,
-  },
+  answers: { paddingBottom: 24 },
 });

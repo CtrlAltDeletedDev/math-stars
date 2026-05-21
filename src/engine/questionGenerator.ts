@@ -87,13 +87,18 @@ export function generateMultiplicationQuestion(tables: number[]): Question {
   };
 }
 
-export function generateFromParams(params: Record<string, number | string>): Question {
+export function generateFromParams(params: Record<string, number | string>, characterName = 'You'): Question {
   const op = params.operation as string;
   if (op === 'addition') return generateAdditionQuestion(Number(params.maxSum));
   if (op === 'subtraction') return generateSubtractionQuestion(Number(params.maxMinuend));
   if (op === 'mixed') {
     if (Math.random() < 0.5) return generateAdditionQuestion(Number(params.maxSum));
     return generateSubtractionQuestion(Number(params.maxMinuend));
+  }
+  if (op === 'word_problem') {
+    const { generateWordProblem } = require('@/data/wordProblems');
+    const type = (params.wordType as string) ?? 'mixed';
+    return generateWordProblem(characterName, type);
   }
   if (op === 'skip_count') return generateSkipCountQuestion(Number(params.by), Number(params.maxStart));
   if (op === 'multiplication') {

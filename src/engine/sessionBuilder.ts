@@ -16,6 +16,7 @@ function shuffle<T>(arr: T[]): T[] {
 export function buildSession(
   level: Level,
   srsCards: Record<string, SRSCard>,
+  characterName = 'You',
 ): Question[] {
   const total = level.questionsPerSession;
   const session: Question[] = [];
@@ -50,7 +51,7 @@ export function buildSession(
 
   if (level.generatorParams) {
     for (let i = 0; i < total; i++) {
-      session.push(generateFromParams(level.generatorParams));
+      session.push(generateFromParams(level.generatorParams, characterName));
     }
   }
 

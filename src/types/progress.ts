@@ -24,12 +24,23 @@ export interface CategoryProgress {
   totalStarsEarned: number;
 }
 
+export interface BadgeEarned {
+  badgeId: string;
+  earnedAt: number;
+}
+
 export interface UserProgress {
   version: number;
   totalStars: number;
+  spendableStars: number;
   currentStreak: number;
   lastPlayedDate: string;
   longestStreak: number;
   categories: Record<string, CategoryProgress>;
   srsCards: Record<string, SRSCard>;
+  characterId: string | null;
+  earnedBadges: BadgeEarned[];
+  purchasedItems: string[];
+  activeTheme: string;
+  consecutiveCorrect: number;
 }

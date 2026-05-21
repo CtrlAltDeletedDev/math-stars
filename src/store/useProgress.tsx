@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { UserProgress, SRSCard } from '@/types';
+import { UserProgress, SRSCard, BadgeEarned } from '@/types';
 import { loadProgress, saveProgress, buildInitialProgress } from './storage';
 import { CATEGORIES, getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
+import { BADGES, BadgeCheckContext } from '@/data/badges';
+import { SHOP_ITEMS } from '@/data/shop';
 
 interface ProgressContextValue {
   progress: UserProgress;
@@ -12,7 +14,11 @@ interface ProgressContextValue {
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
-  ) => void;
+    consecutiveCorrect: number,
+  ) => BadgeEarned[];
+  selectCharacter: (characterId: string) => void;
+  purchaseItem: (itemId: string) => boolean;
+  setActiveTheme: (themeId: string) => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -34,21 +40,53 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     saveTimer.current = setTimeout(() => saveProgress(p), 500);
   }
 
+  function checkNewBadges(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): BadgeEarned[] {
+    const existingIds = new Set(prev.earnedBadges.map((b) => b.badgeId));
+
+    const categoriesCompleted = Object.values(next.categories).filter((cat) =>
+      Object.values(cat.levels).every((l) => l.status === 'completed'),
+    ).length;
+
+    const totalLevelsCompleted = Object.values(next.categories).reduce(
+      (sum, cat) => sum + Object.values(cat.levels).filter((l) => l.status === 'completed').length,
+      0,
+    );
+
+    const ctx: BadgeCheckContext = {
+      totalStars: next.totalStars,
+      currentStreak: next.currentStreak,
+      longestStreak: next.longestStreak,
+      consecutiveCorrect: next.consecutiveCorrect,
+      categoriesCompleted,
+      totalLevelsCompleted,
+      sessionCorrect,
+      sessionTotal,
+    };
+
+    return BADGES.filter((b) => !existingIds.has(b.id) && b.check(ctx)).map((b) => ({
+      badgeId: b.id,
+      earnedAt: Date.now(),
+    }));
+  }
+
   function recordLevelComplete(
     levelId: string,
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
-  ) {
+    consecutiveCorrect: number,
+  ): BadgeEarned[] {
     const level = getLevelById(levelId);
-    if (!level) return;
+    if (!level) return [];
 
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
     const passed = didPassLevel(score);
+    let newBadges: BadgeEarned[] = [];
 
     setProgress((prev) => {
       let next = updateStreak(prev);
+      next = { ...next, consecutiveCorrect };
 
       const catProgress = { ...next.categories[level.categoryId] };
       const prevLevel = catProgress.levels[levelId] ?? {
@@ -82,10 +120,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
           if (nextLevel && catProgress.levels[nextLevel.id]?.status === 'locked') {
             catProgress.levels = {
               ...catProgress.levels,
-              [nextLevel.id]: {
-                ...catProgress.levels[nextLevel.id],
-                status: 'unlocked',
-              },
+              [nextLevel.id]: { ...catProgress.levels[nextLevel.id], status: 'unlocked' },
             };
           }
         }
@@ -101,20 +136,60 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       next = {
         ...next,
         totalStars: next.totalStars + newStarDelta,
-        categories: {
-          ...next.categories,
-          [level.categoryId]: catProgress,
-        },
+        spendableStars: next.spendableStars + newStarDelta,
+        categories: { ...next.categories, [level.categoryId]: catProgress },
         srsCards: updatedSRS,
       };
 
+      newBadges = checkNewBadges(prev, next, correctCount, totalCount);
+      if (newBadges.length > 0) {
+        next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
+      }
+
+      debouncedSave(next);
+      return next;
+    });
+
+    return newBadges;
+  }
+
+  function selectCharacter(characterId: string) {
+    setProgress((prev) => {
+      const next = { ...prev, characterId };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
+  function purchaseItem(itemId: string): boolean {
+    const item = SHOP_ITEMS.find((i) => i.id === itemId);
+    if (!item) return false;
+
+    let success = false;
+    setProgress((prev) => {
+      if (prev.spendableStars < item.cost || prev.purchasedItems.includes(itemId)) return prev;
+      const next = {
+        ...prev,
+        spendableStars: prev.spendableStars - item.cost,
+        purchasedItems: [...prev.purchasedItems, itemId],
+      };
+      debouncedSave(next);
+      success = true;
+      return next;
+    });
+    return success;
+  }
+
+  function setActiveTheme(themeId: string) {
+    setProgress((prev) => {
+      const next = { ...prev, activeTheme: themeId };
       debouncedSave(next);
       return next;
     });
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, selectCharacter, purchaseItem, setActiveTheme }}>
       {children}
     </ProgressContext.Provider>
   );

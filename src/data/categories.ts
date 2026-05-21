@@ -1,6 +1,7 @@
 import { Category } from '@/types';
 import { ALL_COUNTING_QUESTIONS } from './counting';
 import { ALL_SHAPE_QUESTIONS } from './shapes';
+import { ALL_TIME_QUESTIONS, OCLOCK_QUESTIONS, HALF_PAST_QUESTIONS } from './time';
 
 export const CATEGORIES: Category[] = [
   {
@@ -255,11 +256,51 @@ export const CATEGORIES: Category[] = [
       },
     ],
   },
+  {
+    id: 'time',
+    title: 'Telling Time',
+    emoji: '🕐',
+    bgColor: '#F9CA24',
+    darkColor: '#E55039',
+    levels: [
+      {
+        id: 'time-oclock',
+        categoryId: 'time',
+        levelNumber: 1,
+        title: "O'Clock",
+        description: 'What time is it?',
+        questionsPerSession: 8,
+        passThreshold: 0.8,
+        questionBankIds: OCLOCK_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'time-halfpast',
+        categoryId: 'time',
+        levelNumber: 2,
+        title: 'Half Past',
+        description: 'Half past the hour!',
+        questionsPerSession: 8,
+        passThreshold: 0.8,
+        questionBankIds: HALF_PAST_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'time-mixed',
+        categoryId: 'time',
+        levelNumber: 3,
+        title: 'Mixed Clocks',
+        description: 'All times mixed together!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: ALL_TIME_QUESTIONS.map((q) => q.id),
+      },
+    ],
+  },
 ];
 
 export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new Map([
   ...ALL_COUNTING_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...ALL_SHAPE_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...ALL_TIME_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
 ]);
 
 export function getLevelById(levelId: string) {

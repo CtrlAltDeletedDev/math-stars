@@ -7,7 +7,9 @@ export type QuestionType =
   | 'skip_count'
   | 'number_compare'
   | 'number_order'
-  | 'multiplication';
+  | 'multiplication'
+  | 'word_problem'
+  | 'tell_time';
 
 export interface Question {
   id: string;
@@ -17,6 +19,8 @@ export interface Question {
   correctAnswer: string;
   choices: string[];
   difficulty: number;
+  hint?: string;
+  speakText?: string;
 }
 
 export interface QuestionResult {
