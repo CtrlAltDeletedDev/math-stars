@@ -1,111 +1,63 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { Level, CategoryProgress } from '@/types';
-import { COLORS } from '@/constants/colors';
+import { Level, LevelState } from '@/types';
 
 interface Props {
   levels: Level[];
-  progress: CategoryProgress | undefined;
-  onSelectLevel: (level: Level) => void;
+  levelStates: Record<string, LevelState>;
+  onSelect: (levelId: string) => void;
 }
 
-export function LevelMap({ levels, progress, onSelectLevel }: Props) {
+function Stars({ n }: { n: number }) {
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      {levels.map((level, idx) => {
-        const state = progress?.levels[level.id];
-        const status = state?.status ?? 'locked';
-        const stars = state?.starsEarned ?? 0;
-        const isLocked = status === 'locked';
-        const isCompleted = status === 'completed';
-
-        return (
-          <View key={level.id} style={styles.nodeWrapper}>
-            {idx > 0 && <View style={[styles.connector, isLocked && styles.connectorLocked]} />}
-            <Pressable
-              style={[
-                styles.node,
-                isCompleted && styles.nodeCompleted,
-                isLocked && styles.nodeLocked,
-              ]}
-              onPress={() => !isLocked && onSelectLevel(level)}
-              disabled={isLocked}
-            >
-              {isLocked ? (
-                <Text style={styles.lockIcon}>🔒</Text>
-              ) : (
-                <Text style={styles.levelNum}>{level.levelNumber}</Text>
-              )}
-            </Pressable>
-            <Text style={[styles.levelTitle, isLocked && styles.lockedText]}>{level.title}</Text>
-            {stars > 0 && <Text style={styles.levelStars}>{'⭐'.repeat(stars)}</Text>}
-          </View>
-        );
-      })}
-    </ScrollView>
+    <span style={{ fontSize: 16 }}>
+      {[0, 1, 2].map((i) => <span key={i}>{i < n ? '⭐' : '☆'}</span>)}
+    </span>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingBottom: 60,
-    gap: 0,
-  },
-  nodeWrapper: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  connector: {
-    width: 4,
-    height: 32,
-    backgroundColor: '#fff',
-    borderRadius: 2,
-    marginVertical: 2,
-  },
-  connectorLocked: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  node: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  nodeCompleted: {
-    backgroundColor: '#FFD700',
-  },
-  nodeLocked: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  levelNum: {
-    fontFamily: 'Nunito-ExtraBold',
-    fontSize: 28,
-    color: '#2D3436',
-  },
-  lockIcon: {
-    fontSize: 28,
-  },
-  levelTitle: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  lockedText: {
-    color: 'rgba(255,255,255,0.5)',
-  },
-  levelStars: {
-    fontSize: 18,
-  },
-});
+export default function LevelMap({ levels, levelStates, onSelect }: Props) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+      {levels.map((level, idx) => {
+        const state = levelStates[level.id];
+        const status = state?.status ?? 'locked';
+        const locked = status === 'locked';
+        const completed = status === 'completed';
+
+        return (
+          <div key={level.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+            {idx > 0 && (
+              <div style={{
+                width: 3, height: 24,
+                background: completed ? '#FFD700' : 'rgba(255,255,255,0.4)',
+                borderRadius: 2,
+              }} />
+            )}
+            <button
+              onClick={() => !locked && onSelect(level.id)}
+              style={{
+                width: 72, height: 72, borderRadius: 36, border: 'none',
+                background: locked ? 'rgba(255,255,255,0.25)' : completed ? '#FFD700' : '#fff',
+                cursor: locked ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'Nunito', fontWeight: 800, fontSize: 24,
+                color: locked ? 'rgba(255,255,255,0.5)' : completed ? '#fff' : '#333',
+                boxShadow: locked ? 'none' : '0 4px 12px rgba(0,0,0,0.15)',
+                opacity: locked ? 0.5 : 1,
+                transition: 'transform 0.1s',
+              }}
+            >
+              {locked ? '🔒' : level.levelNumber}
+            </button>
+
+            <div style={{ textAlign: 'center', marginTop: 6 }}>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: locked ? 'rgba(255,255,255,0.5)' : '#fff' }}>
+                {level.title}
+              </div>
+              {!locked && <Stars n={state?.starsEarned ?? 0} />}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

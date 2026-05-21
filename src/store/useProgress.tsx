@@ -29,10 +29,9 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    loadProgress().then((saved) => {
-      if (saved) setProgress(saved);
-      setIsLoaded(true);
-    });
+    const saved = loadProgress();
+    if (saved) setProgress(saved);
+    setIsLoaded(true);
   }, []);
 
   function debouncedSave(p: UserProgress) {

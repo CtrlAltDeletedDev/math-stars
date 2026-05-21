@@ -1,41 +1,34 @@
-import React, { useEffect } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
   count: number;
   size?: number;
 }
 
-export function StarBadge({ count, size = 28 }: Props) {
-  const scale = useSharedValue(1);
+export default function StarBadge({ count, size = 28 }: Props) {
+  const [anim, setAnim] = useState(false);
+  const prevCount = useRef(count);
 
   useEffect(() => {
-    scale.value = withSpring(1.3, { damping: 4, stiffness: 400 }, () => {
-      scale.value = withSpring(1.0);
-    });
+    if (count !== prevCount.current) {
+      prevCount.current = count;
+      setAnim(true);
+      const t = setTimeout(() => setAnim(false), 500);
+      return () => clearTimeout(t);
+    }
   }, [count]);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
   return (
-    <Animated.View style={[styles.container, animStyle]}>
-      <Text style={[styles.text, { fontSize: size }]}>⭐ {count}</Text>
-    </Animated.View>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <span style={{
+        fontSize: size,
+        display: 'inline-block',
+        transform: anim ? 'scale(1.4)' : 'scale(1)',
+        transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>⭐</span>
+      <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: size * 0.9, color: '#FFD700' }}>
+        {count}
+      </span>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  text: {
-    fontFamily: 'Nunito-ExtraBold',
-    color: '#fff',
-  },
-});

@@ -1,6 +1,4 @@
-import React from 'react';
-import { Pressable, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
+import { CSSProperties, useState } from 'react';
 
 interface Props {
   onPress: () => void;
@@ -8,66 +6,40 @@ interface Props {
   color?: string;
   textColor?: string;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
-  minSize?: number;
+  style?: CSSProperties;
+  fontSize?: number;
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-export function BigButton({ onPress, label, color = '#4FC3F7', textColor = '#fff', disabled, style, textStyle, minSize = 120 }: Props) {
-  const scale = useSharedValue(1);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  function handlePressIn() {
-    scale.value = withSpring(0.93, { damping: 10, stiffness: 300 });
-  }
-
-  function handlePressOut() {
-    scale.value = withSpring(1.0, { damping: 10, stiffness: 300 });
-  }
-
+export default function BigButton({ onPress, label, color = '#4A90E2', textColor = '#fff', disabled = false, style, fontSize = 22 }: Props) {
+  const [pressed, setPressed] = useState(false);
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+    <button
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => { setPressed(false); if (!disabled) onPress(); }}
+      onPointerLeave={() => setPressed(false)}
       disabled={disabled}
-      style={[
-        styles.button,
-        { backgroundColor: color, minWidth: minSize, minHeight: minSize },
-        style,
-        animStyle,
-        disabled && styles.disabled,
-      ]}
+      style={{
+        background: disabled ? '#ccc' : color,
+        color: disabled ? '#888' : textColor,
+        fontFamily: 'Nunito, sans-serif',
+        fontWeight: 800,
+        fontSize,
+        borderRadius: 20,
+        padding: '16px 24px',
+        minHeight: 64,
+        minWidth: 120,
+        boxShadow: pressed || disabled ? 'none' : '0 4px 0 rgba(0,0,0,0.2)',
+        transform: pressed ? 'translateY(3px) scale(0.97)' : 'translateY(0) scale(1)',
+        transition: 'transform 0.1s, box-shadow 0.1s',
+        cursor: disabled ? 'default' : 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: 'none',
+        ...style,
+      }}
     >
-      <Text style={[styles.label, { color: textColor }, textStyle]}>{label}</Text>
-    </AnimatedPressable>
+      {label}
+    </button>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  label: {
-    fontSize: 28,
-    fontFamily: 'Nunito-ExtraBold',
-    textAlign: 'center',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});

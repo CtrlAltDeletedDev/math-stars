@@ -1,7 +1,6 @@
-import React from 'react';
-import { Pressable, Text, StyleSheet, View } from 'react-native';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
-import { Category, CategoryProgress } from '@/types';
+import { useState } from 'react';
+import { Category } from '@/types';
+import { CategoryProgress } from '@/types';
 
 interface Props {
   category: Category;
@@ -9,80 +8,42 @@ interface Props {
   onPress: () => void;
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-export function CategoryCard({ category, progress, onPress }: Props) {
-  const scale = useSharedValue(1);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const totalLevels = 0;
-  const completedLevels = progress
-    ? Object.values(progress.levels).filter((l) => l.status === 'completed').length
-    : 0;
+export default function CategoryCard({ category, progress, onPress }: Props) {
+  const [pressed, setPressed] = useState(false);
+  const levels = Object.values(progress?.levels ?? {});
+  const completed = levels.filter((l) => l.status === 'completed').length;
+  const total = levels.length;
   const stars = progress?.totalStarsEarned ?? 0;
 
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={() => { scale.value = withSpring(0.95); }}
-      onPressOut={() => { scale.value = withSpring(1.0); }}
-      style={[styles.card, { backgroundColor: category.bgColor }, animStyle]}
+    <button
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => { setPressed(false); onPress(); }}
+      onPointerLeave={() => setPressed(false)}
+      style={{
+        background: category.bgColor,
+        borderRadius: 24,
+        padding: '20px 16px',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        boxShadow: pressed ? 'none' : '0 4px 0 rgba(0,0,0,0.15)',
+        transform: pressed ? 'translateY(3px) scale(0.97)' : 'translateY(0) scale(1)',
+        transition: 'transform 0.1s, box-shadow 0.1s',
+        flex: 1,
+        minWidth: 0,
+      }}
     >
-      <Text style={styles.emoji}>{category.emoji}</Text>
-      <Text style={styles.title}>{category.title}</Text>
-      {stars > 0 && (
-        <View style={styles.starRow}>
-          <Text style={styles.stars}>⭐ {stars}</Text>
-        </View>
-      )}
-      {completedLevels > 0 && (
-        <Text style={styles.levels}>{completedLevels} levels done!</Text>
-      )}
-    </AnimatedPressable>
+      <div style={{ fontSize: 44 }}>{category.emoji}</div>
+      <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>
+        {category.title}
+      </div>
+      <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
+        ⭐ {stars} · {completed}/{total} levels
+      </div>
+    </button>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    borderRadius: 24,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 160,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  emoji: {
-    fontSize: 48,
-  },
-  title: {
-    fontFamily: 'Nunito-ExtraBold',
-    fontSize: 18,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  starRow: {
-    backgroundColor: 'rgba(0,0,0,0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-  },
-  stars: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 16,
-    color: '#fff',
-  },
-  levels: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
-  },
-});

@@ -1,8 +1,3 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { BigButton } from '@/components/ui/BigButton';
-import { COLORS } from '@/constants/colors';
-
 interface Props {
   choices: string[];
   onSelect: (choice: string) => void;
@@ -11,42 +6,51 @@ interface Props {
   disabled: boolean;
 }
 
-export function AnswerGrid({ choices, onSelect, selectedChoice, correctAnswer, disabled }: Props) {
-  function getColor(choice: string): string {
-    if (!selectedChoice) return '#4FC3F7';
-    if (choice === correctAnswer) return COLORS.correct;
-    if (choice === selectedChoice) return COLORS.wrong;
-    return '#B2BEC3';
-  }
-
-  return (
-    <View style={styles.grid}>
-      {choices.map((choice) => (
-        <BigButton
-          key={choice}
-          label={choice}
-          onPress={() => onSelect(choice)}
-          disabled={disabled}
-          color={getColor(choice)}
-          style={styles.button}
-          minSize={120}
-        />
-      ))}
-    </View>
-  );
+function getColor(choice: string, selected: string | null, correct: string): string {
+  if (!selected) return '#4A90E2';
+  if (choice === correct) return '#4CAF50';
+  if (choice === selected) return '#FF5252';
+  return '#bbb';
 }
 
-const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 14,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  button: {
-    width: '45%',
-    minWidth: 130,
-  },
-});
+export default function AnswerGrid({ choices, onSelect, selectedChoice, correctAnswer, disabled }: Props) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 14,
+      width: '100%',
+    }}>
+      {choices.map((choice) => {
+        const color = getColor(choice, selectedChoice, correctAnswer);
+        const isSelected = choice === selectedChoice;
+        const isCorrect = selectedChoice && choice === correctAnswer;
+        return (
+          <button
+            key={choice}
+            onClick={() => { if (!disabled && !selectedChoice) onSelect(choice); }}
+            className={isSelected && choice !== correctAnswer ? 'anim-shake' : isCorrect ? 'anim-pop' : ''}
+            style={{
+              background: color,
+              color: '#fff',
+              fontFamily: 'Nunito',
+              fontWeight: 800,
+              fontSize: 26,
+              borderRadius: 20,
+              border: 'none',
+              minHeight: 90,
+              boxShadow: disabled ? 'none' : '0 4px 0 rgba(0,0,0,0.2)',
+              cursor: disabled || !!selectedChoice ? 'default' : 'pointer',
+              transition: 'background 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {choice}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

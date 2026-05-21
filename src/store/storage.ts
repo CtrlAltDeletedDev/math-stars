@@ -1,13 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProgress, CategoryProgress, LevelState } from '@/types';
 import { CATEGORIES } from '@/data/categories';
 
-const STORAGE_KEY = '@mathstars/progress_v2';
+const STORAGE_KEY = 'mathstars_progress_v2';
 const CURRENT_VERSION = 2;
 
-export async function loadProgress(): Promise<UserProgress | null> {
+export function loadProgress(): UserProgress | null {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as UserProgress;
     if (parsed.version !== CURRENT_VERSION) return null;
@@ -17,11 +16,11 @@ export async function loadProgress(): Promise<UserProgress | null> {
   }
 }
 
-export async function saveProgress(progress: UserProgress): Promise<void> {
+export function saveProgress(progress: UserProgress): void {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   } catch {
-    // silently fail — progress will be saved on next attempt
+    // storage full or unavailable — silently ignore
   }
 }
 

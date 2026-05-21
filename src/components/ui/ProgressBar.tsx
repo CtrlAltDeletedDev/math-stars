@@ -1,6 +1,4 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
 
 interface Props {
   current: number;
@@ -8,51 +6,33 @@ interface Props {
   color?: string;
 }
 
-export function ProgressBar({ current, total, color = '#FFD700' }: Props) {
-  const fraction = total > 0 ? current / total : 0;
-  const width = useSharedValue(0);
+export default function ProgressBar({ current, total, color = '#FFD700' }: Props) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const pct = total > 0 ? Math.min(1, current / total) : 0;
 
   useEffect(() => {
-    width.value = withTiming(fraction, { duration: 400 });
-  }, [fraction]);
-
-  const barStyle = useAnimatedStyle(() => ({
-    width: `${width.value * 100}%` as `${number}%`,
-  }));
+    if (barRef.current) {
+      barRef.current.style.width = `${pct * 100}%`;
+    }
+  }, [pct]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.track}>
-        <Animated.View style={[styles.fill, { backgroundColor: color }, barStyle]} />
-      </View>
-      <Text style={styles.label}>{current}/{total}</Text>
-    </View>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ flex: 1, height: 12, background: 'rgba(255,255,255,0.4)', borderRadius: 6, overflow: 'hidden' }}>
+        <div
+          ref={barRef}
+          style={{
+            height: '100%',
+            background: color,
+            borderRadius: 6,
+            width: `${pct * 100}%`,
+            transition: 'width 0.4s ease',
+          }}
+        />
+      </div>
+      <span style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: '#fff', minWidth: 36, textAlign: 'right' }}>
+        {current}/{total}
+      </span>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-  },
-  track: {
-    flex: 1,
-    height: 14,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    borderRadius: 7,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 7,
-  },
-  label: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 16,
-    color: '#fff',
-    width: 40,
-    textAlign: 'right',
-  },
-});

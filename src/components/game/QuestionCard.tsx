@@ -1,78 +1,62 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import * as Speech from 'expo-speech';
 import { Question } from '@/types';
 
 interface Props {
   question: Question;
 }
 
-export function QuestionCard({ question }: Props) {
-  function handleSpeak() {
-    const text = question.speakText ?? question.prompt;
-    Speech.speak(text, { language: 'en-US', rate: 0.85, pitch: 1.1 });
-  }
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.topRow}>
-        <Text style={styles.prompt}>{question.prompt}</Text>
-        <Pressable onPress={handleSpeak} style={styles.speakBtn} hitSlop={12}>
-          <Text style={styles.speakIcon}>🔊</Text>
-        </Pressable>
-      </View>
-      {question.promptEmoji ? (
-        <Text style={styles.emoji} numberOfLines={4} adjustsFontSizeToFit>
-          {question.promptEmoji}
-        </Text>
-      ) : null}
-    </View>
-  );
+function speak(text: string) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85;
+  u.pitch = 1.1;
+  window.speechSynthesis.speak(u);
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 28,
-    padding: 24,
-    marginHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 180,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    gap: 12,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  prompt: {
-    fontFamily: 'Nunito-ExtraBold',
-    fontSize: 30,
-    color: '#2D3436',
-    textAlign: 'center',
-    flex: 1,
-  },
-  speakBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EAF4FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  speakIcon: { fontSize: 22 },
-  emoji: {
-    fontSize: 34,
-    textAlign: 'center',
-    lineHeight: 46,
-  },
-});
+export default function QuestionCard({ question }: Props) {
+  const speakText = question.speakText ?? question.prompt;
+
+  return (
+    <div style={{
+      background: '#fff',
+      borderRadius: 28,
+      padding: '24px 28px',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 12,
+      position: 'relative',
+    }}>
+      <button
+        onClick={() => speak(speakText)}
+        style={{
+          position: 'absolute', top: 14, right: 14,
+          background: '#EEF4FF', border: 'none', borderRadius: 12,
+          width: 44, height: 44, fontSize: 22, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+        title="Read aloud"
+      >
+        🔊
+      </button>
+
+      {question.promptEmoji && (
+        <div style={{ fontSize: 48, lineHeight: 1.2, textAlign: 'center', letterSpacing: 4 }}>
+          {question.promptEmoji}
+        </div>
+      )}
+
+      <div style={{
+        fontFamily: 'Nunito',
+        fontWeight: 800,
+        fontSize: 30,
+        color: '#333',
+        textAlign: 'center',
+        lineHeight: 1.3,
+      }}>
+        {question.prompt}
+      </div>
+    </div>
+  );
+}

@@ -1,28 +1,27 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ReactNode } from 'react';
 
 interface Props {
-  children: React.ReactNode;
-  colors?: [string, string, ...string[]];
+  colors?: [string, string];
+  children: ReactNode;
+  style?: React.CSSProperties;
 }
 
-export function BackgroundGradient({ children, colors = ['#87CEEB', '#5BA3D9'] }: Props) {
+export default function BackgroundGradient({ colors = ['#87CEEB', '#4A90E2'], children, style }: Props) {
   return (
-    <LinearGradient colors={colors} style={styles.gradient}>
-      <SafeAreaView style={styles.safe}>
-        {children}
-      </SafeAreaView>
-    </LinearGradient>
+    <div style={{
+      width: '100%',
+      height: '100dvh',
+      background: `linear-gradient(180deg, ${colors[0]} 0%, ${colors[1]} 100%)`,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      paddingTop: 'env(safe-area-inset-top)',
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      paddingLeft: 'env(safe-area-inset-left)',
+      paddingRight: 'env(safe-area-inset-right)',
+      ...style,
+    }}>
+      {children}
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  safe: {
-    flex: 1,
-  },
-});

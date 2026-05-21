@@ -1,58 +1,25 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
-
 interface Props {
   hint: string;
   visible: boolean;
 }
 
-export function HintBubble({ hint, visible }: Props) {
-  const scale = useSharedValue(0);
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      scale.value = withSpring(1, { damping: 10, stiffness: 200 });
-      opacity.value = withSpring(1);
-    } else {
-      scale.value = withSpring(0);
-      opacity.value = withSpring(0);
-    }
-  }, [visible]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
+export default function HintBubble({ hint, visible }: Props) {
+  if (!visible) return null;
   return (
-    <Animated.View style={[styles.bubble, animStyle]}>
-      <Text style={styles.label}>💡 Hint</Text>
-      <Text style={styles.text}>{hint}</Text>
-    </Animated.View>
+    <div
+      className="anim-slide"
+      style={{
+        background: '#FFF9C4',
+        borderRadius: 16,
+        padding: '12px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      }}
+    >
+      <span style={{ fontSize: 20 }}>💡</span>
+      <span style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 16, color: '#555' }}>{hint}</span>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  bubble: {
-    backgroundColor: '#FFF9C4',
-    borderRadius: 16,
-    padding: 14,
-    marginHorizontal: 20,
-    marginTop: 8,
-    gap: 4,
-    borderWidth: 2,
-    borderColor: '#F9CA24',
-  },
-  label: {
-    fontFamily: 'Nunito-ExtraBold',
-    fontSize: 16,
-    color: '#E55039',
-  },
-  text: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 16,
-    color: '#2D3436',
-  },
-});
