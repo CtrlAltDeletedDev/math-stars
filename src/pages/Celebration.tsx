@@ -8,6 +8,7 @@ import { BadgeEarned } from '@/types';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BadgeModal from '@/components/ui/BadgeModal';
 import BigButton from '@/components/ui/BigButton';
+import Confetti from '@/components/ui/Confetti';
 
 export default function Celebration() {
   const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
@@ -45,7 +46,8 @@ export default function Celebration() {
 
   return (
     <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 20 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 20, position: 'relative', overflow: 'hidden' }}>
+        <Confetti active={passed} />
 
         <div className="anim-bounce" style={{ fontSize: 72 }}>{emoji}</div>
 

@@ -131,7 +131,7 @@ export default function Game() {
             disabled={showFeedback}
           />
 
-          <FeedbackOverlay visible={showFeedback} correct={lastCorrect} characterEmoji={characterEmoji} />
+          <FeedbackOverlay visible={showFeedback} correct={lastCorrect} characterEmoji={characterEmoji} correctAnswer={question.correctAnswer} />
         </div>
       </div>
     </BackgroundGradient>

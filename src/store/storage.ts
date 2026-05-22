@@ -10,6 +10,8 @@ export function loadProgress(): UserProgress | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as UserProgress;
     if (parsed.version !== CURRENT_VERSION) return null;
+    // Patch fields added after initial release
+    if (!parsed.playHistory) parsed.playHistory = [];
     return parsed;
   } catch {
     return null;
@@ -67,5 +69,6 @@ export function buildInitialProgress(): UserProgress {
     purchasedItems: [],
     activeTheme: 'sky',
     consecutiveCorrect: 0,
+    playHistory: [],
   };
 }

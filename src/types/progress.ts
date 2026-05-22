@@ -43,4 +43,5 @@ export interface UserProgress {
   purchasedItems: string[];
   activeTheme: string;
   consecutiveCorrect: number;
+  playHistory: string[];
 }

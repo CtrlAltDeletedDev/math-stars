@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
@@ -6,10 +7,25 @@ import { getTheme } from '@/data/shop';
 import CategoryCard from '@/components/home/CategoryCard';
 import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
+import PlayCalendar from '@/components/ui/PlayCalendar';
+import InstallBanner from '@/components/ui/InstallBanner';
 
 export default function Home() {
   const { progress, isLoaded } = useProgress();
   const navigate = useNavigate();
+  const titleTaps = useRef(0);
+  const titleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleTitleTap() {
+    titleTaps.current += 1;
+    if (titleTapTimer.current) clearTimeout(titleTapTimer.current);
+    if (titleTaps.current >= 3) {
+      titleTaps.current = 0;
+      navigate('/parent');
+    } else {
+      titleTapTimer.current = setTimeout(() => { titleTaps.current = 0; }, 700);
+    }
+  }
 
   if (!isLoaded) {
     return (
@@ -40,16 +56,15 @@ export default function Home() {
           >
             {emoji}
           </button>
-          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 28, color: '#fff' }}>Math Stars!</div>
+          <div onClick={handleTitleTap} style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 28, color: '#fff', cursor: 'default', userSelect: 'none' }}>Math Stars!</div>
           <StarBadge count={progress.totalStars} />
         </div>
 
-        {/* Streak */}
-        {progress.currentStreak >= 2 && (
-          <div style={{ textAlign: 'center', fontFamily: 'Nunito', fontWeight: 700, fontSize: 18, color: '#fff' }}>
-            {'🔥'.repeat(Math.min(progress.currentStreak, 7))} {progress.currentStreak} day streak!
-          </div>
-        )}
+        {/* Install banner */}
+        <InstallBanner />
+
+        {/* Play calendar + streak */}
+        <PlayCalendar playHistory={progress.playHistory ?? []} />
 
         {/* Category grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, flex: 1 }}>

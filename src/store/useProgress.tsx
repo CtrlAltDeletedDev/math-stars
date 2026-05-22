@@ -85,6 +85,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
     setProgress((prev) => {
       let next = updateStreak(prev);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const ph = next.playHistory ?? [];
+      if (!ph.includes(todayStr)) {
+        next = { ...next, playHistory: [...ph, todayStr] };
+      }
       next = { ...next, consecutiveCorrect };
 
       const catProgress = { ...next.categories[level.categoryId] };

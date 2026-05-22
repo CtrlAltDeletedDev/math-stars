@@ -2,9 +2,10 @@ interface Props {
   visible: boolean;
   correct: boolean;
   characterEmoji: string;
+  correctAnswer?: string;
 }
 
-export default function FeedbackOverlay({ visible, correct, characterEmoji }: Props) {
+export default function FeedbackOverlay({ visible, correct, characterEmoji, correctAnswer }: Props) {
   if (!visible) return null;
 
   return (
@@ -29,6 +30,15 @@ export default function FeedbackOverlay({ visible, correct, characterEmoji }: Pr
       <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 28, color: '#fff' }}>
         {correct ? 'Great job! 🌟' : 'Try again soon!'}
       </div>
+      {!correct && correctAnswer && (
+        <div style={{
+          background: 'rgba(255,255,255,0.25)', borderRadius: 14,
+          padding: '8px 20px', fontFamily: 'Nunito', fontWeight: 800,
+          fontSize: 22, color: '#fff',
+        }}>
+          Answer: {correctAnswer}
+        </div>
+      )}
     </div>
   );
 }

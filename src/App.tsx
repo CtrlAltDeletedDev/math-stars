@@ -6,6 +6,7 @@ import Game from './pages/Game';
 import Celebration from './pages/Celebration';
 import Badges from './pages/Badges';
 import Shop from './pages/Shop';
+import Parent from './pages/Parent';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/celebration/:categoryId/:levelId" element={<Celebration />} />
       <Route path="/badges" element={<Badges />} />
       <Route path="/shop" element={<Shop />} />
+      <Route path="/parent" element={<Parent />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
