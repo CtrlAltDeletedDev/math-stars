@@ -1,30 +1,5 @@
 import { Question } from '@/types';
 
-function makeCountQ(
-  id: string,
-  count: number,
-  emoji: string,
-  difficulty: number,
-  choices?: string[],
-): Question {
-  const correct = String(count);
-  const wrong = choices ?? [
-    String(count - 1),
-    String(count + 1),
-    String(count + 2),
-  ];
-  const allChoices = shuffle([correct, ...wrong.slice(0, 3)]);
-  return {
-    id,
-    type: 'counting',
-    prompt: `How many ${emoji} are there?`,
-    promptEmoji: emoji.repeat(count),
-    correctAnswer: correct,
-    choices: allChoices,
-    difficulty,
-  };
-}
-
 function shuffle(arr: string[]): string[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -34,22 +9,67 @@ function shuffle(arr: string[]): string[] {
   return a;
 }
 
+function makeCountQ(
+  id: string,
+  count: number,
+  emoji: string,
+  difficulty: number,
+  wrong: [string, string, string],
+): Question {
+  return {
+    id,
+    type: 'counting',
+    prompt: `How many ${emoji} are there?`,
+    promptEmoji: emoji.repeat(count),
+    correctAnswer: String(count),
+    choices: shuffle([String(count), ...wrong]),
+    difficulty,
+  };
+}
+
 export const COUNTING_QUESTIONS: Question[] = [
-  makeCountQ('count-1', 3, '⭐', 1, ['2', '4', '5']),
-  makeCountQ('count-2', 5, '🍎', 1, ['4', '6', '3']),
-  makeCountQ('count-3', 2, '🐱', 1, ['1', '3', '4']),
-  makeCountQ('count-4', 4, '🌸', 1, ['3', '5', '6']),
-  makeCountQ('count-5', 6, '🐢', 1, ['5', '7', '4']),
-  makeCountQ('count-6', 7, '🍓', 2, ['6', '8', '5']),
-  makeCountQ('count-7', 8, '🦋', 2, ['7', '9', '6']),
-  makeCountQ('count-8', 9, '🌟', 2, ['8', '10', '7']),
-  makeCountQ('count-9', 10, '🐸', 2, ['9', '11', '8']),
-  makeCountQ('count-10', 1, '🐶', 1, ['2', '3', '0']),
-  makeCountQ('count-11', 12, '🍦', 3, ['11', '13', '10']),
-  makeCountQ('count-12', 15, '🌈', 3, ['14', '16', '13']),
-  makeCountQ('count-13', 14, '🦄', 3, ['13', '15', '12']),
-  makeCountQ('count-14', 18, '🌺', 3, ['17', '19', '16']),
-  makeCountQ('count-15', 20, '🐠', 3, ['19', '21', '18']),
+  // Count 1–5 (difficulty 1)
+  makeCountQ('count-1a', 1, '⭐', 1, ['2', '3', '4']),
+  makeCountQ('count-1b', 1, '🐶', 1, ['2', '3', '0']),
+  makeCountQ('count-2a', 2, '🐱', 1, ['1', '3', '4']),
+  makeCountQ('count-2b', 2, '🍎', 1, ['1', '3', '5']),
+  makeCountQ('count-3a', 3, '⭐', 1, ['2', '4', '5']),
+  makeCountQ('count-3b', 3, '🌸', 1, ['2', '4', '1']),
+  makeCountQ('count-3c', 3, '🐸', 1, ['2', '4', '5']),
+  makeCountQ('count-4a', 4, '🌸', 1, ['3', '5', '6']),
+  makeCountQ('count-4b', 4, '🦋', 1, ['3', '5', '2']),
+  makeCountQ('count-5a', 5, '🍎', 1, ['4', '6', '3']),
+  makeCountQ('count-5b', 5, '🌟', 1, ['4', '6', '7']),
+  makeCountQ('count-5c', 5, '🐢', 1, ['4', '6', '3']),
+  // Count 6–10 (difficulty 2)
+  makeCountQ('count-6a', 6, '🐢', 2, ['5', '7', '4']),
+  makeCountQ('count-6b', 6, '🍊', 2, ['5', '7', '8']),
+  makeCountQ('count-7a', 7, '🍓', 2, ['6', '8', '5']),
+  makeCountQ('count-7b', 7, '🦊', 2, ['6', '8', '9']),
+  makeCountQ('count-8a', 8, '🦋', 2, ['7', '9', '6']),
+  makeCountQ('count-8b', 8, '🐟', 2, ['7', '9', '10']),
+  makeCountQ('count-9a', 9, '🌟', 2, ['8', '10', '7']),
+  makeCountQ('count-9b', 9, '🍋', 2, ['8', '10', '11']),
+  makeCountQ('count-10a', 10, '🐸', 2, ['9', '11', '8']),
+  makeCountQ('count-10b', 10, '🌺', 2, ['9', '11', '12']),
+  makeCountQ('count-10c', 10, '🍇', 2, ['9', '11', '8']),
+  // Count 11–15 (difficulty 3)
+  makeCountQ('count-11a', 11, '🦄', 3, ['10', '12', '9']),
+  makeCountQ('count-11b', 11, '🌙', 3, ['10', '12', '13']),
+  makeCountQ('count-12a', 12, '🍦', 3, ['11', '13', '10']),
+  makeCountQ('count-12b', 12, '🌈', 3, ['11', '13', '14']),
+  makeCountQ('count-13a', 13, '🦄', 3, ['12', '14', '11']),
+  makeCountQ('count-13b', 13, '🍭', 3, ['12', '14', '15']),
+  makeCountQ('count-14a', 14, '🌺', 3, ['13', '15', '12']),
+  makeCountQ('count-14b', 14, '🐠', 3, ['13', '15', '16']),
+  makeCountQ('count-15a', 15, '🌈', 3, ['14', '16', '13']),
+  makeCountQ('count-15b', 15, '⭐', 3, ['14', '16', '17']),
+  // Count 16–20 (difficulty 3)
+  makeCountQ('count-16a', 16, '🍓', 3, ['15', '17', '14']),
+  makeCountQ('count-17a', 17, '🦋', 3, ['16', '18', '15']),
+  makeCountQ('count-18a', 18, '🌺', 3, ['17', '19', '16']),
+  makeCountQ('count-19a', 19, '🐸', 3, ['18', '20', '17']),
+  makeCountQ('count-20a', 20, '🐠', 3, ['19', '21', '18']),
 ];
 
 const COMPARE_QUESTIONS: Question[] = [
@@ -108,6 +128,63 @@ const COMPARE_QUESTIONS: Question[] = [
     difficulty: 2,
   },
   {
+    id: 'cmp-7',
+    type: 'number_compare',
+    prompt: 'Which number is smaller?',
+    promptEmoji: '6  or  2',
+    correctAnswer: '2',
+    choices: ['2', '6', '4', '5'],
+    difficulty: 1,
+  },
+  {
+    id: 'cmp-8',
+    type: 'number_compare',
+    prompt: 'Which number is bigger?',
+    promptEmoji: '10  or  8',
+    correctAnswer: '10',
+    choices: ['10', '8', '9', '7'],
+    difficulty: 1,
+  },
+  {
+    id: 'cmp-9',
+    type: 'number_compare',
+    prompt: 'Which number is smaller?',
+    promptEmoji: '16  or  11',
+    correctAnswer: '11',
+    choices: ['11', '16', '14', '13'],
+    difficulty: 2,
+  },
+  {
+    id: 'cmp-10',
+    type: 'number_compare',
+    prompt: 'Which number is bigger?',
+    promptEmoji: '3  or  9',
+    correctAnswer: '9',
+    choices: ['9', '3', '6', '7'],
+    difficulty: 1,
+  },
+  {
+    id: 'cmp-11',
+    type: 'number_compare',
+    prompt: 'Which number is smaller?',
+    promptEmoji: '19  or  14',
+    correctAnswer: '14',
+    choices: ['14', '19', '17', '16'],
+    difficulty: 2,
+  },
+  {
+    id: 'cmp-12',
+    type: 'number_compare',
+    prompt: 'Which number is bigger?',
+    promptEmoji: '1  or  7',
+    correctAnswer: '7',
+    choices: ['7', '1', '4', '5'],
+    difficulty: 1,
+  },
+];
+
+const ORDER_QUESTIONS: Question[] = [
+  {
     id: 'ord-1',
     type: 'number_order',
     prompt: 'What number comes next?',
@@ -152,6 +229,73 @@ const COMPARE_QUESTIONS: Question[] = [
     choices: ['11', '13', '9', '14'],
     difficulty: 2,
   },
+  {
+    id: 'ord-6',
+    type: 'number_order',
+    prompt: 'What number comes next?',
+    promptEmoji: '14, 15, 16, ?',
+    correctAnswer: '17',
+    choices: ['17', '18', '16', '19'],
+    difficulty: 2,
+  },
+  {
+    id: 'ord-7',
+    type: 'number_order',
+    prompt: 'What number is missing?',
+    promptEmoji: '6, ?, 8',
+    correctAnswer: '7',
+    choices: ['7', '9', '5', '6'],
+    difficulty: 1,
+  },
+  {
+    id: 'ord-8',
+    type: 'number_order',
+    prompt: 'What number comes next?',
+    promptEmoji: '17, 18, 19, ?',
+    correctAnswer: '20',
+    choices: ['20', '21', '19', '18'],
+    difficulty: 2,
+  },
+  {
+    id: 'ord-9',
+    type: 'number_order',
+    prompt: 'What number is missing?',
+    promptEmoji: '13, ?, 15',
+    correctAnswer: '14',
+    choices: ['14', '16', '12', '15'],
+    difficulty: 2,
+  },
+  {
+    id: 'ord-10',
+    type: 'number_order',
+    prompt: 'What number comes before?',
+    promptEmoji: '?, 5, 6',
+    correctAnswer: '4',
+    choices: ['4', '3', '6', '7'],
+    difficulty: 1,
+  },
+  {
+    id: 'ord-11',
+    type: 'number_order',
+    prompt: 'What number comes before?',
+    promptEmoji: '?, 10, 11',
+    correctAnswer: '9',
+    choices: ['9', '8', '11', '12'],
+    difficulty: 2,
+  },
+  {
+    id: 'ord-12',
+    type: 'number_order',
+    prompt: 'What number comes before?',
+    promptEmoji: '?, 20',
+    correctAnswer: '19',
+    choices: ['19', '18', '21', '17'],
+    difficulty: 2,
+  },
 ];
 
-export const ALL_COUNTING_QUESTIONS: Question[] = [...COUNTING_QUESTIONS, ...COMPARE_QUESTIONS];
+export const ALL_COUNTING_QUESTIONS: Question[] = [
+  ...COUNTING_QUESTIONS,
+  ...COMPARE_QUESTIONS,
+  ...ORDER_QUESTIONS,
+];

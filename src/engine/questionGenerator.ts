@@ -35,7 +35,7 @@ export function generateAdditionQuestion(maxSum: number): Question {
   const b = randomInt(0, maxSum - a);
   const correct = a + b;
   return {
-    id: `add-${a}+${b}-${Date.now()}`,
+    id: `add-${a}+${b}`,
     type: 'addition',
     prompt: `${a} + ${b} = ?`,
     correctAnswer: String(correct),
@@ -49,7 +49,7 @@ export function generateSubtractionQuestion(maxMinuend: number): Question {
   const b = randomInt(0, a);
   const correct = a - b;
   return {
-    id: `sub-${a}-${b}-${Date.now()}`,
+    id: `sub-${a}-${b}`,
     type: 'subtraction',
     prompt: `${a} - ${b} = ?`,
     correctAnswer: String(correct),
@@ -64,7 +64,7 @@ export function generateSkipCountQuestion(by: number, maxStart: number): Questio
   const sequence = Array.from({ length: steps }, (_, i) => start + i * by);
   const correct = start + steps * by;
   return {
-    id: `skip-${by}-${start}-${steps}-${Date.now()}`,
+    id: `skip-${by}-${start}-${steps}`,
     type: 'skip_count',
     prompt: `${sequence.join(', ')}, ?`,
     correctAnswer: String(correct),
@@ -78,7 +78,7 @@ export function generateMultiplicationQuestion(tables: number[]): Question {
   const b = randomInt(1, 10);
   const correct = table * b;
   return {
-    id: `mul-${table}x${b}-${Date.now()}`,
+    id: `mul-${table}x${b}`,
     type: 'multiplication',
     prompt: `${table} × ${b} = ?`,
     correctAnswer: String(correct),

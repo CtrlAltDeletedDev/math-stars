@@ -4,6 +4,7 @@ import { useProgress } from '@/store/useProgress';
 import { getLevelById, getCategoryById } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { useGameSession } from '@/hooks/useGameSession';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import ProgressBar from '@/components/ui/ProgressBar';
 import QuestionCard from '@/components/game/QuestionCard';
@@ -17,6 +18,7 @@ export default function Game() {
   const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
   const navigate = useNavigate();
   const { progress, recordLevelComplete } = useProgress();
+  const sounds = useSoundEffects();
 
   const level = getLevelById(levelId);
   const category = getCategoryById(categoryId);
@@ -48,8 +50,10 @@ export default function Game() {
 
     if (correct) {
       setConsecutiveCorrect((n) => n + 1);
+      sounds.playCorrect();
     } else {
       setConsecutiveCorrect(0);
+      sounds.playWrong();
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
     }
 
@@ -60,6 +64,7 @@ export default function Game() {
 
       if (session.isComplete && !hasCompleted.current) {
         hasCompleted.current = true;
+        sounds.playLevelUp();
         const newBadges = recordLevelComplete(
           levelId,
           session.correctCount + (correct ? 1 : 0),
@@ -93,7 +98,7 @@ export default function Game() {
 
   return (
     <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 14, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -104,19 +109,17 @@ export default function Game() {
             ✕
           </button>
           <div style={{ flex: 1 }}>
-            <ProgressBar current={session.currentIndex} total={session.totalQuestions} />
+            {/* Fix 1: +1 so first question shows "1/10" not "0/10" */}
+            <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
           <div style={{ fontSize: 32 }}>{characterEmoji}</div>
         </div>
 
         <StreakBar streak={session.streak} />
 
-        {/* Question area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden', justifyContent: 'center' }}>
-          <div style={{ position: 'relative' }}>
-            <QuestionCard question={question} />
-            <FeedbackOverlay visible={showFeedback} correct={lastCorrect} characterEmoji={characterEmoji} />
-          </div>
+        {/* Fix 5: FeedbackOverlay is sibling to card+hint+grid, covering all of them */}
+        <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden', justifyContent: 'center' }}>
+          <QuestionCard question={question} />
 
           {question.hint && <HintBubble hint={question.hint} visible={showHint} />}
 
@@ -127,6 +130,8 @@ export default function Game() {
             correctAnswer={question.correctAnswer}
             disabled={showFeedback}
           />
+
+          <FeedbackOverlay visible={showFeedback} correct={lastCorrect} characterEmoji={characterEmoji} />
         </div>
       </div>
     </BackgroundGradient>
