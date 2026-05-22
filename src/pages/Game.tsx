@@ -41,6 +41,12 @@ export default function Game() {
 
   function handleAnswer(choice: string) {
     if (selectedChoice || showFeedback) return;
+
+    // Capture before recordAnswer queues its state update — the closure will see stale session values.
+    const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
+    const correctCountBeforeAnswer = session.correctCount;
+    const srsUpdatesBeforeAnswer = session.srsUpdates;
+
     const correct = session.recordAnswer(choice);
     setSelectedChoice(choice);
     setLastCorrect(correct);
@@ -48,6 +54,7 @@ export default function Game() {
     setShowHint(false);
     if (hintTimer.current) clearTimeout(hintTimer.current);
 
+    const nextConsecutive = correct ? consecutiveCorrect + 1 : 0;
     if (correct) {
       setConsecutiveCorrect((n) => n + 1);
       sounds.playCorrect();
@@ -57,25 +64,27 @@ export default function Game() {
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
     }
 
+    const finalCorrectCount = correctCountBeforeAnswer + (correct ? 1 : 0);
+
     advanceTimer.current = setTimeout(() => {
       setShowFeedback(false);
       setSelectedChoice(null);
       setShowHint(false);
 
-      if (session.isComplete && !hasCompleted.current) {
+      if (isLastQuestion && !hasCompleted.current) {
         hasCompleted.current = true;
         sounds.playLevelUp();
         const newBadges = recordLevelComplete(
           levelId,
-          session.correctCount + (correct ? 1 : 0),
+          finalCorrectCount,
           session.totalQuestions,
-          session.srsUpdates,
-          consecutiveCorrect + (correct ? 1 : 0),
+          srsUpdatesBeforeAnswer,
+          nextConsecutive,
         );
         navigate(`/celebration/${categoryId}/${levelId}`, {
           replace: true,
           state: {
-            correctCount: session.correctCount + (correct ? 1 : 0),
+            correctCount: finalCorrectCount,
             totalCount: session.totalQuestions,
             newBadges,
           },
