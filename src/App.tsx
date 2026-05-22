@@ -7,6 +7,10 @@ import Celebration from './pages/Celebration';
 import Badges from './pages/Badges';
 import Shop from './pages/Shop';
 import Parent from './pages/Parent';
+import Stickers from './pages/Stickers';
+import Story from './pages/Story';
+import Flashcard from './pages/Flashcard';
+import Worksheet from './pages/Worksheet';
 
 export default function App() {
   return (
@@ -19,6 +23,10 @@ export default function App() {
       <Route path="/badges" element={<Badges />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/parent" element={<Parent />} />
+      <Route path="/stickers" element={<Stickers />} />
+      <Route path="/story/:categoryId" element={<Story />} />
+      <Route path="/flashcard/:categoryId/:levelId" element={<Flashcard />} />
+      <Route path="/worksheet" element={<Worksheet />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

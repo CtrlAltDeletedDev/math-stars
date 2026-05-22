@@ -4,6 +4,7 @@ import { loadProgress, saveProgress, buildInitialProgress } from './storage';
 import { CATEGORIES, getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
 import { BADGES, BadgeCheckContext } from '@/data/badges';
+import { STICKERS } from '@/data/stickers';
 import { SHOP_ITEMS } from '@/data/shop';
 
 interface ProgressContextValue {
@@ -19,6 +20,8 @@ interface ProgressContextValue {
   selectCharacter: (characterId: string) => void;
   purchaseItem: (itemId: string) => boolean;
   setActiveTheme: (themeId: string) => void;
+  toggleMusic: () => void;
+  toggleChallengeMode: () => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -66,6 +69,29 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       badgeId: b.id,
       earnedAt: Date.now(),
     }));
+  }
+
+  function checkNewStickers(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): string[] {
+    const existing = new Set(prev.earnedStickers ?? []);
+    const playDays = new Set(next.playHistory ?? []).size;
+    const categoriesCompleted = Object.values(next.categories).filter((cat) =>
+      Object.values(cat.levels).every((l) => l.status === 'completed'),
+    ).length;
+    const totalLevelsCompleted = Object.values(next.categories).reduce(
+      (sum, cat) => sum + Object.values(cat.levels).filter((l) => l.status === 'completed').length, 0,
+    );
+    const ctx = {
+      totalStars: next.totalStars,
+      currentStreak: next.currentStreak,
+      longestStreak: next.longestStreak,
+      consecutiveCorrect: next.consecutiveCorrect,
+      categoriesCompleted,
+      totalLevelsCompleted,
+      sessionCorrect,
+      sessionTotal,
+      playDays,
+    };
+    return STICKERS.filter((s) => !existing.has(s.id) && s.check(ctx)).map((s) => s.id);
   }
 
   function recordLevelComplete(
@@ -149,6 +175,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       if (newBadges.length > 0) {
         next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
       }
+      const newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      if (newStickers.length > 0) {
+        next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
+      }
 
       debouncedSave(next);
       return next;
@@ -192,8 +222,24 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  function toggleMusic() {
+    setProgress((prev) => {
+      const next = { ...prev, musicEnabled: !prev.musicEnabled };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
+  function toggleChallengeMode() {
+    setProgress((prev) => {
+      const next = { ...prev, challengeMode: !prev.challengeMode };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, selectCharacter, purchaseItem, setActiveTheme }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode }}>
       {children}
     </ProgressContext.Provider>
   );

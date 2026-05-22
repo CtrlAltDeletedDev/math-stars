@@ -4,6 +4,7 @@ import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { getTheme } from '@/data/shop';
+import { STICKERS } from '@/data/stickers';
 import CategoryCard from '@/components/home/CategoryCard';
 import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
@@ -11,7 +12,7 @@ import PlayCalendar from '@/components/ui/PlayCalendar';
 import InstallBanner from '@/components/ui/InstallBanner';
 
 export default function Home() {
-  const { progress, isLoaded } = useProgress();
+  const { progress, isLoaded, toggleMusic, toggleChallengeMode } = useProgress();
   const navigate = useNavigate();
   const titleTaps = useRef(0);
   const titleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -43,31 +44,52 @@ export default function Home() {
   const theme = getTheme(progress.activeTheme);
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
+  const earnedStickers = (progress.earnedStickers ?? []).length;
 
   return (
     <BackgroundGradient colors={theme.colors}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 20px', gap: 16, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 20px', gap: 12, overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={() => navigate('/character-select')}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 16, padding: '8px 14px', fontSize: 26, cursor: 'pointer' }}
-          >
-            {emoji}
-          </button>
+          >{emoji}</button>
           <div onClick={handleTitleTap} style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 28, color: '#fff', cursor: 'default', userSelect: 'none' }}>Math Stars!</div>
           <StarBadge count={progress.totalStars} />
+        </div>
+
+        {/* Quick-toggle row */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={toggleMusic}
+            style={{
+              flex: 1, background: progress.musicEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)',
+              border: progress.musicEnabled ? '2px solid #fff' : '2px solid transparent',
+              borderRadius: 14, padding: '8px 6px', cursor: 'pointer',
+              fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: '#fff',
+            }}
+          >{progress.musicEnabled ? '🎵 Music On' : '🔇 Music Off'}</button>
+          <button
+            onClick={toggleChallengeMode}
+            style={{
+              flex: 1, background: progress.challengeMode ? 'rgba(255,180,0,0.5)' : 'rgba(255,255,255,0.2)',
+              border: progress.challengeMode ? '2px solid #FFE066' : '2px solid transparent',
+              borderRadius: 14, padding: '8px 6px', cursor: 'pointer',
+              fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: '#fff',
+            }}
+          >{progress.challengeMode ? '⏱️ Challenge!' : '⏱️ Challenge'}</button>
         </div>
 
         {/* Install banner */}
         <InstallBanner />
 
-        {/* Play calendar + streak */}
+        {/* Play calendar */}
         <PlayCalendar playHistory={progress.playHistory ?? []} />
 
         {/* Category grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, flex: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, flex: 1, minHeight: 0 }}>
           {CATEGORIES.map((cat) => (
             <CategoryCard
               key={cat.id}
@@ -79,29 +101,24 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={() => navigate('/badges')}
-            style={{
-              flex: 1, background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 16,
-              padding: '12px 8px', cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700,
-              fontSize: 16, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            }}
-          >
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => navigate('/badges')} style={footerBtn}>
             🏅 Badges ({progress.earnedBadges.length})
           </button>
-          <button
-            onClick={() => navigate('/shop')}
-            style={{
-              flex: 1, background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 16,
-              padding: '12px 8px', cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700,
-              fontSize: 16, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            }}
-          >
-            🛍️ Shop (⭐{progress.spendableStars})
+          <button onClick={() => navigate('/stickers')} style={footerBtn}>
+            🎨 Stickers ({earnedStickers}/{STICKERS.length})
+          </button>
+          <button onClick={() => navigate('/shop')} style={footerBtn}>
+            🛍️ ⭐{progress.spendableStars}
           </button>
         </div>
       </div>
     </BackgroundGradient>
   );
 }
+
+const footerBtn: React.CSSProperties = {
+  flex: 1, background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 16,
+  padding: '10px 4px', cursor: 'pointer', fontFamily: 'Nunito', fontWeight: 700,
+  fontSize: 13, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+};

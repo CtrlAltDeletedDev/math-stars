@@ -12,6 +12,9 @@ export function loadProgress(): UserProgress | null {
     if (parsed.version !== CURRENT_VERSION) return null;
     // Patch fields added after initial release
     if (!parsed.playHistory) parsed.playHistory = [];
+    if (!parsed.earnedStickers) parsed.earnedStickers = [];
+    if (parsed.musicEnabled === undefined) parsed.musicEnabled = false;
+    if (parsed.challengeMode === undefined) parsed.challengeMode = false;
     return parsed;
   } catch {
     return null;
@@ -70,5 +73,8 @@ export function buildInitialProgress(): UserProgress {
     activeTheme: 'sky',
     consecutiveCorrect: 0,
     playHistory: [],
+    earnedStickers: [],
+    musicEnabled: false,
+    challengeMode: false,
   };
 }

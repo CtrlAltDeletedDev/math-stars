@@ -100,7 +100,8 @@ export default function Parent() {
           );
         })}
 
-        <BigButton onPress={() => navigate('/')} label="← Back to Game" color="rgba(255,255,255,0.2)" />
+        <BigButton onPress={() => navigate('/worksheet')} label="📄 Generate Worksheet" color="rgba(255,255,255,0.2)" />
+        <BigButton onPress={() => navigate('/')} label="← Back to Game" color="rgba(255,255,255,0.15)" />
       </div>
     </BackgroundGradient>
   );

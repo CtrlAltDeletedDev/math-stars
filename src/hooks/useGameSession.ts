@@ -9,6 +9,7 @@ interface SessionState {
   currentIndex: number;
   correctCount: number;
   streak: number;
+  hotStreak: number;
   results: { questionId: string; correct: boolean }[];
   srsUpdates: SRSCard[];
   isComplete: boolean;
@@ -22,6 +23,7 @@ export function useGameSession(level: Level, srsCards: Record<string, SRSCard>, 
     currentIndex: 0,
     correctCount: 0,
     streak: 0,
+    hotStreak: 0,
     results: [],
     srsUpdates: [],
     isComplete: false,
@@ -41,12 +43,14 @@ export function useGameSession(level: Level, srsCards: Record<string, SRSCard>, 
     setState((prev) => {
       const newCorrectCount = prev.correctCount + (correct ? 1 : 0);
       const newStreak = correct ? prev.streak + 1 : 0;
+      const newHotStreak = correct ? prev.hotStreak + 1 : 0;
       const isLast = prev.currentIndex >= prev.questions.length - 1;
 
       return {
         ...prev,
         correctCount: newCorrectCount,
         streak: newStreak,
+        hotStreak: newHotStreak,
         results: [...prev.results, { questionId: question.id, correct }],
         srsUpdates: [...prev.srsUpdates, updatedCard],
         isComplete: isLast,
@@ -69,6 +73,7 @@ export function useGameSession(level: Level, srsCards: Record<string, SRSCard>, 
     totalQuestions: state.questions.length,
     correctCount: state.correctCount,
     streak: state.streak,
+    hotStreak: state.hotStreak,
     isComplete: state.isComplete,
     srsUpdates: state.srsUpdates,
     recordAnswer,

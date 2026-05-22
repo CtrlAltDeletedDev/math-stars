@@ -44,4 +44,7 @@ export interface UserProgress {
   activeTheme: string;
   consecutiveCorrect: number;
   playHistory: string[];
+  earnedStickers: string[];
+  musicEnabled: boolean;
+  challengeMode: boolean;
 }
