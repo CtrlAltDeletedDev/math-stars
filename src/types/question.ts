@@ -9,7 +9,9 @@ export type QuestionType =
   | 'number_order'
   | 'multiplication'
   | 'word_problem'
-  | 'tell_time';
+  | 'tell_time'
+  | 'measurement'
+  | 'money';
 
 export interface Question {
   id: string;

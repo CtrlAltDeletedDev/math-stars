@@ -32,7 +32,7 @@ const ADDITION_TEMPLATES: Template[] = [
       const b = Math.floor(Math.random() * 5) + 1;
       const c = a + b;
       return {
-        id: `wp-add-${a}+${b}-${Date.now()}`,
+        id: `wp-add-${a}+${b}`,
         type: 'word_problem',
         prompt: `${n} has ${a} apples 🍎 and finds ${b} more. How many apples does ${n} have now?`,
         correctAnswer: String(c),
@@ -49,7 +49,7 @@ const ADDITION_TEMPLATES: Template[] = [
       const b = Math.floor(Math.random() * 5) + 1;
       const c = a + b;
       return {
-        id: `wp-add2-${a}+${b}-${Date.now()}`,
+        id: `wp-add2-${a}+${b}`,
         type: 'word_problem',
         prompt: `There are ${a} birds 🐦 in a tree. ${b} more fly in. How many birds are there now?`,
         correctAnswer: String(c),
@@ -66,7 +66,7 @@ const ADDITION_TEMPLATES: Template[] = [
       const b = Math.floor(Math.random() * 5) + 2;
       const c = a + b;
       return {
-        id: `wp-add3-${a}+${b}-${Date.now()}`,
+        id: `wp-add3-${a}+${b}`,
         type: 'word_problem',
         prompt: `${n} drew ${a} stars ⭐ on Monday and ${b} stars on Tuesday. How many stars altogether?`,
         correctAnswer: String(c),
@@ -86,7 +86,7 @@ const SUBTRACTION_TEMPLATES: Template[] = [
       const b = Math.floor(Math.random() * (a - 1)) + 1;
       const c = a - b;
       return {
-        id: `wp-sub-${a}-${b}-${Date.now()}`,
+        id: `wp-sub-${a}-${b}`,
         type: 'word_problem',
         prompt: `${n} had ${a} cookies 🍪. ${n} ate ${b} of them. How many cookies are left?`,
         correctAnswer: String(c),
@@ -103,7 +103,7 @@ const SUBTRACTION_TEMPLATES: Template[] = [
       const b = Math.floor(Math.random() * 4) + 1;
       const c = a - b;
       return {
-        id: `wp-sub2-${a}-${b}-${Date.now()}`,
+        id: `wp-sub2-${a}-${b}`,
         type: 'word_problem',
         prompt: `There are ${a} fish 🐟 in a pond. ${b} fish swim away. How many fish are left?`,
         correctAnswer: String(c),

@@ -16,6 +16,7 @@ export interface LevelState {
   starsEarned: number;
   totalAttempts: number;
   lastPlayed: number;
+  unlockedAt?: number;
 }
 
 export interface CategoryProgress {

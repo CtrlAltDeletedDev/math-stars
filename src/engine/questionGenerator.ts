@@ -1,4 +1,5 @@
 import { Question, QuestionType } from '@/types';
+import { generateWordProblem } from '@/data/wordProblems';
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -96,9 +97,8 @@ export function generateFromParams(params: Record<string, number | string>, char
     return generateSubtractionQuestion(Number(params.maxMinuend));
   }
   if (op === 'word_problem') {
-    const { generateWordProblem } = require('@/data/wordProblems');
     const type = (params.wordType as string) ?? 'mixed';
-    return generateWordProblem(characterName, type);
+    return generateWordProblem(characterName, type as 'addition' | 'subtraction' | 'mixed');
   }
   if (op === 'skip_count') return generateSkipCountQuestion(Number(params.by), Number(params.maxStart));
   if (op === 'multiplication') {

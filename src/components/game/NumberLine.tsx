@@ -4,7 +4,7 @@ interface Props {
 
 export default function NumberLine({ prompt }: Props) {
   const parts = prompt.split(',').map((s) => s.trim().replace('?', '').trim());
-  const known = parts.map(Number).filter((n) => !isNaN(n) && n.toString() !== '');
+  const known = parts.filter((s) => s !== '').map(Number).filter((n) => !isNaN(n));
   if (known.length < 2) return null;
 
   const step = known[1] - known[0];

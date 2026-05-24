@@ -82,6 +82,18 @@ export default function Home() {
           >{progress.challengeMode ? '⏱️ Challenge!' : '⏱️ Challenge'}</button>
         </div>
 
+        {/* Streak banner */}
+        {progress.currentStreak > 1 && (
+          <div style={{
+            background: 'rgba(255,150,0,0.3)', borderRadius: 14, padding: '8px 16px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
+          }}>
+            <span>{'🔥'.repeat(Math.min(progress.currentStreak, 7))}</span>
+            <span>{progress.currentStreak} day streak!</span>
+          </div>
+        )}
+
         {/* Install banner */}
         <InstallBanner />
 

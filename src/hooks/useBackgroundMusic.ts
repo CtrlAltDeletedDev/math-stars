@@ -7,10 +7,12 @@ const BEAT = 0.55; // seconds per note
 export function useBackgroundMusic(enabled: boolean) {
   const ctxRef = useRef<AudioContext | null>(null);
   const runningRef = useRef(false);
+  const loopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       runningRef.current = false;
+      if (loopTimeoutRef.current) { clearTimeout(loopTimeoutRef.current); loopTimeoutRef.current = null; }
       if (ctxRef.current) {
         ctxRef.current.close().catch(() => {});
         ctxRef.current = null;
@@ -49,13 +51,14 @@ export function useBackgroundMusic(enabled: boolean) {
 
       const loopEnd = startAt + MELODY.length * BEAT;
       const msUntilReschedule = Math.max(0, (loopEnd - ctx.currentTime - 0.3) * 1000);
-      setTimeout(() => scheduleLoop(loopEnd), msUntilReschedule);
+      loopTimeoutRef.current = setTimeout(() => scheduleLoop(loopEnd), msUntilReschedule);
     }
 
     scheduleLoop(ctx.currentTime + 0.2);
 
     return () => {
       runningRef.current = false;
+      if (loopTimeoutRef.current) { clearTimeout(loopTimeoutRef.current); loopTimeoutRef.current = null; }
       ctx.close().catch(() => {});
       ctxRef.current = null;
     };

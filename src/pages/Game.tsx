@@ -42,6 +42,8 @@ export default function Game() {
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(progress.consecutiveCorrect);
   const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
   const [isListening, setIsListening] = useState(false);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const wrongAnswersRef = useRef<{ prompt: string; correct: string }[]>([]);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -95,6 +97,13 @@ export default function Game() {
       setConsecutiveCorrect(0);
       sounds.playWrong();
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
+      const currentQ = session.currentQuestion;
+      if (currentQ && choice !== '__timeout__') {
+        wrongAnswersRef.current = [
+          ...wrongAnswersRef.current,
+          { prompt: currentQ.prompt, correct: currentQ.correctAnswer },
+        ];
+      }
     }
 
     const finalCorrectCount = correctCountBefore + (correct ? 1 : 0);
@@ -107,12 +116,19 @@ export default function Game() {
       if (isLastQuestion && !hasCompleted.current) {
         hasCompleted.current = true;
         sounds.playLevelUp();
-        const newBadges = recordLevelComplete(
+        const { newBadges, newStickers, streakBonus } = recordLevelComplete(
           levelId, finalCorrectCount, session.totalQuestions, srsUpdatesBefore, nextConsecutive,
         );
         navigate(`/celebration/${categoryId}/${levelId}`, {
           replace: true,
-          state: { correctCount: finalCorrectCount, totalCount: session.totalQuestions, newBadges },
+          state: {
+            correctCount: finalCorrectCount,
+            totalCount: session.totalQuestions,
+            newBadges,
+            newStickers,
+            streakBonus,
+            wrongAnswers: wrongAnswersRef.current,
+          },
         });
       } else {
         session.advance();
@@ -162,12 +178,38 @@ export default function Game() {
 
   return (
     <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden', position: 'relative' }}>
+
+        {/* Quit confirm overlay */}
+        {showQuitConfirm && (
+          <div style={{
+            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: '#fff', borderRadius: 24, padding: '28px 32px', textAlign: 'center',
+              display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 300, width: '90%',
+            }}>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#333' }}>Quit this game? 🎮</div>
+              <div style={{ fontFamily: 'Nunito', fontSize: 15, color: '#666' }}>Your progress for this level won't be saved.</div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  onClick={() => navigate(`/category/${categoryId}`)}
+                  style={{ flex: 1, background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: 14, padding: '12px 0', fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}
+                >Yes, quit</button>
+                <button
+                  onClick={() => setShowQuitConfirm(false)}
+                  style={{ flex: 1, background: '#5DD97A', color: '#fff', border: 'none', borderRadius: 14, padding: '12px 0', fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}
+                >Keep going!</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
-            onClick={() => navigate(`/category/${categoryId}`)}
+            onClick={() => setShowQuitConfirm(true)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
           >✕</button>
           <div style={{ flex: 1 }}>

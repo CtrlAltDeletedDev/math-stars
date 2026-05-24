@@ -16,7 +16,7 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-  ) => BadgeEarned[];
+  ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   selectCharacter: (characterId: string) => void;
   purchaseItem: (itemId: string) => boolean;
   setActiveTheme: (themeId: string) => void;
@@ -100,21 +100,28 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-  ): BadgeEarned[] {
+  ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
     const level = getLevelById(levelId);
-    if (!level) return [];
+    if (!level) return { newBadges: [], newStickers: [], streakBonus: 0 };
 
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
     const passed = didPassLevel(score);
     let newBadges: BadgeEarned[] = [];
+    let newStickers: string[] = [];
+    let streakBonus = 0;
 
     setProgress((prev) => {
       let next = updateStreak(prev);
       const todayStr = new Date().toISOString().split('T')[0];
       const ph = next.playHistory ?? [];
-      if (!ph.includes(todayStr)) {
+      const isFirstPlayToday = !ph.includes(todayStr);
+      if (isFirstPlayToday) {
         next = { ...next, playHistory: [...ph, todayStr] };
+        if (next.currentStreak > 1) {
+          streakBonus = Math.min(next.currentStreak, 7);
+          next = { ...next, spendableStars: next.spendableStars + streakBonus };
+        }
       }
       next = { ...next, consecutiveCorrect };
 
@@ -147,10 +154,14 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         if (category) {
           const levelIndex = category.levels.findIndex((l) => l.id === levelId);
           const nextLevel = category.levels[levelIndex + 1];
-          if (nextLevel && catProgress.levels[nextLevel.id]?.status === 'locked') {
+          if (nextLevel && (!catProgress.levels[nextLevel.id] || catProgress.levels[nextLevel.id]?.status === 'locked')) {
             catProgress.levels = {
               ...catProgress.levels,
-              [nextLevel.id]: { ...catProgress.levels[nextLevel.id], status: 'unlocked' },
+              [nextLevel.id]: {
+                ...(catProgress.levels[nextLevel.id] ?? { levelId: nextLevel.id, status: 'locked', bestScore: 0, starsEarned: 0, totalAttempts: 0, lastPlayed: 0 }),
+                status: 'unlocked',
+                unlockedAt: Date.now(),
+              },
             };
           }
         }
@@ -175,7 +186,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       if (newBadges.length > 0) {
         next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
       }
-      const newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      newStickers = checkNewStickers(prev, next, correctCount, totalCount);
       if (newStickers.length > 0) {
         next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
       }
@@ -184,7 +195,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
-    return newBadges;
+    return { newBadges, newStickers, streakBonus };
   }
 
   function selectCharacter(characterId: string) {

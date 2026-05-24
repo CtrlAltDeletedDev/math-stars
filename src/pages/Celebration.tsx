@@ -10,6 +10,9 @@ import BadgeModal from '@/components/ui/BadgeModal';
 import BigButton from '@/components/ui/BigButton';
 import Confetti from '@/components/ui/Confetti';
 import StarBurst from '@/components/ui/StarBurst';
+import Toast from '@/components/ui/Toast';
+
+type WrongAnswer = { prompt: string; correct: string };
 
 export default function Celebration() {
   const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
@@ -17,10 +20,20 @@ export default function Celebration() {
   const location = useLocation();
   const { progress } = useProgress();
 
-  const state = location.state as { correctCount: number; totalCount: number; newBadges: BadgeEarned[] } | null;
+  const state = location.state as {
+    correctCount: number;
+    totalCount: number;
+    newBadges: BadgeEarned[];
+    newStickers: string[];
+    streakBonus: number;
+    wrongAnswers: WrongAnswer[];
+  } | null;
   const correctCount = state?.correctCount ?? 0;
   const totalCount = state?.totalCount ?? 10;
   const newBadges = state?.newBadges ?? [];
+  const newStickers = state?.newStickers ?? [];
+  const streakBonus = state?.streakBonus ?? 0;
+  const wrongAnswers = state?.wrongAnswers ?? [];
 
   const score = totalCount > 0 ? correctCount / totalCount : 0;
   const stars = calculateStars(score);
@@ -33,7 +46,13 @@ export default function Celebration() {
   const [visibleStars, setVisibleStars] = useState(0);
   const [showBurst, setShowBurst] = useState(false);
   const [badgeIndex, setBadgeIndex] = useState(0);
+  const [showReview, setShowReview] = useState(false);
   const currentBadge = newBadges[badgeIndex] ?? null;
+
+  const toastMessages = [
+    ...newStickers.map(() => '🎨 New sticker unlocked!'),
+    ...(streakBonus > 0 ? [`🔥 Streak bonus: +${streakBonus} ⭐`] : []),
+  ];
 
   useEffect(() => {
     let i = 0;
@@ -52,6 +71,7 @@ export default function Celebration() {
 
   return (
     <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+      <Toast messages={toastMessages} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 20, position: 'relative', overflow: 'hidden' }}>
         <Confetti active={passed} />
         <StarBurst count={stars} active={showBurst} />
@@ -106,6 +126,44 @@ export default function Celebration() {
             style={{ flex: 1 }}
           />
         </div>
+
+        {/* Wrong answer review */}
+        {wrongAnswers.length > 0 && (
+          <div style={{ width: '100%', maxWidth: 380, zIndex: 1 }}>
+            <button
+              onClick={() => setShowReview((s) => !s)}
+              style={{
+                width: '100%', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 14,
+                padding: '10px 16px', fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}
+            >
+              <span>📝 Review {wrongAnswers.length} mistake{wrongAnswers.length > 1 ? 's' : ''}</span>
+              <span>{showReview ? '▲' : '▼'}</span>
+            </button>
+
+            {showReview && (
+              <div style={{
+                background: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: '12px 16px',
+                marginTop: 6, display: 'flex', flexDirection: 'column', gap: 8,
+              }}>
+                {wrongAnswers.map((wa, i) => (
+                  <div key={i} style={{
+                    background: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: '8px 12px',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
+                  }}>
+                    <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.9)', flex: 1 }}>
+                      {wa.prompt}
+                    </div>
+                    <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 13, color: '#FFE066', flexShrink: 0 }}>
+                      ✓ {wa.correct}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <BadgeModal badgeId={currentBadge?.badgeId ?? null} onDismiss={() => setBadgeIndex((i) => i + 1)} />

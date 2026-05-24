@@ -14,6 +14,8 @@ function Stars({ n }: { n: number }) {
   );
 }
 
+const NEW_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+
 export default function LevelMap({ levels, levelStates, onSelect }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 0' }}>
@@ -22,6 +24,7 @@ export default function LevelMap({ levels, levelStates, onSelect }: Props) {
         const status = state?.status ?? 'locked';
         const locked = status === 'locked';
         const completed = status === 'completed';
+        const isNew = status === 'unlocked' && state?.unlockedAt != null && (Date.now() - state.unlockedAt < NEW_THRESHOLD_MS);
 
         return (
           <div key={level.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
@@ -32,22 +35,34 @@ export default function LevelMap({ levels, levelStates, onSelect }: Props) {
                 borderRadius: 2,
               }} />
             )}
-            <button
-              onClick={() => !locked && onSelect(level.id)}
-              style={{
-                width: 72, height: 72, borderRadius: 36, border: 'none',
-                background: locked ? 'rgba(255,255,255,0.25)' : completed ? '#FFD700' : '#fff',
-                cursor: locked ? 'default' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'Nunito', fontWeight: 800, fontSize: 24,
-                color: locked ? 'rgba(255,255,255,0.5)' : completed ? '#fff' : '#333',
-                boxShadow: locked ? 'none' : '0 4px 12px rgba(0,0,0,0.15)',
-                opacity: locked ? 0.5 : 1,
-                transition: 'transform 0.1s',
-              }}
-            >
-              {locked ? '🔒' : level.levelNumber}
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => !locked && onSelect(level.id)}
+                style={{
+                  width: 72, height: 72, borderRadius: 36, border: 'none',
+                  background: locked ? 'rgba(255,255,255,0.25)' : completed ? '#FFD700' : '#fff',
+                  cursor: locked ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'Nunito', fontWeight: 800, fontSize: 24,
+                  color: locked ? 'rgba(255,255,255,0.5)' : completed ? '#fff' : '#333',
+                  boxShadow: locked ? 'none' : '0 4px 12px rgba(0,0,0,0.15)',
+                  opacity: locked ? 0.5 : 1,
+                  transition: 'transform 0.1s',
+                }}
+              >
+                {locked ? '🔒' : level.levelNumber}
+              </button>
+              {isNew && (
+                <div className="anim-new" style={{
+                  position: 'absolute', top: -6, right: -6,
+                  background: '#FF5252', color: '#fff',
+                  fontFamily: 'Nunito', fontWeight: 800, fontSize: 10,
+                  borderRadius: 8, padding: '2px 6px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                  pointerEvents: 'none',
+                }}>NEW!</div>
+              )}
+            </div>
 
             <div style={{ textAlign: 'center', marginTop: 6 }}>
               <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: locked ? 'rgba(255,255,255,0.5)' : '#fff' }}>

@@ -2,6 +2,8 @@ import { Category } from '@/types';
 import { ALL_COUNTING_QUESTIONS } from './counting';
 import { ALL_SHAPE_QUESTIONS } from './shapes';
 import { ALL_TIME_QUESTIONS, OCLOCK_QUESTIONS, HALF_PAST_QUESTIONS } from './time';
+import { MEASUREMENT_QUESTIONS } from './measurement';
+import { COINS_QUESTIONS } from './coins';
 
 export const CATEGORIES: Category[] = [
   {
@@ -257,6 +259,35 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
+    id: 'measure',
+    title: 'Measurement & Money',
+    emoji: '📏',
+    bgColor: '#FF7043',
+    darkColor: '#BF360C',
+    levels: [
+      {
+        id: 'measure-length',
+        categoryId: 'measure',
+        levelNumber: 1,
+        title: 'Longer & Shorter',
+        description: 'Compare sizes and lengths!',
+        questionsPerSession: 8,
+        passThreshold: 0.8,
+        questionBankIds: MEASUREMENT_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'measure-coins',
+        categoryId: 'measure',
+        levelNumber: 2,
+        title: 'Coins & Money',
+        description: 'Pennies, nickels, dimes, quarters!',
+        questionsPerSession: 8,
+        passThreshold: 0.8,
+        questionBankIds: COINS_QUESTIONS.map((q) => q.id),
+      },
+    ],
+  },
+  {
     id: 'time',
     title: 'Telling Time',
     emoji: '🕐',
@@ -301,6 +332,8 @@ export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new 
   ...ALL_COUNTING_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...ALL_SHAPE_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...ALL_TIME_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...MEASUREMENT_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...COINS_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
 ]);
 
 export function getLevelById(levelId: string) {

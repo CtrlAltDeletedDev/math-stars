@@ -15,6 +15,12 @@ export function loadProgress(): UserProgress | null {
     if (!parsed.earnedStickers) parsed.earnedStickers = [];
     if (parsed.musicEnabled === undefined) parsed.musicEnabled = false;
     if (parsed.challengeMode === undefined) parsed.challengeMode = false;
+    // Initialize any new categories added since this save was made
+    for (const cat of CATEGORIES) {
+      if (!parsed.categories[cat.id]) {
+        parsed.categories[cat.id] = buildInitialCategoryProgress(cat.id);
+      }
+    }
     return parsed;
   } catch {
     return null;

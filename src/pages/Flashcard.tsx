@@ -34,6 +34,21 @@ export default function Flashcard() {
   if (!level || !category) return null;
 
   const questions = questionsRef.current;
+
+  if (questions.length === 0) {
+    return (
+      <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 20 }}>
+          <div style={{ fontSize: 64 }}>🤔</div>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff', textAlign: 'center' }}>
+            No questions available yet — play a level first!
+          </div>
+          <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="← Back" color="rgba(255,255,255,0.3)" />
+        </div>
+      </BackgroundGradient>
+    );
+  }
+
   const question = questions[index];
 
   function handleAnswer(choice: string) {

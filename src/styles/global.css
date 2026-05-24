@@ -87,6 +87,17 @@ button {
   50%       { transform: scale(1.08); }
 }
 
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes newBadgePop {
+  0%   { transform: scale(0) rotate(-10deg); }
+  60%  { transform: scale(1.2) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
 .anim-pop    { animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 .anim-shake  { animation: shake 0.5s ease forwards; }
 .anim-bounce { animation: bounceIn 0.4s ease forwards; }
@@ -94,3 +105,4 @@ button {
 .anim-slide  { animation: slideUp 0.35s ease forwards; }
 .anim-star   { animation: starPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
 .anim-pulse  { animation: pulse 1.5s ease infinite; }
+.anim-new    { animation: newBadgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
