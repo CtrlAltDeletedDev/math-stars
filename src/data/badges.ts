@@ -15,6 +15,8 @@ export interface BadgeCheckContext {
   totalLevelsCompleted: number;
   sessionCorrect: number;
   sessionTotal: number;
+  dailyChallengeStreak?: number;
+  dailyChallengesCompleted?: number;
 }
 
 export const BADGES: BadgeDef[] = [
@@ -101,5 +103,26 @@ export const BADGES: BadgeDef[] = [
     emoji: '👑',
     description: 'Completed all levels in a category',
     check: (ctx) => ctx.categoriesCompleted >= 1,
+  },
+  {
+    id: 'daily_challenge_first',
+    title: 'Challenge Accepted!',
+    emoji: '🎯',
+    description: 'Completed your first daily challenge',
+    check: (ctx) => (ctx.dailyChallengesCompleted ?? 0) >= 1,
+  },
+  {
+    id: 'daily_challenge_7',
+    title: 'Challenge Streak!',
+    emoji: '🗓️',
+    description: 'Completed the daily challenge 7 days in a row',
+    check: (ctx) => (ctx.dailyChallengeStreak ?? 0) >= 7,
+  },
+  {
+    id: 'daily_challenge_30',
+    title: 'Challenge Champion!',
+    emoji: '🏆',
+    description: 'Completed the daily challenge 30 days in a row',
+    check: (ctx) => (ctx.dailyChallengeStreak ?? 0) >= 30,
   },
 ];

@@ -12,4 +12,7 @@ export const GAME_CONFIG = {
   choiceCount: 4,
   answerButtonMinSize: 120,
   maxSRSPerSession: 5,
+  dailyGoalQuestions: 20,
+  dailyGoalBonus: 3,
+  dailyChallengeBonus: 5,
 } as const;

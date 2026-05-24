@@ -6,9 +6,10 @@ interface Props {
   category: Category;
   progress: CategoryProgress | undefined;
   onPress: () => void;
+  onMasterPress?: () => void;
 }
 
-export default function CategoryCard({ category, progress, onPress }: Props) {
+export default function CategoryCard({ category, progress, onPress, onMasterPress }: Props) {
   const [pressed, setPressed] = useState(false);
   const levels = Object.values(progress?.levels ?? {});
   const completed = levels.filter((l) => l.status === 'completed').length;
@@ -43,6 +44,23 @@ export default function CategoryCard({ category, progress, onPress }: Props) {
       <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
         ⭐ {stars} · {completed}/{total} levels
       </div>
+      {completed === total && total > 0 && onMasterPress && (
+        <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => { e.stopPropagation(); onMasterPress(); }}
+          style={{
+            background: 'rgba(255,255,255,0.25)',
+            border: '1px solid rgba(255,255,255,0.5)',
+            borderRadius: 10,
+            padding: '4px 10px',
+            fontFamily: 'Nunito',
+            fontWeight: 800,
+            fontSize: 11,
+            color: '#fff',
+            cursor: 'pointer',
+          }}
+        >⭐ Master Mode</button>
+      )}
     </button>
   );
 }

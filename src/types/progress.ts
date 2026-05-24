@@ -48,4 +48,9 @@ export interface UserProgress {
   earnedStickers: string[];
   musicEnabled: boolean;
   challengeMode: boolean;
+  dailyChallengeStreak: number;
+  lastDailyChallengeDate: string;
+  dailyChallengeHistory: string[];
+  dailyQuestionsDate: string;
+  dailyQuestionsCount: number;
 }

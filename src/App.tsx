@@ -11,6 +11,8 @@ import Stickers from './pages/Stickers';
 import Story from './pages/Story';
 import Flashcard from './pages/Flashcard';
 import Worksheet from './pages/Worksheet';
+import DailyGame from './pages/DailyGame';
+import MasterGame from './pages/MasterGame';
 
 export default function App() {
   return (
@@ -20,6 +22,10 @@ export default function App() {
       <Route path="/category/:id" element={<Category />} />
       <Route path="/game/:categoryId/:levelId" element={<Game />} />
       <Route path="/celebration/:categoryId/:levelId" element={<Celebration />} />
+      <Route path="/game/daily/challenge" element={<DailyGame />} />
+      <Route path="/game/master/:categoryId" element={<MasterGame />} />
+      <Route path="/celebration/daily/challenge" element={<Celebration />} />
+      <Route path="/celebration/master/:categoryId" element={<Celebration />} />
       <Route path="/badges" element={<Badges />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/parent" element={<Parent />} />

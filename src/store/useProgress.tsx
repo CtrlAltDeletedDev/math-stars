@@ -6,6 +6,7 @@ import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
 import { BADGES, BadgeCheckContext } from '@/data/badges';
 import { STICKERS } from '@/data/stickers';
 import { SHOP_ITEMS } from '@/data/shop';
+import { GAME_CONFIG } from '@/constants/gameConfig';
 
 interface ProgressContextValue {
   progress: UserProgress;
@@ -17,6 +18,20 @@ interface ProgressContextValue {
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
+  recordDailyChallengeComplete: (
+    correctCount: number,
+    totalCount: number,
+    srsUpdates: SRSCard[],
+    consecutiveCorrect: number,
+  ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number };
+  recordMasterComplete: (
+    categoryId: string,
+    correctCount: number,
+    totalCount: number,
+    srsUpdates: SRSCard[],
+    consecutiveCorrect: number,
+  ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
+  recordQuestionsAnswered: (count: number) => void;
   selectCharacter: (characterId: string) => void;
   purchaseItem: (itemId: string) => boolean;
   setActiveTheme: (themeId: string) => void;
@@ -63,6 +78,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       totalLevelsCompleted,
       sessionCorrect,
       sessionTotal,
+      dailyChallengeStreak: next.dailyChallengeStreak,
+      dailyChallengesCompleted: next.dailyChallengeHistory?.length,
     };
 
     return BADGES.filter((b) => !existingIds.has(b.id) && b.check(ctx)).map((b) => ({
@@ -198,6 +215,139 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return { newBadges, newStickers, streakBonus };
   }
 
+  function recordDailyChallengeComplete(
+    correctCount: number,
+    totalCount: number,
+    srsUpdates: SRSCard[],
+    consecutiveCorrect: number,
+  ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number } {
+    const score = totalCount > 0 ? correctCount / totalCount : 0;
+    const stars = calculateStars(score);
+    let newBadges: BadgeEarned[] = [];
+    let newStickers: string[] = [];
+    let streakBonus = 0;
+    const dcStreakBonus = GAME_CONFIG.dailyChallengeBonus;
+
+    setProgress((prev) => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (prev.lastDailyChallengeDate === todayStr) return prev;
+
+      let next = updateStreak(prev);
+      const ph = next.playHistory ?? [];
+      const isFirstPlayToday = !ph.includes(todayStr);
+      if (isFirstPlayToday) {
+        next = { ...next, playHistory: [...ph, todayStr] };
+        if (next.currentStreak > 1) {
+          streakBonus = Math.min(next.currentStreak, 7);
+          next = { ...next, spendableStars: next.spendableStars + streakBonus };
+        }
+      }
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      const dcStreak = prev.lastDailyChallengeDate === yesterdayStr
+        ? prev.dailyChallengeStreak + 1
+        : 1;
+
+      next = {
+        ...next,
+        consecutiveCorrect,
+        dailyChallengeStreak: dcStreak,
+        lastDailyChallengeDate: todayStr,
+        dailyChallengeHistory: [...(next.dailyChallengeHistory ?? []), todayStr],
+        totalStars: next.totalStars + stars + dcStreakBonus,
+        spendableStars: next.spendableStars + stars + dcStreakBonus,
+      };
+
+      const updatedSRS: Record<string, SRSCard> = { ...next.srsCards };
+      for (const card of srsUpdates) updatedSRS[card.questionId] = card;
+      next = { ...next, srsCards: updatedSRS };
+
+      newBadges = checkNewBadges(prev, next, correctCount, totalCount);
+      if (newBadges.length > 0) next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
+      newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      if (newStickers.length > 0) next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
+
+      debouncedSave(next);
+      return next;
+    });
+
+    return { newBadges, newStickers, streakBonus, dcStreakBonus };
+  }
+
+  function recordMasterComplete(
+    categoryId: string,
+    correctCount: number,
+    totalCount: number,
+    srsUpdates: SRSCard[],
+    consecutiveCorrect: number,
+  ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
+    const score = totalCount > 0 ? correctCount / totalCount : 0;
+    const stars = calculateStars(score);
+    let newBadges: BadgeEarned[] = [];
+    let newStickers: string[] = [];
+    let streakBonus = 0;
+
+    setProgress((prev) => {
+      let next = updateStreak(prev);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const ph = next.playHistory ?? [];
+      const isFirstPlayToday = !ph.includes(todayStr);
+      if (isFirstPlayToday) {
+        next = { ...next, playHistory: [...ph, todayStr] };
+        if (next.currentStreak > 1) {
+          streakBonus = Math.min(next.currentStreak, 7);
+          next = { ...next, spendableStars: next.spendableStars + streakBonus };
+        }
+      }
+      next = {
+        ...next,
+        consecutiveCorrect,
+        totalStars: next.totalStars + stars,
+        spendableStars: next.spendableStars + stars,
+      };
+
+      const updatedSRS: Record<string, SRSCard> = { ...next.srsCards };
+      for (const card of srsUpdates) updatedSRS[card.questionId] = card;
+      next = { ...next, srsCards: updatedSRS };
+
+      newBadges = checkNewBadges(prev, next, correctCount, totalCount);
+      if (newBadges.length > 0) next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
+      newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      if (newStickers.length > 0) next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
+
+      debouncedSave(next);
+      return next;
+    });
+
+    return { newBadges, newStickers, streakBonus };
+  }
+
+  function recordQuestionsAnswered(count: number) {
+    setProgress((prev) => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const wasAtGoal = prev.dailyQuestionsDate === todayStr && prev.dailyQuestionsCount >= GAME_CONFIG.dailyGoalQuestions;
+      if (wasAtGoal) return prev;
+
+      const prevCount = prev.dailyQuestionsDate === todayStr ? prev.dailyQuestionsCount : 0;
+      const newCount = prevCount + count;
+      const crossedGoal = !wasAtGoal && newCount >= GAME_CONFIG.dailyGoalQuestions;
+
+      const next = {
+        ...prev,
+        dailyQuestionsDate: todayStr,
+        dailyQuestionsCount: newCount,
+        ...(crossedGoal ? {
+          spendableStars: prev.spendableStars + GAME_CONFIG.dailyGoalBonus,
+          totalStars: prev.totalStars + GAME_CONFIG.dailyGoalBonus,
+        } : {}),
+      };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
   function selectCharacter(characterId: string) {
     setProgress((prev) => {
       const next = { ...prev, characterId };
@@ -250,7 +400,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode }}>
       {children}
     </ProgressContext.Provider>
   );

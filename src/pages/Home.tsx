@@ -6,10 +6,13 @@ import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { getTheme } from '@/data/shop';
 import { STICKERS } from '@/data/stickers';
 import CategoryCard from '@/components/home/CategoryCard';
+import DailyChallengeCard from '@/components/home/DailyChallengeCard';
+import DailyGoalBar from '@/components/home/DailyGoalBar';
 import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import PlayCalendar from '@/components/ui/PlayCalendar';
 import InstallBanner from '@/components/ui/InstallBanner';
+import { GAME_CONFIG } from '@/constants/gameConfig';
 
 export default function Home() {
   const { progress, isLoaded, toggleMusic, toggleChallengeMode } = useProgress();
@@ -97,6 +100,15 @@ export default function Home() {
         {/* Install banner */}
         <InstallBanner />
 
+        {/* Daily challenge card */}
+        <DailyChallengeCard progress={progress} onPress={() => navigate('/game/daily/challenge')} />
+
+        {/* Daily goal bar */}
+        <DailyGoalBar
+          questionsToday={progress.dailyQuestionsDate === new Date().toISOString().split('T')[0] ? progress.dailyQuestionsCount : 0}
+          goal={GAME_CONFIG.dailyGoalQuestions}
+        />
+
         {/* Play calendar */}
         <PlayCalendar playHistory={progress.playHistory ?? []} />
 
@@ -109,6 +121,7 @@ export default function Home() {
                 category={cat}
                 progress={progress.categories[cat.id]}
                 onPress={() => navigate(`/category/${cat.id}`)}
+                onMasterPress={() => navigate(`/game/master/${cat.id}`)}
               />
             ))}
           </div>

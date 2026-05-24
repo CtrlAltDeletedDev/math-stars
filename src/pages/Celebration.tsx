@@ -26,20 +26,33 @@ export default function Celebration() {
     newBadges: BadgeEarned[];
     newStickers: string[];
     streakBonus: number;
+    dcStreakBonus?: number;
     wrongAnswers: WrongAnswer[];
+    isDailyChallenge?: boolean;
+    isMasterMode?: boolean;
+    masterCategoryId?: string;
   } | null;
   const correctCount = state?.correctCount ?? 0;
   const totalCount = state?.totalCount ?? 10;
   const newBadges = state?.newBadges ?? [];
   const newStickers = state?.newStickers ?? [];
   const streakBonus = state?.streakBonus ?? 0;
+  const dcStreakBonus = state?.dcStreakBonus ?? 0;
   const wrongAnswers = state?.wrongAnswers ?? [];
+  const isDailyChallenge = state?.isDailyChallenge ?? false;
+  const isMasterMode = state?.isMasterMode ?? false;
+  const masterCategoryId = state?.masterCategoryId ?? '';
 
   const score = totalCount > 0 ? correctCount / totalCount : 0;
   const stars = calculateStars(score);
   const passed = didPassLevel(score);
   const isPerfect = correctCount === totalCount && totalCount >= 5;
-  const category = getCategoryById(categoryId);
+
+  const realCategory = categoryId === 'master' ? getCategoryById(masterCategoryId) : getCategoryById(categoryId);
+  const category = categoryId === 'daily'
+    ? { id: 'daily', bgColor: '#FF9F43', darkColor: '#EE5A24', title: 'Daily Challenge', emoji: '🌟', levels: [] }
+    : (realCategory ?? null);
+
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
 
@@ -52,6 +65,7 @@ export default function Celebration() {
   const toastMessages = [
     ...newStickers.map(() => '🎨 New sticker unlocked!'),
     ...(streakBonus > 0 ? [`🔥 Streak bonus: +${streakBonus} ⭐`] : []),
+    ...(dcStreakBonus > 0 ? [`⭐ Daily bonus: +${dcStreakBonus} stars!`] : []),
   ];
 
   useEffect(() => {
@@ -79,8 +93,14 @@ export default function Celebration() {
         <div className="anim-bounce" style={{ fontSize: isPerfect ? 88 : 72, zIndex: 1 }}>{emoji}</div>
 
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: isPerfect ? 38 : 34, color: '#fff', textAlign: 'center', zIndex: 1 }}>
-          {isPerfect ? '🌟 PERFECT! 🌟' : passed ? '🎉 Level Complete!' : '💪 Good Try!'}
+          {isDailyChallenge ? '🌟 Daily Challenge Complete! 🌟' : isPerfect ? '🌟 PERFECT! 🌟' : passed ? '🎉 Level Complete!' : '💪 Good Try!'}
         </div>
+
+        {isDailyChallenge && progress.dailyChallengeStreak > 0 && (
+          <div className="anim-pulse" style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: '#FFE066', zIndex: 1 }}>
+            🔥 {progress.dailyChallengeStreak} day challenge streak!
+          </div>
+        )}
 
         {isPerfect && (
           <div className="anim-pulse" style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 20, color: '#FFE066', zIndex: 1 }}>
@@ -112,17 +132,33 @@ export default function Celebration() {
         )}
 
         <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 380, zIndex: 1 }}>
-          <BigButton
-            onPress={() => navigate(`/game/${categoryId}/${levelId}`, { replace: true })}
-            label="Play Again 🔄"
-            color="rgba(255,255,255,0.3)"
-            style={{ flex: 1 }}
-          />
+          {isDailyChallenge ? (
+            <BigButton
+              onPress={() => {}}
+              label="See you tomorrow! 📅"
+              color="rgba(255,255,255,0.2)"
+              style={{ flex: 1, opacity: 0.7 }}
+            />
+          ) : isMasterMode ? (
+            <BigButton
+              onPress={() => navigate(`/game/master/${masterCategoryId}`, { replace: true })}
+              label="Play Again 🔄"
+              color="rgba(255,255,255,0.3)"
+              style={{ flex: 1 }}
+            />
+          ) : (
+            <BigButton
+              onPress={() => navigate(`/game/${categoryId}/${levelId}`, { replace: true })}
+              label="Play Again 🔄"
+              color="rgba(255,255,255,0.3)"
+              style={{ flex: 1 }}
+            />
+          )}
           <BigButton
             onPress={() => navigate('/', { replace: true })}
             label="Home 🏠"
             color="#fff"
-            textColor={category.bgColor}
+            textColor={category?.bgColor ?? '#FF9F43'}
             style={{ flex: 1 }}
           />
         </div>

@@ -15,8 +15,12 @@ interface SessionState {
   isComplete: boolean;
 }
 
-export function useGameSession(level: Level, srsCards: Record<string, SRSCard>, characterName = 'You') {
-  const questions = useRef<Question[]>(buildSession(level, srsCards, characterName));
+export function useGameSession(levelOrQuestions: Level | Question[], srsCards: Record<string, SRSCard>, characterName = 'You') {
+  const questions = useRef<Question[]>(
+    Array.isArray(levelOrQuestions)
+      ? levelOrQuestions
+      : buildSession(levelOrQuestions as Level, srsCards, characterName),
+  );
 
   const [state, setState] = useState<SessionState>({
     questions: questions.current,

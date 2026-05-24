@@ -15,6 +15,11 @@ export function loadProgress(): UserProgress | null {
     if (!parsed.earnedStickers) parsed.earnedStickers = [];
     if (parsed.musicEnabled === undefined) parsed.musicEnabled = false;
     if (parsed.challengeMode === undefined) parsed.challengeMode = false;
+    if (parsed.dailyChallengeStreak === undefined) parsed.dailyChallengeStreak = 0;
+    if (!parsed.lastDailyChallengeDate) parsed.lastDailyChallengeDate = '';
+    if (!parsed.dailyChallengeHistory) parsed.dailyChallengeHistory = [];
+    if (!parsed.dailyQuestionsDate) parsed.dailyQuestionsDate = '';
+    if (parsed.dailyQuestionsCount === undefined) parsed.dailyQuestionsCount = 0;
     // Initialize any new categories added since this save was made
     for (const cat of CATEGORIES) {
       if (!parsed.categories[cat.id]) {
@@ -82,5 +87,10 @@ export function buildInitialProgress(): UserProgress {
     earnedStickers: [],
     musicEnabled: false,
     challengeMode: false,
+    dailyChallengeStreak: 0,
+    lastDailyChallengeDate: '',
+    dailyChallengeHistory: [],
+    dailyQuestionsDate: '',
+    dailyQuestionsCount: 0,
   };
 }

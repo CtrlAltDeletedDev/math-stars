@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
-import { getLevelById, getCategoryById } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
+import { buildDailyChallengeSession } from '@/engine/sessionBuilder';
 import { useGameSession } from '@/hooks/useGameSession';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
@@ -18,22 +18,21 @@ import TimerArc from '@/components/game/TimerArc';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 
 const TIMER_SECONDS = 10;
+const DAILY_COLORS: [string, string] = ['#FF9F43', '#EE5A24'];
 
-export default function Game() {
-  const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
+export default function DailyGame() {
   const navigate = useNavigate();
-  const { progress, recordLevelComplete, recordQuestionsAnswered } = useProgress();
+  const { progress, recordDailyChallengeComplete, recordQuestionsAnswered } = useProgress();
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
   const speech = useSpeechRecognition();
 
-  const level = getLevelById(levelId);
-  const category = getCategoryById(categoryId);
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterName = character?.name ?? 'Friend';
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
 
-  const session = useGameSession(level!, progress.srsCards, characterName);
+  const questionsRef = useRef(buildDailyChallengeSession(progress, characterName));
+  const session = useGameSession(questionsRef.current, progress.srsCards, characterName);
 
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -50,8 +49,6 @@ export default function Game() {
   const hasCompleted = useRef(false);
 
   const challengeMode = progress.challengeMode;
-
-  if (!level || !category) return null;
 
   function startCountdown() {
     if (!challengeMode) return;
@@ -116,11 +113,11 @@ export default function Game() {
       if (isLastQuestion && !hasCompleted.current) {
         hasCompleted.current = true;
         sounds.playLevelUp();
-        const { newBadges, newStickers, streakBonus } = recordLevelComplete(
-          levelId, finalCorrectCount, session.totalQuestions, srsUpdatesBefore, nextConsecutive,
+        const { newBadges, newStickers, streakBonus, dcStreakBonus } = recordDailyChallengeComplete(
+          finalCorrectCount, session.totalQuestions, srsUpdatesBefore, nextConsecutive,
         );
         recordQuestionsAnswered(session.totalQuestions);
-        navigate(`/celebration/${categoryId}/${levelId}`, {
+        navigate('/celebration/daily/challenge', {
           replace: true,
           state: {
             correctCount: finalCorrectCount,
@@ -128,7 +125,9 @@ export default function Game() {
             newBadges,
             newStickers,
             streakBonus,
+            dcStreakBonus,
             wrongAnswers: wrongAnswersRef.current,
+            isDailyChallenge: true,
           },
         });
       } else {
@@ -146,7 +145,6 @@ export default function Game() {
         setIsListening(false);
         const question = session.currentQuestion;
         if (!question) return;
-        // Try matching transcript to a choice (number words + digits)
         const words: Record<string, string> = {
           zero:'0',one:'1',two:'2',three:'3',four:'4',five:'5',
           six:'6',seven:'7',eight:'8',nine:'9',ten:'10',
@@ -178,10 +176,9 @@ export default function Game() {
   const hotStreak = session.hotStreak;
 
   return (
-    <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+    <BackgroundGradient colors={DAILY_COLORS}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden', position: 'relative' }}>
 
-        {/* Quit confirm overlay */}
         {showQuitConfirm && (
           <div style={{
             position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 100,
@@ -191,11 +188,11 @@ export default function Game() {
               background: '#fff', borderRadius: 24, padding: '28px 32px', textAlign: 'center',
               display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 300, width: '90%',
             }}>
-              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#333' }}>Quit this game? 🎮</div>
-              <div style={{ fontFamily: 'Nunito', fontSize: 15, color: '#666' }}>Your progress for this level won't be saved.</div>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#333' }}>Quit Daily Challenge? 🎮</div>
+              <div style={{ fontFamily: 'Nunito', fontSize: 15, color: '#666' }}>Your progress won't be saved.</div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
-                  onClick={() => navigate(`/category/${categoryId}`)}
+                  onClick={() => navigate('/')}
                   style={{ flex: 1, background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: 14, padding: '12px 0', fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}
                 >Yes, quit</button>
                 <button
@@ -222,9 +219,12 @@ export default function Game() {
           }
         </div>
 
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff', textAlign: 'center', letterSpacing: 0.5 }}>
+          ⭐ Daily Challenge
+        </div>
+
         <StreakBar streak={session.streak} />
 
-        {/* Hot streak badge */}
         {hotStreak >= 3 && (
           <div className="anim-slide" style={{
             textAlign: 'center', fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff',
@@ -247,7 +247,6 @@ export default function Game() {
             disabled={showFeedback}
           />
 
-          {/* Voice input button */}
           {speech.isSupported && !showFeedback && !selectedChoice && (
             <button
               onClick={handleMic}
