@@ -48,7 +48,7 @@ export default function Home() {
 
   return (
     <BackgroundGradient colors={theme.colors}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 20px', gap: 12, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 16px', gap: 8, overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -100,16 +100,18 @@ export default function Home() {
         {/* Play calendar */}
         <PlayCalendar playHistory={progress.playHistory ?? []} />
 
-        {/* Category grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, flex: 1, minHeight: 0 }}>
-          {CATEGORIES.map((cat) => (
-            <CategoryCard
-              key={cat.id}
-              category={cat}
-              progress={progress.categories[cat.id]}
-              onPress={() => navigate(`/category/${cat.id}`)}
-            />
-          ))}
+        {/* Category grid — scrollable so footer stays pinned */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, paddingBottom: 4 }}>
+            {CATEGORIES.map((cat) => (
+              <CategoryCard
+                key={cat.id}
+                category={cat}
+                progress={progress.categories[cat.id]}
+                onPress={() => navigate(`/category/${cat.id}`)}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
