@@ -21,13 +21,11 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/character-select" element={<CharacterSelect />} />
       <Route path="/category/:id" element={<Category />} />
+      <Route path="/game/daily/challenge" element={<DailyGame />} />
+      <Route path="/game/master/:categoryId" element={<MasterGame />} />
       <Route path="/game/:categoryId/:levelId" element={<Game />} />
       <Route path="/celebration/:categoryId/:levelId" element={<Celebration />} />
       <Route path="/lesson/:categoryId/:levelId" element={<Lesson />} />
-      <Route path="/game/daily/challenge" element={<DailyGame />} />
-      <Route path="/game/master/:categoryId" element={<MasterGame />} />
-      <Route path="/celebration/daily/challenge" element={<Celebration />} />
-      <Route path="/celebration/master/:categoryId" element={<Celebration />} />
       <Route path="/badges" element={<Badges />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/parent" element={<Parent />} />

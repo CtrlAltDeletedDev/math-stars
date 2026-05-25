@@ -48,7 +48,7 @@ export default function Celebration() {
   const passed = didPassLevel(score);
   const isPerfect = correctCount === totalCount && totalCount >= 5;
 
-  const realCategory = categoryId === 'master' ? getCategoryById(masterCategoryId) : getCategoryById(categoryId);
+  const realCategory = categoryId === 'master' ? getCategoryById(masterCategoryId || levelId) : getCategoryById(categoryId);
   const category = categoryId === 'daily'
     ? { id: 'daily', bgColor: '#FF9F43', darkColor: '#EE5A24', title: 'Daily Challenge', emoji: '🌟', levels: [] }
     : (realCategory ?? null);
