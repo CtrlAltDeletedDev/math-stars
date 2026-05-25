@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
@@ -6,7 +7,41 @@ import BigButton from '@/components/ui/BigButton';
 
 export default function Parent() {
   const navigate = useNavigate();
-  const { progress } = useProgress();
+  const { progress, importProgress } = useProgress();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+
+  function handleExport() {
+    const json = JSON.stringify(progress, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `math-stars-progress-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        if (typeof data !== 'object' || !data.version) throw new Error('Invalid file');
+        importProgress(data);
+        setImportMsg('Progress imported successfully!');
+      } catch {
+        setImportMsg('Could not read file. Please use a valid export.');
+      }
+      e.target.value = '';
+      setTimeout(() => setImportMsg(null), 3000);
+    };
+    reader.readAsText(file);
+  }
 
   const totalLevels = CATEGORIES.reduce((sum, c) => sum + c.levels.length, 0);
   const completedLevels = Object.values(progress.categories).reduce(
@@ -99,6 +134,36 @@ export default function Parent() {
             </div>
           );
         })}
+
+        {/* Export / Import */}
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+          Progress Backup
+        </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={handleExport}
+            style={{
+              flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 16, padding: '14px 0', fontFamily: 'Nunito', fontWeight: 800,
+              fontSize: 16, color: '#fff', cursor: 'pointer',
+            }}
+          >📤 Export</button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 16, padding: '14px 0', fontFamily: 'Nunito', fontWeight: 800,
+              fontSize: 16, color: '#fff', cursor: 'pointer',
+            }}
+          >📥 Import</button>
+        </div>
+        <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportFile} style={{ display: 'none' }} />
+        {importMsg && (
+          <div style={{
+            background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '10px 16px',
+            fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: '#fff', textAlign: 'center',
+          }}>{importMsg}</div>
+        )}
 
         <BigButton onPress={() => navigate('/worksheet')} label="📄 Generate Worksheet" color="rgba(255,255,255,0.2)" />
         <BigButton onPress={() => navigate('/')} label="← Back to Game" color="rgba(255,255,255,0.15)" />

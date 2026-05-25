@@ -5,6 +5,8 @@ import { ALL_TIME_QUESTIONS, OCLOCK_QUESTIONS, HALF_PAST_QUESTIONS } from './tim
 import { MEASUREMENT_QUESTIONS } from './measurement';
 import { COINS_QUESTIONS } from './coins';
 import { PLACE_VALUE_L1_QUESTIONS, PLACE_VALUE_L2_QUESTIONS, PLACE_VALUE_L3_QUESTIONS, ALL_PLACE_VALUE_QUESTIONS } from './placeValue';
+import { NUMBER_BONDS_5, NUMBER_BONDS_10, NUMBER_BONDS_20, ALL_NUMBER_BONDS_QUESTIONS } from './numberBonds';
+import { EVEN_ODD_ID, EVEN_ODD_FIND, ALL_EVEN_ODD_QUESTIONS } from './evenOdd';
 
 export const CATEGORIES: Category[] = [
   {
@@ -328,6 +330,74 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
+    id: 'number-bonds',
+    title: 'Number Bonds',
+    emoji: '🔗',
+    bgColor: '#FF8F00',
+    darkColor: '#E65100',
+    levels: [
+      {
+        id: 'nb-bonds-5',
+        categoryId: 'number-bonds',
+        levelNumber: 1,
+        title: 'Bonds to 5',
+        description: 'Find pairs that make 5!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: NUMBER_BONDS_5.map((q) => q.id),
+      },
+      {
+        id: 'nb-bonds-10',
+        categoryId: 'number-bonds',
+        levelNumber: 2,
+        title: 'Bonds to 10',
+        description: 'Find pairs that make 10!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: NUMBER_BONDS_10.map((q) => q.id),
+      },
+      {
+        id: 'nb-bonds-20',
+        categoryId: 'number-bonds',
+        levelNumber: 3,
+        title: 'Bonds to 20',
+        description: 'Find pairs that make 20!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: NUMBER_BONDS_20.map((q) => q.id),
+      },
+    ],
+  },
+  {
+    id: 'even-odd',
+    title: 'Even & Odd',
+    emoji: '🟰',
+    bgColor: '#7986CB',
+    darkColor: '#3949AB',
+    levels: [
+      {
+        id: 'eo-id',
+        categoryId: 'even-odd',
+        levelNumber: 1,
+        title: 'Even or Odd?',
+        description: 'Is the number even or odd?',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: EVEN_ODD_ID.map((q) => q.id),
+      },
+      {
+        id: 'eo-find',
+        categoryId: 'even-odd',
+        levelNumber: 2,
+        title: 'Find Even & Odd',
+        description: 'Find the even or odd number!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: EVEN_ODD_FIND.map((q) => q.id),
+      },
+    ],
+  },
+  {
     id: 'place-value',
     title: 'Place Value',
     emoji: '🔢',
@@ -375,6 +445,8 @@ export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new 
   ...MEASUREMENT_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...COINS_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...ALL_PLACE_VALUE_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...ALL_NUMBER_BONDS_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...ALL_EVEN_ODD_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
 ]);
 
 export function getLevelById(levelId: string) {

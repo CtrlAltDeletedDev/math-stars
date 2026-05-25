@@ -201,6 +201,148 @@ export const LESSONS: Record<string, LessonSlide[]> = {
     },
   ],
 
+  // ── Number Bonds ─────────────────────────────────────────────────────────
+
+  'nb-bonds-5': [
+    {
+      title: 'What is a Number Bond?',
+      body: 'A NUMBER BOND shows two parts that make a whole! 5 can be split into 2+3, or 1+4, or 0+5!',
+      emoji: '🔗',
+      example: '2 + 3 = 5\n1 + 4 = 5\n0 + 5 = 5',
+    },
+    {
+      title: 'Find the Missing Part',
+      body: 'When we see 2 + ? = 5, we find the MISSING PART. Count up from 2 to 5!',
+      emoji: '❓',
+      example: '2 + ? = 5\n2 → 3 → 4 → 5\nCount 3 steps = 3!',
+      tip: 'Tip: Count on your fingers!',
+    },
+    {
+      title: 'Both Ways Work!',
+      body: 'Number bonds go BOTH ways! If 3 + 2 = 5, then 2 + 3 = 5 too! Always true!',
+      emoji: '↔️',
+      example: '3 + 2 = 5\n2 + 3 = 5\nBoth are correct!',
+    },
+    {
+      title: 'Ready to Bond!',
+      body: 'Find the missing number to make 5. You can use your fingers to count! 🌟',
+      emoji: '🖐️',
+    },
+  ],
+
+  'nb-bonds-10': [
+    {
+      title: 'Bonds to 10',
+      body: '10 is a special number! Knowing which pairs make 10 helps you add BIG numbers fast!',
+      emoji: '🔟',
+      example: '1+9=10  2+8=10\n3+7=10  4+6=10\n5+5=10',
+    },
+    {
+      title: 'Count On to 10',
+      body: 'To solve 7 + ? = 10, count up from 7: "8, 9, 10" — that is 3 steps, so the answer is 3!',
+      emoji: '🖐️',
+      example: '7 + ? = 10\n7→8→9→10 = 3 steps\nAnswer: 3',
+      tip: 'Tip: Use all 10 fingers!',
+    },
+    {
+      title: '10 in Real Life',
+      body: 'You have 10 fingers! Hold up some fingers and count the rest — they always add to 10!',
+      emoji: '🙌',
+      example: 'Hold up 6 fingers\nCount the rest: 4\n6 + 4 = 10 ✓',
+    },
+    {
+      title: 'Make 10!',
+      body: 'Find the missing number to make 10. Use your fingers or count up! 🌟',
+      emoji: '🎉',
+    },
+  ],
+
+  'nb-bonds-20': [
+    {
+      title: 'Bonds to 20',
+      body: '20 is made of TWO tens. So 10 + 10 = 20! Can you find the other bonds to 20?',
+      emoji: '2️⃣0️⃣',
+      example: '10 + 10 = 20\n15 + 5 = 20\n12 + 8 = 20',
+    },
+    {
+      title: 'Use Your 10s!',
+      body: 'Bonds to 20 use what you know! If 6 + 4 = 10, then 16 + 4 = 20. Just add 10!',
+      emoji: '🧠',
+      example: '6 + 4 = 10\n16 + 4 = 20\nJust add 10 more!',
+      tip: 'Tip: Your 10-bonds knowledge helps!',
+    },
+    {
+      title: 'Count the Gap',
+      body: 'For 12 + ? = 20, count from 12 to 20: 13, 14, 15, 16, 17, 18, 19, 20 — that is 8!',
+      emoji: '📏',
+      example: '12 + ? = 20\n12 → 20 = 8 steps\nAnswer: 8',
+    },
+    {
+      title: 'Bond Master!',
+      body: 'Find the missing number to make 20. Use what you know about tens! 🌟',
+      emoji: '🎉',
+    },
+  ],
+
+  // ── Even & Odd ────────────────────────────────────────────────────────────
+
+  'eo-id': [
+    {
+      title: 'Even Numbers',
+      body: 'EVEN numbers can be split into two EQUAL groups — they always come in pairs!',
+      emoji: '🟢',
+      example: '4 = 2 + 2 ✓ Even!\n6 = 3 + 3 ✓ Even!\n8 = 4 + 4 ✓ Even!',
+      tip: 'Even numbers: 0, 2, 4, 6, 8, 10...',
+    },
+    {
+      title: 'Odd Numbers',
+      body: 'ODD numbers always have ONE left over when you try to make pairs — one is always lonely!',
+      emoji: '🔴',
+      example: '3 = 2 + 1 (leftover!)\n5 = 4 + 1 (leftover!)',
+      tip: 'Odd numbers: 1, 3, 5, 7, 9, 11...',
+    },
+    {
+      title: 'The Quick Trick!',
+      body: 'Just look at the LAST DIGIT! Ends in 0, 2, 4, 6, or 8 = EVEN. Ends in 1, 3, 5, 7, or 9 = ODD!',
+      emoji: '🔢',
+      example: '24 → last digit 4 → EVEN!\n37 → last digit 7 → ODD!',
+      tip: 'Tip: Only the last digit matters!',
+    },
+    {
+      title: 'Even or Odd?',
+      body: 'Look at the last digit and decide — even or odd? You\'ve got this! 🌟',
+      emoji: '🎉',
+    },
+  ],
+
+  'eo-find': [
+    {
+      title: 'Find the Even One!',
+      body: 'To find the EVEN number in a group, check each one\'s last digit. Even ends in 0, 2, 4, 6, or 8!',
+      emoji: '🟢',
+      example: '7, 9, 12, 15\nWhich is even?\n12 → ends in 2 → EVEN!',
+    },
+    {
+      title: 'Find the Odd One!',
+      body: 'Odd numbers end in 1, 3, 5, 7, or 9. Spot the one that doesn\'t pair up!',
+      emoji: '🔴',
+      example: '4, 6, 9, 10\nWhich is odd?\n9 → ends in 9 → ODD!',
+    },
+    {
+      title: 'Next Even & Odd',
+      body: 'The NEXT even after 6 is 8 (skip 7!). The NEXT odd after 5 is 7 (skip 6!). Always skip one!',
+      emoji: '➡️',
+      example: 'Next even after 6:\n6 → skip 7 → 8 ✓\nNext odd after 5:\n5 → skip 6 → 7 ✓',
+    },
+    {
+      title: 'Pattern Detective!',
+      body: 'Find the even, the odd, or what comes next. Use the last-digit trick! 🌟',
+      emoji: '🎉',
+    },
+  ],
+
+  // ── Measurement & Money ───────────────────────────────────────────────────
+
   'measure-coins': [
     {
       title: 'Coins Are Money!',

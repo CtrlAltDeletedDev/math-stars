@@ -12,7 +12,9 @@ export type QuestionType =
   | 'tell_time'
   | 'measurement'
   | 'money'
-  | 'place_value';
+  | 'place_value'
+  | 'number_bond'
+  | 'even_odd';
 
 export interface Question {
   id: string;

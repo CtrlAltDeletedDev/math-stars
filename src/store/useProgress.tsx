@@ -37,6 +37,7 @@ interface ProgressContextValue {
   setActiveTheme: (themeId: string) => void;
   toggleMusic: () => void;
   toggleChallengeMode: () => void;
+  importProgress: (data: UserProgress) => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -399,8 +400,13 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  function importProgress(data: UserProgress) {
+    setProgress(data);
+    saveProgress(data);
+  }
+
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, importProgress }}>
       {children}
     </ProgressContext.Provider>
   );

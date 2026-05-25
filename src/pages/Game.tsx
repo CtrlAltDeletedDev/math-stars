@@ -7,6 +7,7 @@ import { useGameSession } from '@/hooks/useGameSession';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useSpeakQuestion } from '@/hooks/useSpeakQuestion';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import ProgressBar from '@/components/ui/ProgressBar';
 import QuestionCard from '@/components/game/QuestionCard';
@@ -26,6 +27,7 @@ export default function Game() {
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
   const speech = useSpeechRecognition();
+  const { speak, cancel } = useSpeakQuestion();
 
   const level = getLevelById(levelId);
   const category = getCategoryById(categoryId);
@@ -172,6 +174,15 @@ export default function Game() {
     };
   }, []); // eslint-disable-line
 
+  useEffect(() => {
+    const q = session.currentQuestion;
+    if (q) speak(q);
+  }, [session.currentIndex]); // eslint-disable-line
+
+  useEffect(() => {
+    if (showFeedback) cancel();
+  }, [showFeedback, cancel]);
+
   const question = session.currentQuestion;
   if (!question) return null;
 
@@ -236,6 +247,18 @@ export default function Game() {
 
         <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden', justifyContent: 'center' }}>
           <QuestionCard question={question} />
+
+          {!showFeedback && !selectedChoice && (
+            <button
+              onClick={() => speak(question)}
+              style={{
+                alignSelf: 'center', background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20,
+                padding: '5px 16px', fontFamily: 'Nunito', fontWeight: 700,
+                fontSize: 14, color: '#fff', cursor: 'pointer',
+              }}
+            >🔊 Read again</button>
+          )}
 
           {question.hint && <HintBubble hint={question.hint} visible={showHint} />}
 
