@@ -71,6 +71,7 @@ export default function Category() {
             levels={category.levels}
             levelStates={catProgress.levels}
             onSelect={(levelId) => navigate(`/game/${category.id}/${levelId}`)}
+            onLesson={(levelId) => navigate(`/lesson/${category.id}/${levelId}`)}
           />
         </div>
       </div>

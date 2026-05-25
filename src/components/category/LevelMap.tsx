@@ -1,9 +1,11 @@
 import { Level, LevelState } from '@/types';
+import { LESSONS } from '@/data/lessons';
 
 interface Props {
   levels: Level[];
   levelStates: Record<string, LevelState>;
   onSelect: (levelId: string) => void;
+  onLesson?: (levelId: string) => void;
 }
 
 function Stars({ n }: { n: number }) {
@@ -16,7 +18,7 @@ function Stars({ n }: { n: number }) {
 
 const NEW_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 
-export default function LevelMap({ levels, levelStates, onSelect }: Props) {
+export default function LevelMap({ levels, levelStates, onSelect, onLesson }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 0' }}>
       {levels.map((level, idx) => {
@@ -64,11 +66,28 @@ export default function LevelMap({ levels, levelStates, onSelect }: Props) {
               )}
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: 6 }}>
+            <div style={{ textAlign: 'center', marginTop: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: locked ? 'rgba(255,255,255,0.5)' : '#fff' }}>
                 {level.title}
               </div>
               {!locked && <Stars n={state?.starsEarned ?? 0} />}
+              {!locked && onLesson && LESSONS[level.id] && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onLesson(level.id); }}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '1px solid rgba(255,255,255,0.4)',
+                    borderRadius: 10,
+                    padding: '3px 12px',
+                    fontFamily: 'Nunito',
+                    fontWeight: 700,
+                    fontSize: 12,
+                    color: '#fff',
+                    cursor: 'pointer',
+                    marginTop: 2,
+                  }}
+                >📖 Learn</button>
+              )}
             </div>
           </div>
         );

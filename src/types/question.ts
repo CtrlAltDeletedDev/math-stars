@@ -11,7 +11,8 @@ export type QuestionType =
   | 'word_problem'
   | 'tell_time'
   | 'measurement'
-  | 'money';
+  | 'money'
+  | 'place_value';
 
 export interface Question {
   id: string;
