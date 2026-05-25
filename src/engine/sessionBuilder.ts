@@ -58,11 +58,11 @@ export function buildSession(
     // Build a large pool of unique questions (deterministic IDs enable dedup)
     const pool = new Map<string, Question>();
     const targetPoolSize = Math.min(total * 8, 200);
-    let attempts = 0;
-    while (pool.size < targetPoolSize && attempts < 400) {
+    let consecutiveMisses = 0;
+    while (pool.size < targetPoolSize && consecutiveMisses < 20) {
       const q = generateFromParams(level.generatorParams, characterName);
-      if (!pool.has(q.id)) pool.set(q.id, q);
-      attempts++;
+      if (!pool.has(q.id)) { pool.set(q.id, q); consecutiveMisses = 0; }
+      else { consecutiveMisses++; }
     }
 
     const allQuestions = Array.from(pool.values());
@@ -96,11 +96,11 @@ function buildLevelQuestions(level: Level, srsCards: Record<string, SRSCard>, ch
   }
   if (level.generatorParams) {
     const pool = new Map<string, Question>();
-    let attempts = 0;
-    while (pool.size < 30 && attempts < 120) {
+    let consecutiveMisses = 0;
+    while (pool.size < 30 && consecutiveMisses < 20) {
       const q = generateFromParams(level.generatorParams, characterName);
-      if (!pool.has(q.id)) pool.set(q.id, q);
-      attempts++;
+      if (!pool.has(q.id)) { pool.set(q.id, q); consecutiveMisses = 0; }
+      else { consecutiveMisses++; }
     }
     return Array.from(pool.values());
   }
