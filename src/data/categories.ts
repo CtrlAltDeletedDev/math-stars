@@ -4,6 +4,7 @@ import { ALL_SHAPE_QUESTIONS } from './shapes';
 import { ALL_TIME_QUESTIONS, OCLOCK_QUESTIONS, HALF_PAST_QUESTIONS } from './time';
 import { MEASUREMENT_QUESTIONS } from './measurement';
 import { COINS_QUESTIONS } from './coins';
+import { PLACE_VALUE_L1_QUESTIONS, PLACE_VALUE_L2_QUESTIONS, PLACE_VALUE_L3_QUESTIONS, ALL_PLACE_VALUE_QUESTIONS } from './placeValue';
 
 export const CATEGORIES: Category[] = [
   {
@@ -326,6 +327,45 @@ export const CATEGORIES: Category[] = [
       },
     ],
   },
+  {
+    id: 'place-value',
+    title: 'Place Value',
+    emoji: '🔢',
+    bgColor: '#00ACC1',
+    darkColor: '#007C91',
+    levels: [
+      {
+        id: 'pv-ones-tens',
+        categoryId: 'place-value',
+        levelNumber: 1,
+        title: 'Ones & Tens',
+        description: 'Find the ones and tens digits!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: PLACE_VALUE_L1_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'pv-building',
+        categoryId: 'place-value',
+        levelNumber: 2,
+        title: 'Building Numbers',
+        description: 'Build numbers from tens and ones!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: PLACE_VALUE_L2_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'pv-comparing',
+        categoryId: 'place-value',
+        levelNumber: 3,
+        title: 'Comparing Numbers',
+        description: 'Which number is bigger or smaller?',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: PLACE_VALUE_L3_QUESTIONS.map((q) => q.id),
+      },
+    ],
+  },
 ];
 
 export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new Map([
@@ -334,6 +374,7 @@ export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new 
   ...ALL_TIME_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...MEASUREMENT_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...COINS_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...ALL_PLACE_VALUE_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
 ]);
 
 export function getLevelById(levelId: string) {
