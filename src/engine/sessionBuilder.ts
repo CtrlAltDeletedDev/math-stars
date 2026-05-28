@@ -14,6 +14,27 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+// Interleave questions by first operand so the same number doesn't appear back-to-back.
+function spreadByFirstOperand(questions: Question[]): Question[] {
+  const groups = new Map<string, Question[]>();
+  for (const q of questions) {
+    const m = q.id.match(/^(?:add|sub)-(\d+)/);
+    const key = m ? m[1] : '_';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(q);
+  }
+  if (groups.size <= 1) return questions;
+  const buckets = [...groups.values()];
+  const result: Question[] = [];
+  let i = 0;
+  while (result.length < questions.length) {
+    const bucket = buckets[i % buckets.length];
+    if (bucket.length > 0) result.push(bucket.shift()!);
+    i++;
+  }
+  return result;
+}
+
 export function buildSession(
   level: Level,
   srsCards: Record<string, SRSCard>,
@@ -84,7 +105,7 @@ export function buildSession(
       .filter((q) => !usedIds.has(q.id))
       .slice(0, total - dueSlot.length);
 
-    return shuffle([...dueSlot, ...fillPool]).slice(0, total);
+    return spreadByFirstOperand(shuffle([...dueSlot, ...fillPool])).slice(0, total);
   }
 
   return [];

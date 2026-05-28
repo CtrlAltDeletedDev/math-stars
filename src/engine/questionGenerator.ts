@@ -32,9 +32,12 @@ function generateChoices(correct: number, min: number, max: number): string[] {
 }
 
 export function generateAdditionQuestion(maxSum: number): Question {
-  const a = randomInt(0, maxSum);
-  const b = randomInt(0, maxSum - a);
-  const correct = a + b;
+  // Pick the answer (sum) first to get uniform distribution across all possible results,
+  // then split it randomly into two operands.
+  const sum = randomInt(1, maxSum); // min 1 avoids trivial 0+0
+  const a = randomInt(0, sum);
+  const b = sum - a;
+  const correct = sum;
   return {
     id: `add-${a}+${b}`,
     type: 'addition',
@@ -46,9 +49,10 @@ export function generateAdditionQuestion(maxSum: number): Question {
 }
 
 export function generateSubtractionQuestion(maxMinuend: number): Question {
-  const a = randomInt(1, maxMinuend);
-  const b = randomInt(0, a);
-  const correct = a - b;
+  // Pick the result (difference) first for uniform distribution, then choose minuend.
+  const correct = randomInt(0, maxMinuend - 1);
+  const a = randomInt(correct + 1, maxMinuend); // ensures b = a - correct >= 1
+  const b = a - correct;
   return {
     id: `sub-${a}-${b}`,
     type: 'subtraction',
