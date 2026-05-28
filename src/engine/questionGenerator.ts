@@ -15,16 +15,21 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function generateChoices(correct: number, min: number, max: number): string[] {
+  // Expand range if needed so there are always at least 4 distinct non-negative
+  // integers available — prevents infinite loop when the caller passes a tiny range.
+  const lo = 0;
+  const hi = Math.max(max, correct + 3, 3);
+
   const wrong = new Set<number>();
   const candidates = [correct - 2, correct - 1, correct + 1, correct + 2];
 
   for (const c of candidates) {
-    if (c !== correct && c >= min && c <= max) wrong.add(c);
+    if (c !== correct && c >= lo && c <= hi) wrong.add(c);
     if (wrong.size === 3) break;
   }
 
   while (wrong.size < 3) {
-    const v = randomInt(min, max);
+    const v = randomInt(lo, hi);
     if (v !== correct) wrong.add(v);
   }
 

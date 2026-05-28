@@ -10,14 +10,17 @@ function shuffle(arr: string[]): string[] {
 }
 
 function choices(correct: number, min: number, max: number): string[] {
+  const lo = 0;
+  const hi = Math.max(max, correct + 3, 3);
+
   const wrong = new Set<number>();
   for (const d of [-2, -1, 1, 2]) {
     const v = correct + d;
-    if (v !== correct && v >= min && v <= max) wrong.add(v);
+    if (v !== correct && v >= lo && v <= hi) wrong.add(v);
     if (wrong.size === 3) break;
   }
   while (wrong.size < 3) {
-    const v = Math.floor(Math.random() * (max - min + 1)) + min;
+    const v = Math.floor(Math.random() * (hi - lo + 1)) + lo;
     if (v !== correct) wrong.add(v);
   }
   return shuffle([correct, ...Array.from(wrong)].map(String));
