@@ -11,7 +11,7 @@ import { EVEN_ODD_ID, EVEN_ODD_FIND, ALL_EVEN_ODD_QUESTIONS } from './evenOdd';
 export const CATEGORIES: Category[] = [
   {
     id: 'addition',
-    title: 'Adding & Taking Away',
+    title: 'Addition & Subtraction',
     emoji: '➕',
     bgColor: '#FF6B6B',
     darkColor: '#D94F4F',
