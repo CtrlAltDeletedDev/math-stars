@@ -7,6 +7,8 @@ import { COINS_QUESTIONS } from './coins';
 import { PLACE_VALUE_L1_QUESTIONS, PLACE_VALUE_L2_QUESTIONS, PLACE_VALUE_L3_QUESTIONS, ALL_PLACE_VALUE_QUESTIONS } from './placeValue';
 import { NUMBER_BONDS_5, NUMBER_BONDS_10, NUMBER_BONDS_20, ALL_NUMBER_BONDS_QUESTIONS } from './numberBonds';
 import { EVEN_ODD_ID, EVEN_ODD_FIND, ALL_EVEN_ODD_QUESTIONS } from './evenOdd';
+import { COMPARE_TO10_QUESTIONS, COMPARE_TO20_QUESTIONS, ALL_COMPARE_QUESTIONS } from './comparing';
+import { FACT_FAMILIES_10, FACT_FAMILIES_20, ALL_FACT_FAMILIES_QUESTIONS } from './factFamilies';
 
 export const CATEGORIES: Category[] = [
   {
@@ -436,6 +438,64 @@ export const CATEGORIES: Category[] = [
       },
     ],
   },
+  {
+    id: 'compare',
+    title: 'Comparing Numbers',
+    emoji: '⚖️',
+    bgColor: '#26A69A',
+    darkColor: '#00695C',
+    levels: [
+      {
+        id: 'cmp-to10',
+        categoryId: 'compare',
+        levelNumber: 1,
+        title: 'Compare to 10',
+        description: 'Use <, >, or = to compare numbers up to 10!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: COMPARE_TO10_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'cmp-to20',
+        categoryId: 'compare',
+        levelNumber: 2,
+        title: 'Compare to 20',
+        description: 'Compare bigger numbers using <, >, and =!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: COMPARE_TO20_QUESTIONS.map((q) => q.id),
+      },
+    ],
+  },
+  {
+    id: 'fact-families',
+    title: 'Fact Families',
+    emoji: '👨‍👩‍👧',
+    bgColor: '#F06292',
+    darkColor: '#C2185B',
+    levels: [
+      {
+        id: 'ff-to10',
+        categoryId: 'fact-families',
+        levelNumber: 1,
+        title: 'Families to 10',
+        description: 'Addition and subtraction are related — discover fact families!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: FACT_FAMILIES_10.map((q) => q.id),
+      },
+      {
+        id: 'ff-to20',
+        categoryId: 'fact-families',
+        levelNumber: 2,
+        title: 'Families to 20',
+        description: 'Explore bigger fact families with sums up to 20!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: FACT_FAMILIES_20.map((q) => q.id),
+      },
+    ],
+  },
 ];
 
 export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new Map([
@@ -447,6 +507,8 @@ export const ALL_QUESTIONS_BY_ID: Map<string, import('@/types').Question> = new 
   ...ALL_PLACE_VALUE_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...ALL_NUMBER_BONDS_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
   ...ALL_EVEN_ODD_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...ALL_COMPARE_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
+  ...ALL_FACT_FAMILIES_QUESTIONS.map((q) => [q.id, q] as [string, import('@/types').Question]),
 ]);
 
 export function getLevelById(levelId: string) {

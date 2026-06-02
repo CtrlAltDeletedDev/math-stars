@@ -7,7 +7,7 @@ import BigButton from '@/components/ui/BigButton';
 
 export default function Parent() {
   const navigate = useNavigate();
-  const { progress, importProgress } = useProgress();
+  const { progress, importProgress, toggleChallengeMode } = useProgress();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
@@ -78,6 +78,25 @@ export default function Parent() {
           <Stat label="Best Streak" value={`🔥 ${progress.longestStreak} days`} />
           <Stat label="Days Played" value={`📅 ${daysPlayed}`} />
           <Stat label="Stars to Spend" value={`⭐ ${progress.spendableStars}`} />
+        </div>
+
+        {/* Settings */}
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+          Settings
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}>⏱️ Speed Challenge Mode</div>
+            <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Each question has a 10-second countdown</div>
+          </div>
+          <button
+            onClick={toggleChallengeMode}
+            style={{
+              background: progress.challengeMode ? '#4CAF50' : 'rgba(255,255,255,0.2)',
+              border: '2px solid rgba(255,255,255,0.4)', borderRadius: 20, padding: '6px 18px',
+              fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff', cursor: 'pointer', minWidth: 72,
+            }}
+          >{progress.challengeMode ? 'ON' : 'OFF'}</button>
         </div>
 
         {/* Per-category breakdown */}

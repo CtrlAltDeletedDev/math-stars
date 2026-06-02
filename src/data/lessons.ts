@@ -369,4 +369,105 @@ export const LESSONS: Record<string, LessonSlide[]> = {
       emoji: '🎉',
     },
   ],
+
+  // ── Comparing Numbers ────────────────────────────────────────────────────
+
+  'cmp-to10': [
+    {
+      title: 'Greater Than >',
+      body: 'The > sign means the number on the LEFT is BIGGER. Think of it as a hungry mouth — it opens toward the bigger number!',
+      emoji: '🐊',
+      example: '5 > 3\n(5 is greater than 3)',
+      tip: 'Tip: The open end always faces the bigger number!',
+    },
+    {
+      title: 'Less Than <',
+      body: 'The < sign means the number on the LEFT is SMALLER. The pointy end always points to the smaller number!',
+      emoji: '◀️',
+      example: '2 < 7\n(2 is less than 7)',
+      tip: 'Tip: < looks like an L for Less!',
+    },
+    {
+      title: 'Equal To =',
+      body: 'The = sign means BOTH numbers are exactly the same. Two equal lines for two equal numbers!',
+      emoji: '⚖️',
+      example: '4 = 4\n(4 is equal to 4)',
+    },
+    {
+      title: 'Let\'s Compare!',
+      body: 'Look at the two numbers: which is bigger, smaller, or are they the same? Pick the right sign! You\'ve got this! 🌟',
+      emoji: '🎯',
+    },
+  ],
+
+  'cmp-to20': [
+    {
+      title: 'Bigger Numbers',
+      body: 'We use the same signs for bigger numbers too! Compare the TENS digit first — a bigger tens digit means a bigger number.',
+      emoji: '🔢',
+      example: '15 > 8\n(15 has a tens digit, 8 doesn\'t)',
+      tip: 'Tip: Any 2-digit number is bigger than a 1-digit number!',
+    },
+    {
+      title: 'Same Tens? Check Ones!',
+      body: 'If the tens digits are the same, compare the ONES digits to decide which is bigger.',
+      emoji: '🔍',
+      example: '14 > 12\n(same tens: 1, but 4 ones > 2 ones)',
+    },
+    {
+      title: 'Practice Makes Perfect',
+      body: 'Remember: > for greater, < for less, = for equal. You\'re doing amazing! 🌟',
+      emoji: '⭐',
+    },
+  ],
+
+  // ── Fact Families ────────────────────────────────────────────────────────
+
+  'ff-to10': [
+    {
+      title: 'What\'s a Fact Family?',
+      body: 'A FACT FAMILY is a group of addition and subtraction equations that use the same three numbers!',
+      emoji: '👨‍👩‍👧',
+      example: 'Numbers 2, 3, 5:\n2 + 3 = 5\n3 + 2 = 5\n5 − 2 = 3\n5 − 3 = 2',
+    },
+    {
+      title: 'The Connection',
+      body: 'Addition and subtraction are opposites — they UNDO each other! If you know an addition fact, you automatically know two subtraction facts!',
+      emoji: '🔗',
+      example: 'Know: 4 + 3 = 7\nThen: 7 − 3 = 4 ✓\nAnd:  7 − 4 = 3 ✓',
+      tip: 'Tip: The big number always goes first in subtraction!',
+    },
+    {
+      title: 'Finding the Missing Part',
+      body: 'When you see "4 + 3 = 7, so 7 − 3 = ?", think: what was added to 3 to make 7? That\'s 4!',
+      emoji: '🧩',
+      example: '4 + 3 = 7\nso 7 − 3 = 4',
+    },
+    {
+      title: 'You\'re Ready!',
+      body: 'Use the addition clue to solve the subtraction. The answer is always one of the two smaller numbers! 🌟',
+      emoji: '🎉',
+    },
+  ],
+
+  'ff-to20': [
+    {
+      title: 'Bigger Families',
+      body: 'Fact families work with bigger numbers too! The same rule applies: use the addition to solve the subtraction.',
+      emoji: '🏠',
+      example: '8 + 5 = 13\nso 13 − 5 = 8\nand 13 − 8 = 5',
+    },
+    {
+      title: 'Think It Through',
+      body: 'For big numbers, count on from the smaller number. If 6 + 7 = 13, then 13 − 7 = 6 because 6 is what you added to 7!',
+      emoji: '🧠',
+      example: '9 + 4 = 13\nso 13 − 4 = ?',
+      tip: 'Tip: The answer is always one of the two parts (not the whole sum)!',
+    },
+    {
+      title: 'You\'re a Math Star!',
+      body: 'Fact families are a superpower — knowing one fact gives you three more for free! 🌟',
+      emoji: '⭐',
+    },
+  ],
 };

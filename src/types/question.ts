@@ -14,7 +14,8 @@ export type QuestionType =
   | 'money'
   | 'place_value'
   | 'number_bond'
-  | 'even_odd';
+  | 'even_odd'
+  | 'fact_family';
 
 export interface Question {
   id: string;

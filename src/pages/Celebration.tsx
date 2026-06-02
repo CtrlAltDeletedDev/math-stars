@@ -55,6 +55,7 @@ export default function Celebration() {
 
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
+  const characterName = character?.name ?? 'Math Star';
 
   const [visibleStars, setVisibleStars] = useState(0);
   const [showBurst, setShowBurst] = useState(false);
@@ -80,6 +81,41 @@ export default function Celebration() {
     }, 300);
     return () => clearInterval(id);
   }, [stars]);
+
+  function printCertificate() {
+    const win = window.open('', '_blank', 'width=640,height=480');
+    if (!win) return;
+    const starStr = '⭐'.repeat(stars || 1);
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const bg = category?.bgColor ?? '#FF9F43';
+    win.document.write(`<!DOCTYPE html><html><head><title>Certificate</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Nunito, Arial, sans-serif; background: ${bg}; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .cert { background: #fff; border: 10px solid ${bg}; border-radius: 28px; padding: 44px 56px; text-align: center; max-width: 520px; width: 92%; box-shadow: 0 8px 40px rgba(0,0,0,0.25); }
+  h1 { font-size: 26px; color: ${bg}; margin-bottom: 6px; }
+  .sub { color: #888; font-size: 15px; margin-bottom: 18px; }
+  .emj { font-size: 84px; line-height: 1; }
+  .name { font-size: 28px; font-weight: 800; color: #222; margin: 14px 0 4px; }
+  .achv { font-size: 18px; color: ${bg}; font-weight: 800; margin-bottom: 14px; }
+  .stars { font-size: 44px; }
+  .date { color: #aaa; font-size: 13px; margin-top: 18px; }
+  @media print { body { background: #fff; } .cert { border-color: ${bg}; box-shadow: none; } }
+</style></head><body>
+<div class="cert">
+  <h1>🏆 Certificate of Achievement</h1>
+  <div class="sub">This certifies that</div>
+  <div class="emj">${emoji}</div>
+  <div class="name">${characterName}</div>
+  <div class="achv">has mastered<br>${category?.title ?? 'Math Stars'}!</div>
+  <div class="stars">${starStr}</div>
+  <div class="date">Awarded ${dateStr}</div>
+</div>
+<script>window.onload=function(){window.print();setTimeout(function(){window.close()},800);}<\/script>
+</body></html>`);
+    win.document.close();
+  }
 
   if (!category) return null;
 
@@ -199,6 +235,19 @@ export default function Celebration() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Print certificate */}
+        {passed && (
+          <button
+            onClick={printCertificate}
+            style={{
+              width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.35)', borderRadius: 14,
+              padding: '11px 16px', fontFamily: 'Nunito', fontWeight: 800,
+              fontSize: 15, color: '#fff', cursor: 'pointer', zIndex: 1,
+            }}
+          >🎓 Print Certificate</button>
         )}
       </div>
 
