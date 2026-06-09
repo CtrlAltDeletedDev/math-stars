@@ -13,6 +13,7 @@ import Flashcard from './pages/Flashcard';
 import Worksheet from './pages/Worksheet';
 import DailyGame from './pages/DailyGame';
 import MasterGame from './pages/MasterGame';
+import ReviewGame from './pages/ReviewGame';
 import Lesson from './pages/Lesson';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/character-select" element={<CharacterSelect />} />
       <Route path="/category/:id" element={<Category />} />
       <Route path="/game/daily/challenge" element={<DailyGame />} />
+      <Route path="/game/review/practice" element={<ReviewGame />} />
       <Route path="/game/master/:categoryId" element={<MasterGame />} />
       <Route path="/game/:categoryId/:levelId" element={<Game />} />
       <Route path="/celebration/:categoryId/:levelId" element={<Celebration />} />

@@ -1,7 +1,7 @@
 import { Question, SRSCard, Level, UserProgress } from '@/types';
 import { Category } from '@/types';
 import { CATEGORIES, ALL_QUESTIONS_BY_ID } from '@/data/categories';
-import { generateFromParams } from './questionGenerator';
+import { generateFromParams, questionFromId } from './questionGenerator';
 import { isDue } from './srs';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 
@@ -18,7 +18,7 @@ function shuffle<T>(arr: T[]): T[] {
 function spreadByFirstOperand(questions: Question[]): Question[] {
   const groups = new Map<string, Question[]>();
   for (const q of questions) {
-    const m = q.id.match(/^(?:add|sub)-(\d+)/);
+    const m = q.id.match(/^(?:add|sub|miss-add|miss-sub)-(\d+)/);
     const key = m ? m[1] : '_';
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(q);
@@ -167,6 +167,27 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
   });
 
   return shuffle(poolPerCat.flat()).slice(0, total);
+}
+
+// Build a session purely from due SRS cards — the questions the child has
+// gotten wrong recently, most overdue first. Bank questions are looked up
+// directly; generated questions are rebuilt from their deterministic IDs.
+export function buildReviewSession(progress: UserProgress, n = 10): Question[] {
+  const dueCards = Object.values(progress.srsCards)
+    .filter(isDue)
+    .sort((a, b) => a.nextDueDate - b.nextDueDate);
+
+  const questions: Question[] = [];
+  for (const card of dueCards) {
+    const q = ALL_QUESTIONS_BY_ID.get(card.questionId) ?? questionFromId(card.questionId);
+    if (q) questions.push(q);
+    if (questions.length >= n) break;
+  }
+  return shuffle(questions);
+}
+
+export function countDueReviews(progress: UserProgress): number {
+  return Object.values(progress.srsCards).filter(isDue).length;
 }
 
 export function buildMasterSession(

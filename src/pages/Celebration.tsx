@@ -51,6 +51,8 @@ export default function Celebration() {
   const realCategory = categoryId === 'master' ? getCategoryById(masterCategoryId || levelId) : getCategoryById(categoryId);
   const category = categoryId === 'daily'
     ? { id: 'daily', bgColor: '#FF9F43', darkColor: '#EE5A24', title: 'Daily Challenge', emoji: '🌟', levels: [] }
+    : categoryId === 'review'
+    ? { id: 'review', bgColor: '#43A047', darkColor: '#1B5E20', title: 'Practice Mistakes', emoji: '💪', levels: [] }
     : (realCategory ?? null);
 
   const character = CHARACTERS.find((c) => c.id === progress.characterId);

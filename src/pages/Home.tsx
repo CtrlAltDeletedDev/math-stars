@@ -5,6 +5,7 @@ import { CATEGORIES } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { getTheme } from '@/data/shop';
 import { STICKERS } from '@/data/stickers';
+import { countDueReviews } from '@/engine/sessionBuilder';
 import CategoryCard from '@/components/home/CategoryCard';
 import DailyChallengeCard from '@/components/home/DailyChallengeCard';
 import DailyGoalBar from '@/components/home/DailyGoalBar';
@@ -48,6 +49,7 @@ export default function Home() {
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const earnedStickers = (progress.earnedStickers ?? []).length;
+  const dueReviews = countDueReviews(progress);
 
   return (
     <BackgroundGradient colors={theme.colors}>
@@ -108,6 +110,24 @@ export default function Home() {
           questionsToday={progress.dailyQuestionsDate === new Date().toISOString().split('T')[0] ? progress.dailyQuestionsCount : 0}
           goal={GAME_CONFIG.dailyGoalQuestions}
         />
+
+        {/* Practice mistakes */}
+        {dueReviews > 0 && (
+          <button
+            onClick={() => navigate('/game/review/practice')}
+            style={{
+              background: 'rgba(67,160,71,0.45)', border: '2px solid rgba(255,255,255,0.5)',
+              borderRadius: 14, padding: '10px 16px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
+            }}
+          >
+            <span>💪 Practice Mistakes</span>
+            <span style={{ background: 'rgba(255,255,255,0.3)', borderRadius: 12, padding: '2px 10px', fontSize: 13 }}>
+              {dueReviews} to review
+            </span>
+          </button>
+        )}
 
         {/* Play calendar */}
         <PlayCalendar playHistory={progress.playHistory ?? []} />

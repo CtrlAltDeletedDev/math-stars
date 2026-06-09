@@ -421,6 +421,77 @@ export const LESSONS: Record<string, LessonSlide[]> = {
     },
   ],
 
+  // ── Missing Number ───────────────────────────────────────────────────────
+
+  'miss-add-10': [
+    {
+      title: 'The Hiding Number',
+      body: 'Sometimes a number HIDES in the problem! "3 + ? = 7" asks: what do we add to 3 to make 7?',
+      emoji: '🙈',
+      example: '3 + ? = 7\nThe hiding number is 4!',
+    },
+    {
+      title: 'Count Up to Find It',
+      body: 'Start at the first number and COUNT UP until you reach the answer. How many counts did it take? That\'s the hiding number!',
+      emoji: '☝️',
+      example: '3 + ? = 7\nCount: 4, 5, 6, 7\nThat\'s 4 counts → ? = 4',
+      tip: 'Tip: Use your fingers to keep track!',
+    },
+    {
+      title: 'Check Your Answer',
+      body: 'When you find the hiding number, add it back to check: does 3 + 4 really make 7? Yes! ✓',
+      emoji: '✅',
+      example: '3 + 4 = 7 ✓',
+    },
+    {
+      title: 'Ready to Search?',
+      body: 'Find each hiding number by counting up. You\'re a number detective now! 🕵️',
+      emoji: '🔍',
+    },
+  ],
+
+  'miss-add-20': [
+    {
+      title: 'Bigger Hiding Numbers',
+      body: 'Same trick, bigger numbers! Count up from the first number to the total.',
+      emoji: '🙈',
+      example: '8 + ? = 15\nCount: 9, 10, 11, 12, 13, 14, 15\nThat\'s 7 counts → ? = 7',
+    },
+    {
+      title: 'Use Ten as a Bridge',
+      body: 'For big jumps, count up to 10 first, then keep going. It\'s easier in two hops!',
+      emoji: '🌉',
+      example: '8 + ? = 15\n8 → 10 is 2\n10 → 15 is 5\n2 + 5 = 7!',
+      tip: 'Tip: 10 is your friend — hop there first!',
+    },
+    {
+      title: 'You\'ve Got This!',
+      body: 'Count up, use the 10-bridge for big numbers, and always check your answer! 🌟',
+      emoji: '⭐',
+    },
+  ],
+
+  'miss-mixed-20': [
+    {
+      title: 'Minus Mysteries',
+      body: 'Numbers can hide in TAKE AWAY problems too! "9 − ? = 6" asks: how many did we take away to get from 9 to 6?',
+      emoji: '🕵️',
+      example: '9 − ? = 6\nCount down: 8, 7, 6\nThat\'s 3 → ? = 3',
+    },
+    {
+      title: 'Count the Gap',
+      body: 'For minus mysteries, find the GAP between the two numbers. The gap is the hiding number!',
+      emoji: '↔️',
+      example: '9 − ? = 6\nThe gap from 6 to 9 is 3',
+      tip: 'Tip: The hiding number is the distance between them!',
+    },
+    {
+      title: 'Plus or Minus?',
+      body: 'Look at the sign first! Plus mysteries: count UP. Minus mysteries: find the GAP. You\'re ready! 🌟',
+      emoji: '🎯',
+    },
+  ],
+
   // ── Fact Families ────────────────────────────────────────────────────────
 
   'ff-to10': [
