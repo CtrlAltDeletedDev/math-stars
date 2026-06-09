@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { UserProgress, SRSCard, BadgeEarned } from '@/types';
-import { loadProgress, saveProgress, buildInitialProgress } from './storage';
+import { loadProgress, saveProgress, buildInitialProgress, normalizeProgress } from './storage';
 import { CATEGORIES, getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
 import { BADGES, BadgeCheckContext } from '@/data/badges';
@@ -37,7 +37,7 @@ interface ProgressContextValue {
   setActiveTheme: (themeId: string) => void;
   toggleMusic: () => void;
   toggleChallengeMode: () => void;
-  importProgress: (data: UserProgress) => void;
+  importProgress: (data: UserProgress) => boolean;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
@@ -400,9 +400,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  function importProgress(data: UserProgress) {
-    setProgress(data);
-    saveProgress(data);
+  function importProgress(data: UserProgress): boolean {
+    const normalized = normalizeProgress(data);
+    if (!normalized) return false;
+    setProgress(normalized);
+    saveProgress(normalized);
+    return true;
   }
 
   return (

@@ -49,6 +49,7 @@ export default function DailyGame() {
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasCompleted = useRef(false);
+  const answeringRef = useRef(false);
 
   const challengeMode = progress.challengeMode;
 
@@ -74,7 +75,8 @@ export default function DailyGame() {
   }
 
   function handleAnswer(choice: string) {
-    if (selectedChoice || showFeedback) return;
+    if (answeringRef.current || selectedChoice || showFeedback) return;
+    answeringRef.current = true;
     stopCountdown();
 
     const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
@@ -108,6 +110,7 @@ export default function DailyGame() {
     const finalCorrectCount = correctCountBefore + (correct ? 1 : 0);
 
     advanceTimer.current = setTimeout(() => {
+      answeringRef.current = false;
       setShowFeedback(false);
       setSelectedChoice(null);
       setShowHint(false);

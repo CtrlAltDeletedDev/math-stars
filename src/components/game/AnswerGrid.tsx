@@ -50,7 +50,7 @@ export default function AnswerGrid({ choices, onSelect, selectedChoice, correctA
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingRight: 36,
+                paddingRight: 50,
               }}
             >
               {choice}
@@ -59,10 +59,10 @@ export default function AnswerGrid({ choices, onSelect, selectedChoice, correctA
               <button
                 onClick={(e) => { e.stopPropagation(); speak(choice); }}
                 style={{
-                  position: 'absolute', top: 8, right: 8,
-                  width: 28, height: 28, borderRadius: 8,
+                  position: 'absolute', top: '50%', right: 6, transform: 'translateY(-50%)',
+                  width: 42, height: 42, borderRadius: 12,
                   background: 'rgba(255,255,255,0.3)', border: 'none',
-                  fontSize: 14, cursor: 'pointer', display: 'flex',
+                  fontSize: 18, cursor: 'pointer', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
                 }}
                 title="Hear this answer"

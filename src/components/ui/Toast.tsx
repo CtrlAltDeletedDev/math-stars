@@ -12,16 +12,21 @@ export default function Toast({ messages }: Props) {
     if (messages.length === 0) return;
     setCurrent(0);
     setVisible(true);
-    const timer = setTimeout(() => setVisible(false), 2500);
-    return () => clearTimeout(timer);
   }, [messages]);
 
+  // Auto-hide the current message after 2.5s
+  useEffect(() => {
+    if (!visible) return;
+    const t = setTimeout(() => setVisible(false), 2500);
+    return () => clearTimeout(t);
+  }, [visible, current]);
+
+  // After hiding, advance to the next queued message
   useEffect(() => {
     if (!visible && current < messages.length - 1) {
       const t = setTimeout(() => {
         setCurrent((c) => c + 1);
         setVisible(true);
-        setTimeout(() => setVisible(false), 2500);
       }, 400);
       return () => clearTimeout(t);
     }

@@ -31,8 +31,7 @@ export default function Parent() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        if (typeof data !== 'object' || !data.version) throw new Error('Invalid file');
-        importProgress(data);
+        if (!importProgress(data)) throw new Error('Invalid file');
         setImportMsg('Progress imported successfully!');
       } catch {
         setImportMsg('Could not read file. Please use a valid export.');

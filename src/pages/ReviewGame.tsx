@@ -43,9 +43,11 @@ export default function ReviewGame() {
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasCompleted = useRef(false);
+  const answeringRef = useRef(false);
 
   function handleAnswer(choice: string) {
-    if (selectedChoice || showFeedback) return;
+    if (answeringRef.current || selectedChoice || showFeedback) return;
+    answeringRef.current = true;
 
     const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
     const correctCountBefore = session.correctCount;
@@ -78,6 +80,7 @@ export default function ReviewGame() {
     const finalCorrectCount = correctCountBefore + (correct ? 1 : 0);
 
     advanceTimer.current = setTimeout(() => {
+      answeringRef.current = false;
       setShowFeedback(false);
       setSelectedChoice(null);
       setShowHint(false);

@@ -73,15 +73,19 @@ export default function Celebration() {
 
   useEffect(() => {
     let i = 0;
+    let burstTimer: ReturnType<typeof setTimeout> | null = null;
     const id = setInterval(() => {
       i++;
       setVisibleStars(i);
       if (i >= stars) {
         clearInterval(id);
-        if (stars > 0) setTimeout(() => setShowBurst(true), 200);
+        if (stars > 0) burstTimer = setTimeout(() => setShowBurst(true), 200);
       }
     }, 300);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      if (burstTimer) clearTimeout(burstTimer);
+    };
   }, [stars]);
 
   function printCertificate() {
