@@ -19,6 +19,8 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   if (!parsed.earnedStickers) parsed.earnedStickers = [];
   if (parsed.musicEnabled === undefined) parsed.musicEnabled = false;
   if (parsed.challengeMode === undefined) parsed.challengeMode = false;
+  if (parsed.slowMode === undefined) parsed.slowMode = false;
+  if (parsed.autoReadEnabled === undefined) parsed.autoReadEnabled = true;
   if (parsed.dailyChallengeStreak === undefined) parsed.dailyChallengeStreak = 0;
   if (!parsed.lastDailyChallengeDate) parsed.lastDailyChallengeDate = '';
   if (!parsed.dailyChallengeHistory) parsed.dailyChallengeHistory = [];
@@ -98,6 +100,8 @@ export function buildInitialProgress(): UserProgress {
     earnedStickers: [],
     musicEnabled: false,
     challengeMode: false,
+    slowMode: false,
+    autoReadEnabled: true,
     dailyChallengeStreak: 0,
     lastDailyChallengeDate: '',
     dailyChallengeHistory: [],

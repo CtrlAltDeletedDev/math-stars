@@ -4,10 +4,11 @@ import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
+import PlayCalendar from '@/components/ui/PlayCalendar';
 
 export default function Parent() {
   const navigate = useNavigate();
-  const { progress, importProgress, toggleChallengeMode } = useProgress();
+  const { progress, importProgress, toggleChallengeMode, toggleSlowMode } = useProgress();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
@@ -97,6 +98,26 @@ export default function Parent() {
             }}
           >{progress.challengeMode ? 'ON' : 'OFF'}</button>
         </div>
+        <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}>🐢 Slow Mode</div>
+            <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Extra time to see each answer, and a longer countdown</div>
+          </div>
+          <button
+            onClick={toggleSlowMode}
+            style={{
+              background: progress.slowMode ? '#4CAF50' : 'rgba(255,255,255,0.2)',
+              border: '2px solid rgba(255,255,255,0.4)', borderRadius: 20, padding: '6px 18px',
+              fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff', cursor: 'pointer', minWidth: 72,
+            }}
+          >{progress.slowMode ? 'ON' : 'OFF'}</button>
+        </div>
+
+        {/* Last 7 days */}
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+          Last 7 Days
+        </div>
+        <PlayCalendar playHistory={progress.playHistory ?? []} />
 
         {/* Per-category breakdown */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>

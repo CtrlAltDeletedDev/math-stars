@@ -37,6 +37,8 @@ interface ProgressContextValue {
   setActiveTheme: (themeId: string) => void;
   toggleMusic: () => void;
   toggleChallengeMode: () => void;
+  toggleSlowMode: () => void;
+  toggleAutoRead: () => void;
   importProgress: (data: UserProgress) => boolean;
 }
 
@@ -400,6 +402,22 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  function toggleSlowMode() {
+    setProgress((prev) => {
+      const next = { ...prev, slowMode: !prev.slowMode };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
+  function toggleAutoRead() {
+    setProgress((prev) => {
+      const next = { ...prev, autoReadEnabled: !prev.autoReadEnabled };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
   function importProgress(data: UserProgress): boolean {
     const normalized = normalizeProgress(data);
     if (!normalized) return false;
@@ -409,7 +427,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, importProgress }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, importProgress }}>
       {children}
     </ProgressContext.Provider>
   );

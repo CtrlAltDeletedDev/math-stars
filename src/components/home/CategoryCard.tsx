@@ -37,12 +37,23 @@ export default function CategoryCard({ category, progress, onPress, onMasterPres
         minWidth: 0,
       }}
     >
-      <div style={{ fontSize: 36 }}>{category.emoji}</div>
-      <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>
+      <div style={{ fontSize: 52, lineHeight: 1 }}>{category.emoji}</div>
+      <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 13, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>
         {category.title}
       </div>
-      <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-        ⭐ {stars} · {completed}/{total} levels
+      {/* Visual progress dots instead of text — readable without reading */}
+      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+        {Array.from({ length: total }, (_, i) => (
+          <div key={i} style={{
+            width: 8, height: 8, borderRadius: 4,
+            background: i < completed ? '#FFE066' : 'rgba(255,255,255,0.3)',
+          }} />
+        ))}
+        {stars > 0 && (
+          <span style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginLeft: 4 }}>
+            ⭐{stars}
+          </span>
+        )}
       </div>
       {completed === total && total > 0 && onMasterPress && (
         <button

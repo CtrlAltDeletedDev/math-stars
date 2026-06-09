@@ -23,7 +23,7 @@ const DAILY_COLORS: [string, string] = ['#FF9F43', '#EE5A24'];
 
 export default function DailyGame() {
   const navigate = useNavigate();
-  const { progress, recordDailyChallengeComplete, recordQuestionsAnswered } = useProgress();
+  const { progress, recordDailyChallengeComplete, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
   const speech = useSpeechRecognition();
@@ -32,6 +32,8 @@ export default function DailyGame() {
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterName = character?.name ?? 'Friend';
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
+  const timerSeconds = progress.slowMode ? 15 : TIMER_SECONDS;
+  const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
   const questionsRef = useRef(buildDailyChallengeSession(progress, characterName));
   const session = useGameSession(questionsRef.current, progress.srsCards, characterName);
@@ -41,7 +43,7 @@ export default function DailyGame() {
   const [lastCorrect, setLastCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(progress.consecutiveCorrect);
-  const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
+  const [timeLeft, setTimeLeft] = useState(timerSeconds);
   const [isListening, setIsListening] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const wrongAnswersRef = useRef<{ prompt: string; correct: string }[]>([]);
@@ -55,7 +57,7 @@ export default function DailyGame() {
 
   function startCountdown() {
     if (!challengeMode) return;
-    setTimeLeft(TIMER_SECONDS);
+    setTimeLeft(timerSeconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
       setTimeLeft((t) => {
@@ -139,7 +141,14 @@ export default function DailyGame() {
         session.advance();
         startCountdown();
       }
-    }, GAME_CONFIG.feedbackDurationMs);
+    }, feedbackMs);
+  }
+
+
+  function handleToggleAutoRead() {
+    if (progress.autoReadEnabled) cancel();
+    else if (session.currentQuestion) speak(session.currentQuestion);
+    toggleAutoRead();
   }
 
   function handleMic() {
@@ -177,7 +186,7 @@ export default function DailyGame() {
 
   useEffect(() => {
     const q = session.currentQuestion;
-    if (q) speak(q);
+    if (q && progress.autoReadEnabled) speak(q);
   }, [session.currentIndex]); // eslint-disable-line
 
   useEffect(() => {
@@ -227,9 +236,22 @@ export default function DailyGame() {
           <div style={{ flex: 1 }}>
             <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
+          <button
+            onClick={handleToggleAutoRead}
+            title={progress.autoReadEnabled ? 'Turn off read-aloud' : 'Turn on read-aloud'}
+            style={{
+              background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
+              border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
+            }}
+          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
           {challengeMode
-            ? <TimerArc timeLeft={timeLeft} totalTime={TIMER_SECONDS} />
-            : <div style={{ fontSize: 32 }}>{characterEmoji}</div>
+            ? <TimerArc timeLeft={timeLeft} totalTime={timerSeconds} />
+            : (
+              <div
+                className={showFeedback ? (lastCorrect ? 'anim-bounce' : 'anim-shake') : ''}
+                style={{ fontSize: 32 }}
+              >{characterEmoji}</div>
+            )
           }
         </div>
 

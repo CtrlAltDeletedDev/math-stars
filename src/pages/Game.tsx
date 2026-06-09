@@ -23,7 +23,7 @@ const TIMER_SECONDS = 10;
 export default function Game() {
   const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
   const navigate = useNavigate();
-  const { progress, recordLevelComplete, recordQuestionsAnswered } = useProgress();
+  const { progress, recordLevelComplete, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
   const speech = useSpeechRecognition();
@@ -37,12 +37,17 @@ export default function Game() {
 
   const session = useGameSession(level!, progress.srsCards, characterName);
 
+  const challengeMode = progress.challengeMode;
+  const timerSeconds = progress.slowMode ? 15 : TIMER_SECONDS;
+  const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
+
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [triedChoices, setTriedChoices] = useState<string[]>([]);
   const [consecutiveCorrect, setConsecutiveCorrect] = useState(progress.consecutiveCorrect);
-  const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
+  const [timeLeft, setTimeLeft] = useState(timerSeconds);
   const [isListening, setIsListening] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const wrongAnswersRef = useRef<{ prompt: string; correct: string }[]>([]);
@@ -52,13 +57,11 @@ export default function Game() {
   const hasCompleted = useRef(false);
   const answeringRef = useRef(false);
 
-  const challengeMode = progress.challengeMode;
-
   if (!level || !category) return null;
 
   function startCountdown() {
     if (!challengeMode) return;
-    setTimeLeft(TIMER_SECONDS);
+    setTimeLeft(timerSeconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
       setTimeLeft((t) => {
@@ -81,6 +84,23 @@ export default function Game() {
     if (answeringRef.current || selectedChoice || showFeedback) return;
     answeringRef.current = true;
     stopCountdown();
+
+    // Gentle retry: the first wrong tap doesn't count. Grey out that choice,
+    // show the hint, and let them try once more before revealing the answer.
+    const currentQuestion = session.currentQuestion;
+    if (
+      currentQuestion &&
+      choice !== '__timeout__' &&
+      choice !== currentQuestion.correctAnswer &&
+      triedChoices.length === 0
+    ) {
+      answeringRef.current = false;
+      setTriedChoices([choice]);
+      sounds.playWrong();
+      setShowHint(true);
+      startCountdown();
+      return;
+    }
 
     const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
     const correctCountBefore = session.correctCount;
@@ -117,6 +137,7 @@ export default function Game() {
       setShowFeedback(false);
       setSelectedChoice(null);
       setShowHint(false);
+      setTriedChoices([]);
 
       if (isLastQuestion && !hasCompleted.current) {
         hasCompleted.current = true;
@@ -140,7 +161,13 @@ export default function Game() {
         session.advance();
         startCountdown();
       }
-    }, GAME_CONFIG.feedbackDurationMs);
+    }, feedbackMs);
+  }
+
+  function handleToggleAutoRead() {
+    if (progress.autoReadEnabled) cancel();
+    else if (session.currentQuestion) speak(session.currentQuestion);
+    toggleAutoRead();
   }
 
   function handleMic() {
@@ -179,7 +206,7 @@ export default function Game() {
 
   useEffect(() => {
     const q = session.currentQuestion;
-    if (q) speak(q);
+    if (q && progress.autoReadEnabled) speak(q);
   }, [session.currentIndex]); // eslint-disable-line
 
   useEffect(() => {
@@ -230,9 +257,22 @@ export default function Game() {
           <div style={{ flex: 1 }}>
             <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
+          <button
+            onClick={handleToggleAutoRead}
+            title={progress.autoReadEnabled ? 'Turn off read-aloud' : 'Turn on read-aloud'}
+            style={{
+              background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
+              border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
+            }}
+          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
           {challengeMode
-            ? <TimerArc timeLeft={timeLeft} totalTime={TIMER_SECONDS} />
-            : <div style={{ fontSize: 32 }}>{characterEmoji}</div>
+            ? <TimerArc timeLeft={timeLeft} totalTime={timerSeconds} />
+            : (
+              <div
+                className={showFeedback ? (lastCorrect ? 'anim-bounce' : 'anim-shake') : ''}
+                style={{ fontSize: 32 }}
+              >{characterEmoji}</div>
+            )
           }
         </div>
 
@@ -245,6 +285,16 @@ export default function Game() {
             background: 'rgba(255,150,0,0.35)', borderRadius: 12, padding: '4px 0',
           }}>
             {'🔥'.repeat(Math.min(hotStreak, 5))} {hotStreak} in a row!
+          </div>
+        )}
+
+        {/* Gentle retry banner */}
+        {triedChoices.length > 0 && !showFeedback && (
+          <div className="anim-slide" style={{
+            textAlign: 'center', fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff',
+            background: 'rgba(255,200,0,0.4)', borderRadius: 12, padding: '6px 0',
+          }}>
+            💛 Almost! Try again!
           </div>
         )}
 
@@ -271,6 +321,7 @@ export default function Game() {
             selectedChoice={selectedChoice}
             correctAnswer={question.correctAnswer}
             disabled={showFeedback}
+            triedChoices={triedChoices}
           />
 
           {/* Voice input button */}

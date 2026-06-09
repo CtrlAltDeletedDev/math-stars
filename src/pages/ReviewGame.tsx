@@ -21,7 +21,7 @@ const REVIEW_COLORS: [string, string] = ['#43A047', '#1B5E20'];
 
 export default function ReviewGame() {
   const navigate = useNavigate();
-  const { progress, recordMasterComplete, recordQuestionsAnswered } = useProgress();
+  const { progress, recordMasterComplete, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
   const { speak, cancel } = useSpeakQuestion();
@@ -29,6 +29,7 @@ export default function ReviewGame() {
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterName = character?.name ?? 'Friend';
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
+  const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
   const questionsRef = useRef(buildReviewSession(progress));
   const session = useGameSession(questionsRef.current, progress.srsCards, characterName);
@@ -106,7 +107,14 @@ export default function ReviewGame() {
       } else {
         session.advance();
       }
-    }, GAME_CONFIG.feedbackDurationMs);
+    }, feedbackMs);
+  }
+
+
+  function handleToggleAutoRead() {
+    if (progress.autoReadEnabled) cancel();
+    else if (session.currentQuestion) speak(session.currentQuestion);
+    toggleAutoRead();
   }
 
   useEffect(() => {
@@ -118,7 +126,7 @@ export default function ReviewGame() {
 
   useEffect(() => {
     const q = session.currentQuestion;
-    if (q) speak(q);
+    if (q && progress.autoReadEnabled) speak(q);
   }, [session.currentIndex]); // eslint-disable-line
 
   useEffect(() => {
@@ -186,7 +194,18 @@ export default function ReviewGame() {
           <div style={{ flex: 1 }}>
             <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
-          <div style={{ fontSize: 32 }}>{characterEmoji}</div>
+          <button
+            onClick={handleToggleAutoRead}
+            title={progress.autoReadEnabled ? 'Turn off read-aloud' : 'Turn on read-aloud'}
+            style={{
+              background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
+              border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
+            }}
+          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
+          <div
+            className={showFeedback ? (lastCorrect ? 'anim-bounce' : 'anim-shake') : ''}
+            style={{ fontSize: 32 }}
+          >{characterEmoji}</div>
         </div>
 
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff', textAlign: 'center', letterSpacing: 0.5 }}>

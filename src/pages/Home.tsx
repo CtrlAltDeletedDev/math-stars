@@ -8,15 +8,14 @@ import { STICKERS } from '@/data/stickers';
 import { countDueReviews } from '@/engine/sessionBuilder';
 import CategoryCard from '@/components/home/CategoryCard';
 import DailyChallengeCard from '@/components/home/DailyChallengeCard';
-import DailyGoalBar from '@/components/home/DailyGoalBar';
+import TodayStrip from '@/components/home/TodayStrip';
 import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
-import PlayCalendar from '@/components/ui/PlayCalendar';
 import InstallBanner from '@/components/ui/InstallBanner';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 
 export default function Home() {
-  const { progress, isLoaded, toggleMusic, toggleChallengeMode } = useProgress();
+  const { progress, isLoaded, toggleMusic } = useProgress();
   const navigate = useNavigate();
   const titleTaps = useRef(0);
   const titleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -65,51 +64,20 @@ export default function Home() {
           <StarBadge count={progress.totalStars} />
         </div>
 
-        {/* Quick-toggle row */}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            onClick={toggleMusic}
-            style={{
-              flex: 1, background: progress.musicEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)',
-              border: progress.musicEnabled ? '2px solid #fff' : '2px solid transparent',
-              borderRadius: 14, padding: '8px 6px', cursor: 'pointer',
-              fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: '#fff',
-            }}
-          >{progress.musicEnabled ? '🎵 Music On' : '🔇 Music Off'}</button>
-          <button
-            onClick={toggleChallengeMode}
-            style={{
-              flex: 1, background: progress.challengeMode ? 'rgba(255,180,0,0.5)' : 'rgba(255,255,255,0.2)',
-              border: progress.challengeMode ? '2px solid #FFE066' : '2px solid transparent',
-              borderRadius: 14, padding: '8px 6px', cursor: 'pointer',
-              fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: '#fff',
-            }}
-          >{progress.challengeMode ? '⏱️ Challenge!' : '⏱️ Challenge'}</button>
-        </div>
-
-        {/* Streak banner */}
-        {progress.currentStreak > 1 && (
-          <div style={{
-            background: 'rgba(255,150,0,0.3)', borderRadius: 14, padding: '8px 16px',
-            display: 'flex', alignItems: 'center', gap: 8,
-            fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
-          }}>
-            <span>{'🔥'.repeat(Math.min(progress.currentStreak, 7))}</span>
-            <span>{progress.currentStreak} day streak!</span>
-          </div>
-        )}
+        {/* Today strip: streak + goal + music in one compact row */}
+        <TodayStrip
+          streak={progress.currentStreak}
+          questionsToday={progress.dailyQuestionsDate === new Date().toISOString().split('T')[0] ? progress.dailyQuestionsCount : 0}
+          goal={GAME_CONFIG.dailyGoalQuestions}
+          musicEnabled={progress.musicEnabled}
+          onToggleMusic={toggleMusic}
+        />
 
         {/* Install banner */}
         <InstallBanner />
 
         {/* Daily challenge card */}
         <DailyChallengeCard progress={progress} onPress={() => navigate('/game/daily/challenge')} />
-
-        {/* Daily goal bar */}
-        <DailyGoalBar
-          questionsToday={progress.dailyQuestionsDate === new Date().toISOString().split('T')[0] ? progress.dailyQuestionsCount : 0}
-          goal={GAME_CONFIG.dailyGoalQuestions}
-        />
 
         {/* Practice mistakes */}
         {dueReviews > 0 && (
@@ -128,9 +96,6 @@ export default function Home() {
             </span>
           </button>
         )}
-
-        {/* Play calendar */}
-        <PlayCalendar playHistory={progress.playHistory ?? []} />
 
         {/* Category grid — scrollable so footer stays pinned */}
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>

@@ -4,10 +4,11 @@ interface Props {
   selectedChoice: string | null;
   correctAnswer: string;
   disabled: boolean;
+  triedChoices?: string[];
 }
 
-function getColor(choice: string, selected: string | null, correct: string): string {
-  if (!selected) return '#4A90E2';
+function getColor(choice: string, selected: string | null, correct: string, tried: string[]): string {
+  if (!selected) return tried.includes(choice) ? '#bbb' : '#4A90E2';
   if (choice === correct) return '#4CAF50';
   if (choice === selected) return '#FF5252';
   return '#bbb';
@@ -22,17 +23,18 @@ function speak(text: string) {
   window.speechSynthesis.speak(u);
 }
 
-export default function AnswerGrid({ choices, onSelect, selectedChoice, correctAnswer, disabled }: Props) {
+export default function AnswerGrid({ choices, onSelect, selectedChoice, correctAnswer, disabled, triedChoices = [] }: Props) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, width: '100%' }}>
       {choices.map((choice) => {
-        const color = getColor(choice, selectedChoice, correctAnswer);
+        const color = getColor(choice, selectedChoice, correctAnswer, triedChoices);
         const isSelected = choice === selectedChoice;
         const isCorrect = selectedChoice && choice === correctAnswer;
+        const isTried = triedChoices.includes(choice);
         return (
           <div key={choice} style={{ position: 'relative' }}>
             <button
-              onClick={() => { if (!disabled && !selectedChoice) onSelect(choice); }}
+              onClick={() => { if (!disabled && !selectedChoice && !isTried) onSelect(choice); }}
               className={isSelected && choice !== correctAnswer ? 'anim-shake' : isCorrect ? 'anim-pop' : ''}
               style={{
                 width: '100%',
