@@ -54,7 +54,9 @@ export default function ReviewGame() {
     const correctCountBefore = session.correctCount;
     const srsUpdatesBefore = session.srsUpdates;
 
-    const correct = session.recordAnswer(choice);
+    const { correct, card } = session.recordAnswer(choice);
+    // Include this answer — `session.srsUpdates` has not caught up yet.
+    const finalSrsUpdates = card ? [...srsUpdatesBefore, card] : srsUpdatesBefore;
     setSelectedChoice(choice);
     setLastCorrect(correct);
     setShowFeedback(true);
@@ -90,7 +92,7 @@ export default function ReviewGame() {
         hasCompleted.current = true;
         sounds.playLevelUp();
         const { newBadges, newStickers, streakBonus } = recordMasterComplete(
-          'review', finalCorrectCount, session.totalQuestions, srsUpdatesBefore, nextConsecutive,
+          'review', finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
         );
         recordQuestionsAnswered(session.totalQuestions);
         navigate('/celebration/review/practice', {

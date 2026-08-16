@@ -38,7 +38,7 @@ export const CHARACTERS: CharacterDef[] = [
   },
   {
     id: 'dog',
-    name: 'Biscuit',
+    name: 'Rocket',
     emoji: '🐶',
     color: '#4FC3F7',
     levelEmojis: ['🐶', '🐕', '🐕✨', '🐕👑'],

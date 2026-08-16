@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useRef } from 'react';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
@@ -13,6 +13,7 @@ import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import InstallBanner from '@/components/ui/InstallBanner';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { todayString } from '@/engine/dates';
 
 export default function Home() {
   const { progress, isLoaded, toggleMusic } = useProgress();
@@ -39,10 +40,9 @@ export default function Home() {
     );
   }
 
-  if (!progress.characterId) {
-    navigate('/character-select', { replace: true });
-    return null;
-  }
+  // A <Navigate> element, not a navigate() call: routing during render is a side
+  // effect in the render phase and React warns about it.
+  if (!progress.characterId) return <Navigate to="/character-select" replace />;
 
   const theme = getTheme(progress.activeTheme);
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
@@ -67,7 +67,7 @@ export default function Home() {
         {/* Today strip: streak + goal + music in one compact row */}
         <TodayStrip
           streak={progress.currentStreak}
-          questionsToday={progress.dailyQuestionsDate === new Date().toISOString().split('T')[0] ? progress.dailyQuestionsCount : 0}
+          questionsToday={progress.dailyQuestionsDate === todayString() ? progress.dailyQuestionsCount : 0}
           goal={GAME_CONFIG.dailyGoalQuestions}
           musicEnabled={progress.musicEnabled}
           onToggleMusic={toggleMusic}

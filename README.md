@@ -1,84 +1,94 @@
 # Math Stars ⭐
 
-A math learning app for kids going into 1st grade. Runs on iPad via Expo Go.
+A math practice web app for a first grader. Open it in a browser, or add it to the home
+screen on a tablet and it behaves like an app.
+
+Built with Vite + React + TypeScript. No accounts, no server, no tracking — all progress
+lives in the browser's local storage on the device.
 
 ---
 
-## Setup — everything in Safari, no terminal needed
+## Running it
 
-### Step 1 — Create an Expo account
+```
+npm install
+npm run dev        # http://localhost:5173
+```
 
-Go to **expo.dev** and sign up for a free account.
+Other commands:
 
----
-
-### Step 2 — Create the project and get your Project ID
-
-1. After signing in, tap **Create Project**
-2. Set the name to exactly: `math-stars`
-3. On the project page, look for the **Project ID** — it's a long code like `a1b2c3d4-...`
-4. Copy it and save it somewhere (Notes app is fine)
-
----
-
-### Step 3 — Create an access token
-
-1. Tap your profile picture → **Account Settings**
-2. Tap **Access Tokens**
-3. Tap **Create Token**, give it a name like "GitHub"
-4. Copy the token and save it (you only see it once)
-
----
-
-### Step 4 — Add the token to GitHub
-
-1. Go to this GitHub repo in Safari
-2. Tap **Settings** (top menu) → **Secrets and variables** → **Actions**
-3. Tap **New repository secret**
-4. Name: `EXPO_TOKEN`
-5. Value: paste the token from Step 3
-6. Tap **Add secret**
-
----
-
-### Step 5 — Add the Project ID
-
-Reply to the chat with your Project ID from Step 2. It will be added to the app and the first publish will trigger automatically.
-
----
-
-### Step 6 — Open the app in Expo Go
-
-1. Install **Expo Go** from the App Store on the iPad (free)
-2. Open Expo Go → tap **Enter URL manually**
-3. Type: `exp://exp.host/@YOUR_EXPO_USERNAME/math-stars`
-   *(replace YOUR_EXPO_USERNAME with the username you chose in Step 1)*
-4. Tap **Connect** — the app loads 🎉
-
-Expo Go remembers this URL, so next time she just taps it from the recent list.
-
----
-
-### Updating the app in the future
-
-Nothing to do — every time code is pushed to this repo, GitHub automatically re-publishes. Expo Go picks up the new version on the next open.
-
----
-
-## What's in the app
-
-| Category | Levels |
+| Command | What it does |
 |---|---|
-| ➕ Adding & Taking Away | Add to 5 → 10 → 20 → Subtract → Word problems |
-| 🔢 Counting & Numbers | Count objects → Order numbers → Compare |
-| 🔷 Shapes & Patterns | Basic shapes → More shapes → Patterns |
-| 🚀 Skip Counting | By 2s → 5s → 10s → ×2 → ×5 → ×10 tables |
-| 🕐 Telling Time | O'clock → Half past → Mixed |
+| `npm run build` | Production build into `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm test` | Question-bank and generator invariants |
+| `npm run check` | TypeScript, no emit |
 
-**Features:**
-- Pick an animal friend who cheers you on
-- 🔊 Speaker button — tap to hear any question read aloud
-- 💡 Hints after wrong answers
-- ⭐ Stars, 13 achievement badges, and a shop for background themes
-- 🔥 Daily streak tracking
-- Spaced repetition — wrong answers come back sooner
+---
+
+## Deploying
+
+Pushing to **`main`** runs `.github/workflows/deploy.yml`, which typechecks, tests, builds,
+and publishes `dist/` to the `gh-pages` branch. GitHub Pages serves that branch.
+
+The build uses a **relative asset base**, so it works from a project-site subpath
+(`/math-stars/`), a custom domain, or a local preview without changes.
+
+---
+
+## Putting it on a tablet
+
+**iPad / iPhone —** open the site in Safari, tap the Share button, then **Add to Home
+Screen**. It launches full-screen with no browser chrome. (Safari does not offer an
+automatic install prompt, so this has to be done by hand once.)
+
+**Android —** Chrome shows an install banner in the app itself; tap **Install**.
+
+---
+
+## What's in it
+
+| Category | What it covers |
+|---|---|
+| ➕ Addition & Subtraction | Adding to 5 → 10 → 20, taking away, mixed |
+| 🔢 Counting & Numbers | Counting objects, ordering, comparing |
+| 🔗 Number Bonds | Pairs that make 5, 10, 20 |
+| 🧩 Missing Number | `3 + ? = 7` and the subtraction version |
+| 👨‍👩‍👧 Fact Families | How addition and subtraction relate |
+| ⚖️ Comparing Numbers | Using `<`, `>`, `=` |
+| 🔢 Place Value | Ones and tens, building and comparing numbers |
+| 🟰 Even & Odd | Identifying and finding even/odd numbers |
+| 🔷 Shapes & Patterns | Shape names, repeating and number patterns |
+| 📏 Measurement & Money | Longer/shorter, coins |
+| 🕐 Telling Time | O'clock, half past, mixed |
+| 🚀 Skip Counting | By 2s, 5s, 10s (plus times tables) |
+
+**Features**
+
+- Pick an animal friend who cheers you on and levels up as you earn stars
+- Read-aloud on every question, plus voice answers where the browser supports it
+- A gentle retry — the first wrong tap doesn't count against you
+- Hints after wrong answers, and short illustrated lessons before most levels
+- Stars, 15 badges, 28 stickers, and a shop for background themes
+- Daily challenge, daily question goal, and a play streak
+- Spaced repetition, so questions you get wrong come back sooner
+- A parent dashboard (triple-tap the title on the home screen) with per-level stats,
+  a printable worksheet generator, and progress export/import
+
+---
+
+## How it fits together
+
+```
+src/
+  engine/      question generation, session building, scoring, spaced repetition
+  data/        question banks + the curriculum (categories.ts is the index)
+  store/       progress state and localStorage persistence
+  pages/       one component per route
+  components/  game/, home/, ui/, category/
+  hooks/       audio, speech, session
+```
+
+To add or change questions, start in `src/data/categories.ts`. Each level either lists
+`questionBankIds` (hand-written questions from a bank file) or `generatorParams`
+(procedurally generated). See `CLAUDE.md` for the invariants the tests enforce.

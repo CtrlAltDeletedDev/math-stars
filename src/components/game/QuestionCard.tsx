@@ -58,6 +58,7 @@ export default function QuestionCard({ question }: Props) {
         color: '#333',
         textAlign: 'center',
         lineHeight: 1.3,
+        whiteSpace: 'pre-line', // some prompts set context on its own line
         paddingRight: showDots || showNumberLine ? 0 : 40,
       }}>
         {question.prompt}

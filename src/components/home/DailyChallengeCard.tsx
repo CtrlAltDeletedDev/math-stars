@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { UserProgress } from '@/types';
+import { todayString } from '@/engine/dates';
 
 interface Props {
   progress: UserProgress;
@@ -8,7 +9,7 @@ interface Props {
 
 export default function DailyChallengeCard({ progress, onPress }: Props) {
   const [pressed, setPressed] = useState(false);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = todayString();
   const doneToday = progress.lastDailyChallengeDate === todayStr;
   const dcStreak = progress.dailyChallengeStreak ?? 0;
 

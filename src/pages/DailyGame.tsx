@@ -50,6 +50,7 @@ export default function DailyGame() {
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const remainingRef = useRef(0);
   const hasCompleted = useRef(false);
   const answeringRef = useRef(false);
 
@@ -59,16 +60,21 @@ export default function DailyGame() {
     if (!challengeMode) return;
     setTimeLeft(timerSeconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
+    // The countdown reads and writes a ref, and only calls setState with a plain
+    // value. Firing handleAnswer from inside a setTimeLeft updater made the
+    // updater impure — StrictMode double-invokes updaters, so a timeout could
+    // register two answers.
+    remainingRef.current = timerSeconds;
     countdownRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 0.25) {
-          clearInterval(countdownRef.current!);
-          countdownRef.current = null;
-          handleAnswer('__timeout__');
-          return 0;
-        }
-        return t - 0.25;
-      });
+      const next = remainingRef.current - 0.25;
+      remainingRef.current = next;
+      if (next <= 0) {
+        stopCountdown();
+        setTimeLeft(0);
+        handleAnswer('__timeout__');
+        return;
+      }
+      setTimeLeft(next);
     }, 250);
   }
 
@@ -85,7 +91,9 @@ export default function DailyGame() {
     const correctCountBefore = session.correctCount;
     const srsUpdatesBefore = session.srsUpdates;
 
-    const correct = session.recordAnswer(choice);
+    const { correct, card } = session.recordAnswer(choice);
+    // Include this answer — `session.srsUpdates` has not caught up yet.
+    const finalSrsUpdates = card ? [...srsUpdatesBefore, card] : srsUpdatesBefore;
     setSelectedChoice(choice);
     setLastCorrect(correct);
     setShowFeedback(true);
@@ -121,7 +129,7 @@ export default function DailyGame() {
         hasCompleted.current = true;
         sounds.playLevelUp();
         const { newBadges, newStickers, streakBonus, dcStreakBonus } = recordDailyChallengeComplete(
-          finalCorrectCount, session.totalQuestions, srsUpdatesBefore, nextConsecutive,
+          finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
         );
         recordQuestionsAnswered(session.totalQuestions);
         navigate('/celebration/daily/challenge', {
