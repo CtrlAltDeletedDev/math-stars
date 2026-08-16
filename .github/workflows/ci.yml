@@ -1,20 +1,26 @@
-name: Deploy to GitHub Pages
+name: CI
 
-# Pull requests are covered by ci.yml; this one only publishes.
+# Runs on every pull request, and on main as a backstop.
+#
+# The deploy workflow only fires on pushes to main, which meant a pull request
+# got no typecheck and no tests at all — it could merge red and only fail once
+# it was already on main, which auto-deploys. This is the gate that stops that.
+
 on:
+  pull_request:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: deploy
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  check:
+    name: Typecheck, test, build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,8 +43,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Deploy to gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist
