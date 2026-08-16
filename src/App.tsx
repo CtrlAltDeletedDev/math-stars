@@ -15,6 +15,7 @@ import DailyGame from './pages/DailyGame';
 import MasterGame from './pages/MasterGame';
 import ReviewGame from './pages/ReviewGame';
 import Lesson from './pages/Lesson';
+import Practice from './pages/Practice';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/character-select" element={<CharacterSelect />} />
       <Route path="/category/:id" element={<Category />} />
+      <Route path="/practice" element={<Practice />} />
       <Route path="/game/daily/challenge" element={<DailyGame />} />
       <Route path="/game/review/practice" element={<ReviewGame />} />
       <Route path="/game/master/:categoryId" element={<MasterGame />} />

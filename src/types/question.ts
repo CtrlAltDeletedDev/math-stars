@@ -16,7 +16,17 @@ export type QuestionType =
   | 'number_bond'
   | 'even_odd'
   | 'fact_family'
-  | 'missing_number';
+  | 'missing_number'
+  | 'fraction';
+
+/**
+ * A drawn illustration for questions a picture explains better than words.
+ * Rendered by the matching component in components/game/.
+ */
+export type QuestionVisual =
+  | { kind: 'fraction'; numerator: number; denominator: number; shape: 'circle' | 'bar' }
+  | { kind: 'fractionSet'; fractions: [number, number][] } // several, drawn to compare
+  | { kind: 'coins'; coins: number[] }; // cent values, e.g. [25, 10, 1]
 
 export interface Question {
   id: string;
@@ -28,6 +38,7 @@ export interface Question {
   difficulty: number;
   hint?: string;
   speakText?: string;
+  visual?: QuestionVisual;
 }
 
 export interface QuestionResult {

@@ -25,6 +25,17 @@ export interface CategoryProgress {
   totalStarsEarned: number;
 }
 
+/** Where the child currently stands on one skill ladder. */
+export interface SkillState {
+  skillId: string;
+  /** Index into the skill's rungs. */
+  rung: number;
+  /** Sliding window of recent results at this rung; cleared on every move. */
+  recent: boolean[];
+  attempts: number;
+  correct: number;
+}
+
 export interface BadgeEarned {
   badgeId: string;
   earnedAt: number;
@@ -55,4 +66,7 @@ export interface UserProgress {
   dailyChallengeHistory: string[];
   dailyQuestionsDate: string;
   dailyQuestionsCount: number;
+  /** Adaptive practice: one entry per skill she has actually met. */
+  skills: Record<string, SkillState>;
+  practiceQuestionsAnswered: number;
 }

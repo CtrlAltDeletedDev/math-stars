@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
+import { SKILLS, rankFor } from '@/data/skills';
+import { rungAccuracy, isMaxed } from '@/engine/skillLadder';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import PlayCalendar from '@/components/ui/PlayCalendar';
@@ -119,6 +121,47 @@ export default function Parent() {
           Last 7 Days
         </div>
         <PlayCalendar playHistory={progress.playHistory ?? []} />
+
+        {/* Where she is on each skill ladder */}
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+          Practice Levels
+        </div>
+        <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
+          These move on their own — up after 6 of the last 8 right, down after 3 or fewer. Skills she hasn't practised yet aren't shown.
+        </div>
+        {SKILLS.filter((sk) => progress.skills?.[sk.id]).length === 0 ? (
+          <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>
+            Nothing yet — tap ♾️ Practice on the home screen to get started.
+          </div>
+        ) : (
+          <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '6px 18px' }}>
+            {SKILLS.filter((sk) => progress.skills?.[sk.id]).map((sk) => {
+              const st = progress.skills[sk.id];
+              const acc = rungAccuracy(st);
+              const rung = sk.rungs[Math.min(st.rung, sk.rungs.length - 1)];
+              return (
+                <div key={sk.id} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 20 }}>{sk.emoji}</span>
+                    <span style={{ flex: 1, fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff' }}>{sk.title}</span>
+                    <span style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+                      {st.rung + 1}/{sk.rungs.length}
+                    </span>
+                    <span style={{ fontSize: 17 }}>{rankFor(st.rung)}</span>
+                  </div>
+                  <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 12.5, color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>
+                    {rung.label}
+                    {isMaxed(st) ? ' · top of the ladder' : ''}
+                  </div>
+                  <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>
+                    {st.attempts} answered
+                    {acc !== null ? ` · ${Math.round(acc * 100)}% on the last ${st.recent.length}` : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Per-category breakdown */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>

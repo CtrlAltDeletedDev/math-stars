@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { UserProgress, SRSCard, BadgeEarned } from '@/types';
+import { UserProgress, SRSCard, BadgeEarned, SkillState } from '@/types';
 import { loadProgress, saveProgress, buildInitialProgress, normalizeProgress } from './storage';
 import { CATEGORIES, getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
@@ -8,6 +8,8 @@ import { STICKERS } from '@/data/stickers';
 import { SHOP_ITEMS } from '@/data/shop';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { todayString, yesterdayString } from '@/engine/dates';
+import { recordSkillAnswer, newSkillState, LadderMove } from '@/engine/skillLadder';
+import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
 
 interface ProgressContextValue {
   progress: UserProgress;
@@ -33,6 +35,11 @@ interface ProgressContextValue {
     consecutiveCorrect: number,
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   recordQuestionsAnswered: (count: number) => void;
+  recordPracticeAnswer: (
+    skillId: string | null,
+    questionId: string,
+    wasCorrect: boolean,
+  ) => { move: LadderMove; skill: SkillState | null; starsAwarded: number };
   selectCharacter: (characterId: string) => void;
   purchaseItem: (itemId: string) => boolean;
   setActiveTheme: (themeId: string) => void;
@@ -52,7 +59,13 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = loadProgress();
-    if (saved) setProgress(saved);
+    if (saved) {
+      setProgress(saved);
+      // Write the migrated shape straight back, so an older save on disk
+      // converges to the current schema even if she never finishes a level
+      // this session.
+      if (saved.version !== undefined) saveProgress(saved);
+    }
     setIsLoaded(true);
   }, []);
 
@@ -352,6 +365,56 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return { newBadges, newStickers, streakBonus };
   }
 
+  // One answer in endless practice: move her along the skill ladder, keep the
+  // SRS card current, and hand back whether she just levelled up so the screen
+  // can celebrate it.
+  function recordPracticeAnswer(
+    skillId: string | null,
+    questionId: string,
+    wasCorrect: boolean,
+  ): { move: LadderMove; skill: SkillState | null; starsAwarded: number } {
+    let move: LadderMove = null;
+    let skill: SkillState | null = null;
+    let starsAwarded = 0;
+
+    setProgress((prev) => {
+      const answered = (prev.practiceQuestionsAnswered ?? 0) + 1;
+
+      // A star every ten questions: enough to feel like progress, slow enough
+      // that endless practice can't flood the shop.
+      starsAwarded = answered % 10 === 0 ? 1 : 0;
+
+      const skills = { ...(prev.skills ?? {}) };
+      if (skillId) {
+        const before = skills[skillId] ?? newSkillState(skillId);
+        const result = recordSkillAnswer(before, wasCorrect);
+        skills[skillId] = result.state;
+        move = result.move;
+        skill = result.state;
+      }
+
+      const card = prev.srsCards[questionId] ?? createNewSRSCard(questionId);
+      const next: UserProgress = {
+        ...updateStreak(prev),
+        skills,
+        practiceQuestionsAnswered: answered,
+        srsCards: { ...prev.srsCards, [questionId]: updateSRSCard(card, wasCorrect) },
+        consecutiveCorrect: wasCorrect ? prev.consecutiveCorrect + 1 : 0,
+        totalStars: prev.totalStars + starsAwarded,
+        spendableStars: prev.spendableStars + starsAwarded,
+      };
+
+      const todayStr = todayString();
+      const ph = next.playHistory ?? [];
+      if (!ph.includes(todayStr)) next.playHistory = [...ph, todayStr];
+
+      debouncedSave(next);
+      return next;
+    });
+
+    return { move, skill, starsAwarded };
+  }
+
   function recordQuestionsAnswered(count: number) {
     setProgress((prev) => {
       const todayStr = todayString();
@@ -452,7 +515,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, importProgress }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, importProgress }}>
       {children}
     </ProgressContext.Provider>
   );

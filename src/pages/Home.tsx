@@ -76,6 +76,27 @@ export default function Home() {
         {/* Install banner */}
         <InstallBanner />
 
+        {/* Endless adaptive practice — the main way in */}
+        <button
+          onClick={() => navigate('/practice')}
+          style={{
+            background: 'linear-gradient(135deg, #7E57C2, #4527A0)',
+            border: '2px solid rgba(255,255,255,0.45)', borderRadius: 18,
+            padding: '16px 18px', cursor: 'pointer', width: '100%',
+            display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
+            boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
+          }}
+        >
+          <div style={{ fontSize: 36 }}>♾️</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff' }}>Practice</div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
+              A mix of everything, just right for you
+            </div>
+          </div>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>▶</div>
+        </button>
+
         {/* Daily challenge card */}
         <DailyChallengeCard progress={progress} onPress={() => navigate('/game/daily/challenge')} />
 

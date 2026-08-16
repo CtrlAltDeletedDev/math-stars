@@ -1,5 +1,6 @@
 import { Question } from '@/types';
 import DotAid from './DotAid';
+import QuestionVisual from './QuestionVisual';
 import NumberLine from './NumberLine';
 
 interface Props {
@@ -63,6 +64,9 @@ export default function QuestionCard({ question }: Props) {
       }}>
         {question.prompt}
       </div>
+
+      {/* After the prompt: she should read (or hear) the question, then look. */}
+      {question.visual && <QuestionVisual visual={question.visual} />}
 
       {showDots && <DotAid prompt={question.prompt} type={question.type} />}
       {showNumberLine && <NumberLine prompt={question.prompt} />}

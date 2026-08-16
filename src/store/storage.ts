@@ -2,14 +2,21 @@ import { UserProgress, CategoryProgress, LevelState } from '@/types';
 import { CATEGORIES } from '@/data/categories';
 
 const STORAGE_KEY = 'mathstars_progress_v2';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
+const OLDEST_MIGRATABLE = 2;
 
 // Patch missing fields on a saved/imported progress object so the rest of
 // the app can rely on every field existing. Returns null if it's not a
 // compatible save at all.
+//
+// Anything from OLDEST_MIGRATABLE upward is *migrated*, not rejected. This used
+// to hard-reject any version !== 2, which meant the first schema change would
+// have silently wiped every star she had earned.
 export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   if (!parsed || typeof parsed !== 'object') return null;
-  if (parsed.version !== CURRENT_VERSION) return null;
+  if (typeof parsed.version !== 'number') return null;
+  if (parsed.version < OLDEST_MIGRATABLE || parsed.version > CURRENT_VERSION) return null;
+
   // Patch fields added after initial release
   if (!parsed.categories) parsed.categories = {};
   if (!parsed.srsCards) parsed.srsCards = {};
@@ -26,12 +33,21 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   if (!parsed.dailyChallengeHistory) parsed.dailyChallengeHistory = [];
   if (!parsed.dailyQuestionsDate) parsed.dailyQuestionsDate = '';
   if (parsed.dailyQuestionsCount === undefined) parsed.dailyQuestionsCount = 0;
+
+  // v2 → v3: adaptive practice. Nothing to convert; she simply starts at the
+  // bottom of each ladder and climbs, which happens quickly for anything she
+  // already knows.
+  if (!parsed.skills) parsed.skills = {};
+  if (parsed.practiceQuestionsAnswered === undefined) parsed.practiceQuestionsAnswered = 0;
+
   // Initialize any new categories added since this save was made
   for (const cat of CATEGORIES) {
     if (!parsed.categories[cat.id]) {
       parsed.categories[cat.id] = buildInitialCategoryProgress(cat.id);
     }
   }
+
+  parsed.version = CURRENT_VERSION;
   return parsed;
 }
 
@@ -107,5 +123,7 @@ export function buildInitialProgress(): UserProgress {
     dailyChallengeHistory: [],
     dailyQuestionsDate: '',
     dailyQuestionsCount: 0,
+    skills: {},
+    practiceQuestionsAnswered: 0,
   };
 }
