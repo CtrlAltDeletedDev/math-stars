@@ -1,5 +1,5 @@
 import { Question } from '@/types';
-import { generateWordProblem } from '@/data/wordProblems';
+import { generateWordProblem, wordProblemFromId } from '@/data/wordProblems';
 import { buildChoices, randomInt } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
@@ -193,9 +193,77 @@ export function generateMultiplicationQuestion(tables: number[]): Question {
   return multiplicationQuestion(table, randomInt(1, 12));
 }
 
+// --- First-grade strategy work -------------------------------------------
+//
+// These three are the backbone of Grade 1 addition and none of them existed:
+// doubles are memorised as anchors, making ten is how you break a hard sum
+// into an easy one, and counting on is the first real strategy that replaces
+// counting everything from one.
+
+function doublesQuestion(a: number): Question {
+  const correct = a * 2;
+  return {
+    id: `dbl-${a}`,
+    type: 'addition',
+    prompt: `${a} + ${a} = ?`,
+    correctAnswer: String(correct),
+    choices: buildChoices(correct, [correct - 1, correct + 1, correct - 2, correct + 2, a], { step: 1 }),
+    difficulty: a <= 5 ? 1 : 2,
+    hint: `A double! ${a} and another ${a}.`,
+    speakText: `${a} plus ${a}?`,
+  };
+}
+
+function makeTenQuestion(target: number, a: number): Question {
+  const correct = target - a;
+  return {
+    id: `mk${target}-${a}`,
+    type: 'missing_number',
+    prompt: `${a} + ? = ${target}`,
+    correctAnswer: String(correct),
+    choices: buildChoices(correct, [target, a, target + a, correct - 1, correct + 1], { step: 1 }),
+    difficulty: target <= 10 ? 1 : 2,
+    hint: `How many more to get from ${a} up to ${target}?`,
+    speakText: `${a} plus what makes ${target}?`,
+  };
+}
+
+function countOnQuestion(a: number, b: number): Question {
+  const correct = a + b;
+  return {
+    id: `cnt-${a}+${b}`,
+    type: 'addition',
+    prompt: `${a} + ${b} = ?`,
+    correctAnswer: String(correct),
+    choices: buildChoices(correct, [correct - 1, correct + 1, a, b, correct + 10], { step: 1 }),
+    difficulty: 1,
+    hint: `Start at ${a} and count on ${b}: ${Array.from({ length: b }, (_, i) => a + i + 1).join(', ')}.`,
+    speakText: `${a} plus ${b}?`,
+  };
+}
+
+export function generateDoublesQuestion(maxAddend: number): Question {
+  return doublesQuestion(randomInt(1, maxAddend));
+}
+
+export function generateMakeTenQuestion(target: number): Question {
+  // "8 + ? = 10" — the pairs that bridge to a ten. The full 0..target range,
+  // not 1..target-1: the two ends are real bonds a first grader is taught, and
+  // without them a target of 10 yields only 9 distinct questions, one short of
+  // filling a session.
+  return makeTenQuestion(target, randomInt(0, target));
+}
+
+export function generateCountOnQuestion(maxStart: number): Question {
+  // Deliberately a big number plus a small one, which is what makes counting on
+  // pay off compared with counting everything from one.
+  const a = randomInt(Math.max(3, Math.floor(maxStart / 2)), maxStart);
+  return countOnQuestion(a, randomInt(1, 3));
+}
+
 // Rebuild a generated question from its deterministic ID (used by the
 // review session, where SRS cards reference questions no bank contains).
-export function questionFromId(id: string): Question | null {
+export function questionFromId(id: string, characterName = 'You'): Question | null {
   let m = id.match(/^add-(\d+)\+(\d+)$/);
   if (m) return additionQuestion(+m[1], +m[2], +m[1] + +m[2]);
   m = id.match(/^sub-(\d+)-(\d+)$/);
@@ -206,6 +274,13 @@ export function questionFromId(id: string): Question | null {
   if (m) return missingSubQuestion(+m[1], +m[2], +m[1]);
   m = id.match(/^mul-(\d+)x(\d+)$/);
   if (m) return multiplicationQuestion(+m[1], +m[2]);
+  if (id.startsWith('wp-')) return wordProblemFromId(id, characterName);
+  m = id.match(/^dbl-(\d+)$/);
+  if (m) return doublesQuestion(+m[1]);
+  m = id.match(/^mk(\d+)-(\d+)$/);
+  if (m) return makeTenQuestion(+m[1], +m[2]);
+  m = id.match(/^cnt-(\d+)\+(\d+)$/);
+  if (m) return countOnQuestion(+m[1], +m[2]);
   m = id.match(/^skip-(\d+)-(\d+)-(\d+)$/);
   if (m) return skipCountQuestion(+m[1], +m[2], +m[3], +m[2] + +m[1] * +m[3]);
   return null;
@@ -227,6 +302,9 @@ export function generateFromParams(params: Record<string, number | string>, char
     const kind = (params.kind as 'addition' | 'subtraction' | 'both') ?? 'both';
     return generateMissingNumberQuestion(Number(params.maxSum), kind);
   }
+  if (op === 'doubles') return generateDoublesQuestion(Number(params.maxAddend));
+  if (op === 'make_ten') return generateMakeTenQuestion(Number(params.target));
+  if (op === 'count_on') return generateCountOnQuestion(Number(params.maxStart));
   if (op === 'skip_count') return generateSkipCountQuestion(Number(params.by), Number(params.maxStart));
   if (op === 'multiplication') {
     const tables = String(params.tables).split(',').map(Number);

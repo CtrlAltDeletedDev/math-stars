@@ -147,21 +147,35 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
   const { srsCards } = progress;
   const total = 10;
 
-  const activeCats = CATEGORIES.filter((cat) => {
+  // Only topics she has actually played.
+  //
+  // Level 1 of every category is unlocked from the start, so "unlocked" meant
+  // all eleven categories on day one — a brand-new player's first ten questions
+  // were place value, telling time and comparing symbols before she had
+  // answered a single sum. A category counts as active once she has attempted
+  // something in it.
+  const hasStarted = (cat: Category) => {
     const catProg = progress.categories[cat.id];
     if (!catProg) return false;
-    return Object.values(catProg.levels).some((l) => l.status === 'unlocked' || l.status === 'completed');
-  });
+    return Object.values(catProg.levels).some((l) => l.status === 'completed' || l.totalAttempts > 0);
+  };
 
-  if (activeCats.length === 0) return [];
+  let activeCats = CATEGORIES.filter(hasStarted);
+
+  // Nothing played yet: fall back to the first category only, so the daily
+  // challenge is a gentle introduction rather than a tour of the whole app.
+  if (activeCats.length === 0) activeCats = CATEGORIES.slice(0, 1);
 
   const perCat = Math.max(1, Math.ceil(total / activeCats.length));
   const poolPerCat: Question[][] = activeCats.map((cat) => {
     const catProg = progress.categories[cat.id];
     const activeLevels = cat.levels.filter((l) => {
       const ls = catProg?.levels[l.id];
-      return ls && (ls.status === 'unlocked' || ls.status === 'completed');
+      if (!ls) return false;
+      return ls.status === 'completed' || ls.totalAttempts > 0;
     });
+    // A category she has only just unlocked still needs something to ask.
+    if (activeLevels.length === 0 && cat.levels.length > 0) activeLevels.push(cat.levels[0]);
     const allQ: Question[] = [];
     for (const level of activeLevels) {
       allQ.push(...buildLevelQuestions(level, srsCards, characterName));
@@ -176,14 +190,14 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
 // Build a session purely from due SRS cards — the questions the child has
 // gotten wrong recently, most overdue first. Bank questions are looked up
 // directly; generated questions are rebuilt from their deterministic IDs.
-export function buildReviewSession(progress: UserProgress, n = 10): Question[] {
+export function buildReviewSession(progress: UserProgress, n = 10, characterName = 'You'): Question[] {
   const dueCards = Object.values(progress.srsCards)
     .filter(isDue)
     .sort((a, b) => a.nextDueDate - b.nextDueDate);
 
   const questions: Question[] = [];
   for (const card of dueCards) {
-    const q = ALL_QUESTIONS_BY_ID.get(card.questionId) ?? questionFromId(card.questionId);
+    const q = ALL_QUESTIONS_BY_ID.get(card.questionId) ?? questionFromId(card.questionId, characterName);
     if (q) questions.push(q);
     if (questions.length >= n) break;
   }

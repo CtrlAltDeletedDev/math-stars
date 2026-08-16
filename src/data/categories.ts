@@ -1,7 +1,7 @@
 import { Category } from '@/types';
 import { ALL_COUNTING_QUESTIONS } from './counting';
 import { ALL_SHAPE_QUESTIONS } from './shapes';
-import { ALL_TIME_QUESTIONS, OCLOCK_QUESTIONS, HALF_PAST_QUESTIONS } from './time';
+import { ALL_TIME_QUESTIONS, OCLOCK_QUESTIONS, HALF_PAST_QUESTIONS, QUARTER_QUESTIONS } from './time';
 import { MEASUREMENT_QUESTIONS } from './measurement';
 import { COINS_QUESTIONS } from './coins';
 import { PLACE_VALUE_L1_QUESTIONS, PLACE_VALUE_L2_QUESTIONS, PLACE_VALUE_L3_QUESTIONS, ALL_PLACE_VALUE_QUESTIONS } from './placeValue';
@@ -77,6 +77,46 @@ export const CATEGORIES: Category[] = [
         questionsPerSession: 10,
         passThreshold: 0.8,
         generatorParams: { operation: 'mixed', maxSum: 20, maxMinuend: 20 },
+      },
+      {
+        id: 'strategy-doubles',
+        categoryId: 'addition',
+        levelNumber: 7,
+        title: 'Doubles',
+        description: 'Two of the same — the ones worth just knowing!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'doubles', maxAddend: 10 },
+      },
+      {
+        id: 'strategy-make-ten',
+        categoryId: 'addition',
+        levelNumber: 8,
+        title: 'Make a Ten',
+        description: 'Find the partner that gets you to 10!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'make_ten', target: 10 },
+      },
+      {
+        id: 'strategy-count-on',
+        categoryId: 'addition',
+        levelNumber: 9,
+        title: 'Counting On',
+        description: 'Start at the big number and count up!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'count_on', maxStart: 18 },
+      },
+      {
+        id: 'word-problems',
+        categoryId: 'addition',
+        levelNumber: 10,
+        title: 'Story Problems',
+        description: 'Maths hiding inside a story!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'word_problem', wordType: 'mixed' },
       },
     ],
   },
@@ -320,9 +360,19 @@ export const CATEGORIES: Category[] = [
         questionBankIds: HALF_PAST_QUESTIONS.map((q) => q.id),
       },
       {
-        id: 'time-mixed',
+        id: 'time-quarter',
         categoryId: 'time',
         levelNumber: 3,
+        title: 'Quarter Past & To',
+        description: 'Fifteen minutes past, and quarter to!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        questionBankIds: QUARTER_QUESTIONS.map((q) => q.id),
+      },
+      {
+        id: 'time-mixed',
+        categoryId: 'time',
+        levelNumber: 4,
         title: 'Mixed Clocks',
         description: 'All times mixed together!',
         questionsPerSession: 10,

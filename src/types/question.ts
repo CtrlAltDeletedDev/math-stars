@@ -26,7 +26,8 @@ export type QuestionType =
 export type QuestionVisual =
   | { kind: 'fraction'; numerator: number; denominator: number; shape: 'circle' | 'bar' }
   | { kind: 'fractionSet'; fractions: [number, number][] } // several, drawn to compare
-  | { kind: 'coins'; coins: number[] }; // cent values, e.g. [25, 10, 1]
+  | { kind: 'coins'; coins: number[] } // cent values, e.g. [25, 10, 1]
+  | { kind: 'clock'; hour: number; minute: number };
 
 export interface Question {
   id: string;

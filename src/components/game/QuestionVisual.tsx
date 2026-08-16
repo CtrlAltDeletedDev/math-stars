@@ -114,7 +114,54 @@ function FractionSet({ fractions }: { fractions: [number, number][] }) {
   );
 }
 
+/**
+ * A real clock face with real hands.
+ *
+ * The bank used to show a Unicode clock emoji (🕒), which is tiny, renders
+ * differently on every device, and — since the emoji already *is* the answer —
+ * teaches nothing about reading hands.
+ */
+function Clock({ hour, minute }: { hour: number; minute: number }) {
+  const c = 90, r = 82;
+  const minuteAngle = (minute / 60) * 360 - 90;
+  const hourAngle = ((hour % 12) / 12) * 360 + (minute / 60) * 30 - 90;
+  const hand = (angleDeg: number, length: number) => ({
+    x2: c + length * Math.cos((angleDeg * Math.PI) / 180),
+    y2: c + length * Math.sin((angleDeg * Math.PI) / 180),
+  });
+  const m = hand(minuteAngle, r * 0.78);
+  const h = hand(hourAngle, r * 0.5);
+
+  return (
+    <svg width="180" height="180" viewBox="0 0 180 180" role="img"
+         aria-label={`Clock showing ${hour} ${minute === 0 ? "o'clock" : minute + ' minutes'}`}>
+      <circle cx={c} cy={c} r={r} fill="#FFFDF5" stroke={LINE} strokeWidth="5" />
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = ((i / 12) * 360 - 90) * (Math.PI / 180);
+        const x1 = c + (r - 10) * Math.cos(a), y1 = c + (r - 10) * Math.sin(a);
+        const x2 = c + (r - 2) * Math.cos(a), y2 = c + (r - 2) * Math.sin(a);
+        const tx = c + (r - 24) * Math.cos(a), ty = c + (r - 24) * Math.sin(a);
+        return (
+          <g key={i}>
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={LINE} strokeWidth="3" strokeLinecap="round" />
+            <text x={tx} y={ty + 6} textAnchor="middle"
+                  style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 17, fill: LINE }}>
+              {i === 0 ? 12 : i}
+            </text>
+          </g>
+        );
+      })}
+      {/* Hour hand short and fat, minute hand long and thin — the distinction
+          she actually has to learn. */}
+      <line x1={c} y1={c} x2={h.x2} y2={h.y2} stroke={LINE} strokeWidth="9" strokeLinecap="round" />
+      <line x1={c} y1={c} x2={m.x2} y2={m.y2} stroke={SHADE} strokeWidth="5.5" strokeLinecap="round" />
+      <circle cx={c} cy={c} r="7" fill={LINE} />
+    </svg>
+  );
+}
+
 export default function QuestionVisual({ visual }: { visual: VisualSpec }) {
+  if (visual.kind === 'clock') return <Clock hour={visual.hour} minute={visual.minute} />;
   if (visual.kind === 'coins') return <Coins coins={visual.coins} />;
   if (visual.kind === 'fractionSet') return <FractionSet fractions={visual.fractions} />;
   return visual.shape === 'circle'

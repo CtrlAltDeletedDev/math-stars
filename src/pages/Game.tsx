@@ -128,6 +128,8 @@ export default function Game() {
       sounds.playWrong();
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
       const currentQ = session.currentQuestion;
+      // Bring it back later in this same session, while the correction is fresh.
+      if (currentQ) session.requeue(currentQ.id);
       if (currentQ && choice !== '__timeout__') {
         wrongAnswersRef.current = [
           ...wrongAnswersRef.current,
@@ -310,17 +312,6 @@ export default function Game() {
         <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden', justifyContent: 'center' }}>
           <QuestionCard question={question} />
 
-          {!showFeedback && !selectedChoice && (
-            <button
-              onClick={() => speak(question)}
-              style={{
-                alignSelf: 'center', background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20,
-                padding: '5px 16px', fontFamily: 'Nunito', fontWeight: 700,
-                fontSize: 14, color: '#fff', cursor: 'pointer',
-              }}
-            >🔊 Read again</button>
-          )}
 
           {question.hint && <HintBubble hint={question.hint} visible={showHint} />}
 

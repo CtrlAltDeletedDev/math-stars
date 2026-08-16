@@ -114,6 +114,28 @@ export const SKILLS: Skill[] = [
     ],
   },
   {
+    id: 'strategies',
+    title: 'Number Tricks',
+    emoji: '💡',
+    rungs: [
+      { label: 'Doubles to 10', source: { kind: 'generated', params: { operation: 'doubles', maxAddend: 5 } } },
+      { label: 'Doubles to 20', source: { kind: 'generated', params: { operation: 'doubles', maxAddend: 10 } } },
+      { label: 'Making ten', source: { kind: 'generated', params: { operation: 'make_ten', target: 10 } } },
+      { label: 'Counting on within 20', source: { kind: 'generated', params: { operation: 'count_on', maxStart: 18 } } },
+      { label: 'Making twenty', source: { kind: 'generated', params: { operation: 'make_ten', target: 20 } } },
+    ],
+  },
+  {
+    id: 'stories',
+    title: 'Story Problems',
+    emoji: '📖',
+    rungs: [
+      { label: 'Adding stories', source: { kind: 'generated', params: { operation: 'word_problem', wordType: 'addition' } } },
+      { label: 'Taking away stories', source: { kind: 'generated', params: { operation: 'word_problem', wordType: 'subtraction' } } },
+      { label: 'Mixed stories', source: { kind: 'generated', params: { operation: 'word_problem', wordType: 'mixed' } } },
+    ],
+  },
+  {
     id: 'comparing',
     title: 'Comparing',
     emoji: '⚖️',
@@ -139,6 +161,7 @@ export const SKILLS: Skill[] = [
     rungs: [
       { label: "O'clock", source: { kind: 'bank', types: ['tell_time'], difficulty: [1] } },
       { label: 'Half past too', source: { kind: 'bank', types: ['tell_time'], difficulty: [1, 2] } },
+      { label: 'Quarter past and quarter to', source: { kind: 'bank', types: ['tell_time'], difficulty: [2, 3] } },
     ],
   },
   {

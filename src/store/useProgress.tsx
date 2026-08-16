@@ -9,6 +9,7 @@ import { SHOP_ITEMS } from '@/data/shop';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { todayString, yesterdayString } from '@/engine/dates';
 import { recordSkillAnswer, newSkillState, LadderMove } from '@/engine/skillLadder';
+import { pruneSRSCards } from '@/engine/srs';
 import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
 
 interface ProgressContextValue {
@@ -75,7 +76,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   function flushSave() {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
-    if (pendingSave.current) { saveProgress(pendingSave.current); pendingSave.current = null; }
+    if (pendingSave.current) {
+      const p = pendingSave.current;
+      saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards) });
+      pendingSave.current = null;
+    }
   }
 
   function debouncedSave(p: UserProgress) {

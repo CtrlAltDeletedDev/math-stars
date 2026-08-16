@@ -1,11 +1,13 @@
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { getTheme } from '@/data/shop';
 import { STICKERS } from '@/data/stickers';
 import { countDueReviews } from '@/engine/sessionBuilder';
+import { findNextUp } from '@/engine/nextUp';
+import { todayString } from '@/engine/dates';
 import CategoryCard from '@/components/home/CategoryCard';
 import DailyChallengeCard from '@/components/home/DailyChallengeCard';
 import TodayStrip from '@/components/home/TodayStrip';
@@ -13,13 +15,15 @@ import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import InstallBanner from '@/components/ui/InstallBanner';
 import { GAME_CONFIG } from '@/constants/gameConfig';
-import { todayString } from '@/engine/dates';
 
 export default function Home() {
   const { progress, isLoaded, toggleMusic } = useProgress();
   const navigate = useNavigate();
   const titleTaps = useRef(0);
   const titleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Eleven category tiles at once is a wall of doors. They start folded away
+  // behind one button, so the screen leads with what to actually play.
+  const [showAllTopics, setShowAllTopics] = useState(false);
 
   function handleTitleTap() {
     titleTaps.current += 1;
@@ -49,6 +53,11 @@ export default function Home() {
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const earnedStickers = (progress.earnedStickers ?? []).length;
   const dueReviews = countDueReviews(progress);
+  const nextUp = findNextUp(progress);
+
+  const nextLabel = nextUp
+    ? nextUp.reason === 'continue' ? 'Keep going' : nextUp.reason === 'new' ? 'New level!' : 'Try this next'
+    : null;
 
   return (
     <BackgroundGradient colors={theme.colors}>
@@ -64,7 +73,6 @@ export default function Home() {
           <StarBadge count={progress.totalStars} />
         </div>
 
-        {/* Today strip: streak + goal + music in one compact row */}
         <TodayStrip
           streak={progress.currentStreak}
           questionsToday={progress.dailyQuestionsDate === todayString() ? progress.dailyQuestionsCount : 0}
@@ -73,64 +81,106 @@ export default function Home() {
           onToggleMusic={toggleMusic}
         />
 
-        {/* Install banner */}
         <InstallBanner />
 
-        {/* Endless adaptive practice — the main way in */}
-        <button
-          onClick={() => navigate('/practice')}
-          style={{
-            background: 'linear-gradient(135deg, #7E57C2, #4527A0)',
-            border: '2px solid rgba(255,255,255,0.45)', borderRadius: 18,
-            padding: '16px 18px', cursor: 'pointer', width: '100%',
-            display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
-            boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
-          }}
-        >
-          <div style={{ fontSize: 36 }}>♾️</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff' }}>Practice</div>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
-              A mix of everything, just right for you
-            </div>
-          </div>
-          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>▶</div>
-        </button>
+        {/* Everything below scrolls; the three big choices come first. */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 4 } as React.CSSProperties}>
 
-        {/* Daily challenge card */}
-        <DailyChallengeCard progress={progress} onPress={() => navigate('/game/daily/challenge')} />
+          {/* 1 — the single most sensible next thing */}
+          {nextUp && (
+            <button
+              onClick={() => navigate(`/game/${nextUp.categoryId}/${nextUp.level.id}`)}
+              style={{
+                background: nextUp.bgColor, border: '2px solid rgba(255,255,255,0.45)', borderRadius: 20,
+                padding: '18px 18px', cursor: 'pointer', width: '100%',
+                display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
+                boxShadow: '0 5px 0 rgba(0,0,0,0.2)',
+              }}
+            >
+              <div style={{ fontSize: 44, lineHeight: 1 }}>{nextUp.categoryEmoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 12.5, color: 'rgba(255,255,255,0.85)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                  {nextLabel}
+                </div>
+                <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 21, color: '#fff' }}>
+                  {nextUp.level.title}
+                </div>
+                <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {nextUp.categoryTitle}
+                </div>
+              </div>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff' }}>▶</div>
+            </button>
+          )}
 
-        {/* Practice mistakes */}
-        {dueReviews > 0 && (
+          {/* 2 — endless adaptive practice */}
           <button
-            onClick={() => navigate('/game/review/practice')}
+            onClick={() => navigate('/practice')}
             style={{
-              background: 'rgba(67,160,71,0.45)', border: '2px solid rgba(255,255,255,0.5)',
-              borderRadius: 14, padding: '10px 16px', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #7E57C2, #4527A0)',
+              border: '2px solid rgba(255,255,255,0.45)', borderRadius: 18,
+              padding: '14px 18px', cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
+              boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
+            }}
+          >
+            <div style={{ fontSize: 34 }}>♾️</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff' }}>Practice</div>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
+                A mix of everything, just right for you
+              </div>
+            </div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>▶</div>
+          </button>
+
+          {/* 3 — the daily ritual */}
+          <DailyChallengeCard progress={progress} onPress={() => navigate('/game/daily/challenge')} />
+
+          {dueReviews > 0 && (
+            <button
+              onClick={() => navigate('/game/review/practice')}
+              style={{
+                background: 'rgba(67,160,71,0.45)', border: '2px solid rgba(255,255,255,0.5)',
+                borderRadius: 14, padding: '10px 16px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
+              }}
+            >
+              <span>💪 Practice Mistakes</span>
+              <span style={{ background: 'rgba(255,255,255,0.3)', borderRadius: 12, padding: '2px 10px', fontSize: 13 }}>
+                {dueReviews} to review
+              </span>
+            </button>
+          )}
+
+          {/* Everything else, folded away */}
+          <button
+            onClick={() => setShowAllTopics((v) => !v)}
+            style={{
+              background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 14,
+              padding: '11px 16px', cursor: 'pointer', width: '100%',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
             }}
           >
-            <span>💪 Practice Mistakes</span>
-            <span style={{ background: 'rgba(255,255,255,0.3)', borderRadius: 12, padding: '2px 10px', fontSize: 13 }}>
-              {dueReviews} to review
-            </span>
+            <span>📚 All Topics</span>
+            <span>{showAllTopics ? '▲' : '▼'}</span>
           </button>
-        )}
 
-        {/* Category grid — scrollable so footer stays pinned */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, paddingBottom: 4 }}>
-            {CATEGORIES.map((cat) => (
-              <CategoryCard
-                key={cat.id}
-                category={cat}
-                progress={progress.categories[cat.id]}
-                onPress={() => navigate(`/category/${cat.id}`)}
-                onMasterPress={() => navigate(`/game/master/${cat.id}`)}
-              />
-            ))}
-          </div>
+          {showAllTopics && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {CATEGORIES.map((cat) => (
+                <CategoryCard
+                  key={cat.id}
+                  category={cat}
+                  progress={progress.categories[cat.id]}
+                  onPress={() => navigate(`/category/${cat.id}`)}
+                  onMasterPress={() => navigate(`/game/master/${cat.id}`)}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer */}

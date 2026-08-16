@@ -84,6 +84,27 @@ export function useGameSession(
     }));
   }
 
+  /**
+   * Put a missed question back into the queue, a few slots ahead.
+   *
+   * The moment she is most ready to fix a mistake is a minute later, not
+   * tomorrow — but a wrong answer only used to set a one-day spaced-repetition
+   * interval, so the correction never got tested while it was fresh. The session
+   * length is unchanged: the requeued question replaces a later one rather than
+   * making the session longer.
+   */
+  function requeue(questionId: string, gap = 3) {
+    setState((prev) => {
+      const q = prev.questions.find((x) => x.id === questionId);
+      if (!q) return prev;
+      const target = prev.currentIndex + gap;
+      if (target >= prev.questions.length) return prev; // too near the end
+      const next = [...prev.questions];
+      next.splice(target, 1, q);
+      return { ...prev, questions: next };
+    });
+  }
+
   return {
     currentQuestion,
     currentIndex: state.currentIndex,
@@ -95,5 +116,6 @@ export function useGameSession(
     srsUpdates: state.srsUpdates,
     recordAnswer,
     advance,
+    requeue,
   };
 }

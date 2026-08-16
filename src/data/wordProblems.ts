@@ -1,121 +1,110 @@
 import { Question } from '@/types';
+import { buildChoices } from '@/engine/choices';
 
-function shuffle(arr: string[]): string[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// Word problems were unreachable for a while — no level referenced them — so
+// they still carried a private copy of the old "walk outward from the answer"
+// choice builder, which made every option four consecutive integers. They now
+// go through the shared builder like everything else.
+
+/** Adding: the slips are counting one off, or answering with an operand. */
+function addChoices(a: number, b: number): string[] {
+  const c = a + b;
+  return buildChoices(c, [c - 1, c + 1, Math.abs(a - b), a, b, c + 10], { step: 1 });
 }
 
-function choices(correct: number, min: number, max: number): string[] {
-  const lo = 0;
-  const hi = Math.max(max, correct + 3, 3);
-
-  const wrong = new Set<number>();
-  for (const d of [-2, -1, 1, 2]) {
-    const v = correct + d;
-    if (v !== correct && v >= lo && v <= hi) wrong.add(v);
-    if (wrong.size === 3) break;
-  }
-  while (wrong.size < 3) {
-    const v = Math.floor(Math.random() * (hi - lo + 1)) + lo;
-    if (v !== correct) wrong.add(v);
-  }
-  return shuffle([correct, ...Array.from(wrong)].map(String));
+/** Taking away: by far the most common error is adding instead. */
+function subChoices(a: number, b: number): string[] {
+  const c = a - b;
+  return buildChoices(c, [a + b, c + 1, c - 1, b, a, Math.max(0, b - 1)], {
+    step: 1,
+    isValid: (n) => n >= 0 && n <= a + b,
+  });
 }
 
-type Template = { make: (characterName: string) => Question };
+type Template = {
+  key: string;
+  /** Random operands for a fresh question. */
+  pick: () => [number, number];
+  /** The question itself, from fixed operands — this is what makes it rebuildable. */
+  build: (a: number, b: number, characterName: string) => Question;
+};
 
 const ADDITION_TEMPLATES: Template[] = [
   {
-    make: (n) => {
-      const a = Math.floor(Math.random() * 5) + 1;
-      const b = Math.floor(Math.random() * 5) + 1;
-      const c = a + b;
-      return {
-        id: `wp-add-${a}+${b}`,
-        type: 'word_problem',
-        prompt: `${n} has ${a} apples 🍎 and finds ${b} more. How many apples does ${n} have now?`,
-        correctAnswer: String(c),
-        choices: choices(c, 1, c + 3),
-        difficulty: 1,
-        hint: `Count up ${b} from ${a}: ${Array.from({ length: b }, (_, i) => a + i + 1).join(', ')}`,
-        speakText: `${n} has ${a} apples and finds ${b} more. How many apples does ${n} have now?`,
-      };
-    },
+    key: 'add',
+    pick: () => [Math.floor(Math.random() * 5) + 1, Math.floor(Math.random() * 5) + 1],
+    build: (a, b, n) => ({
+      id: `wp-add-${a}+${b}`,
+      type: 'word_problem',
+      prompt: `${n} has ${a} apples 🍎 and finds ${b} more. How many apples does ${n} have now?`,
+      correctAnswer: String(a + b),
+      choices: addChoices(a, b),
+      difficulty: 1,
+      hint: `Count up ${b} from ${a}: ${Array.from({ length: b }, (_, i) => a + i + 1).join(', ')}`,
+      speakText: `${n} has ${a} apples and finds ${b} more. How many apples does ${n} have now?`,
+    }),
   },
   {
-    make: (n) => {
-      const a = Math.floor(Math.random() * 5) + 3;
-      const b = Math.floor(Math.random() * 5) + 1;
-      const c = a + b;
-      return {
-        id: `wp-add2-${a}+${b}`,
-        type: 'word_problem',
-        prompt: `There are ${a} birds 🐦 in a tree. ${b} more fly in. How many birds are there now?`,
-        correctAnswer: String(c),
-        choices: choices(c, 1, c + 3),
-        difficulty: 1,
-        hint: `Start at ${a} and count on ${b} more.`,
-        speakText: `There are ${a} birds in a tree. ${b} more fly in. How many birds are there now?`,
-      };
-    },
+    key: 'add2',
+    pick: () => [Math.floor(Math.random() * 5) + 3, Math.floor(Math.random() * 5) + 1],
+    build: (a, b, _n) => ({
+      id: `wp-add2-${a}+${b}`,
+      type: 'word_problem',
+      prompt: `There are ${a} birds 🐦 in a tree. ${b} more fly in. How many birds are there now?`,
+      correctAnswer: String(a + b),
+      choices: addChoices(a, b),
+      difficulty: 1,
+      hint: `Start at ${a} and count on ${b} more.`,
+      speakText: `There are ${a} birds in a tree. ${b} more fly in. How many birds are there now?`,
+    }),
   },
   {
-    make: (n) => {
-      const a = Math.floor(Math.random() * 5) + 2;
-      const b = Math.floor(Math.random() * 5) + 2;
-      const c = a + b;
-      return {
-        id: `wp-add3-${a}+${b}`,
-        type: 'word_problem',
-        prompt: `${n} drew ${a} stars ⭐ on Monday and ${b} stars on Tuesday. How many stars altogether?`,
-        correctAnswer: String(c),
-        choices: choices(c, 1, c + 3),
-        difficulty: 2,
-        hint: `Add ${a} and ${b} together.`,
-        speakText: `${n} drew ${a} stars on Monday and ${b} stars on Tuesday. How many stars altogether?`,
-      };
-    },
+    key: 'add3',
+    pick: () => [Math.floor(Math.random() * 5) + 2, Math.floor(Math.random() * 5) + 2],
+    build: (a, b, n) => ({
+      id: `wp-add3-${a}+${b}`,
+      type: 'word_problem',
+      prompt: `${n} drew ${a} stars ⭐ on Monday and ${b} stars on Tuesday. How many stars altogether?`,
+      correctAnswer: String(a + b),
+      choices: addChoices(a, b),
+      difficulty: 2,
+      hint: `Add ${a} and ${b} together.`,
+      speakText: `${n} drew ${a} stars on Monday and ${b} stars on Tuesday. How many stars altogether?`,
+    }),
   },
 ];
 
 const SUBTRACTION_TEMPLATES: Template[] = [
   {
-    make: (n) => {
+    key: 'sub',
+    pick: () => {
       const a = Math.floor(Math.random() * 5) + 4;
-      const b = Math.floor(Math.random() * (a - 1)) + 1;
-      const c = a - b;
-      return {
-        id: `wp-sub-${a}-${b}`,
-        type: 'word_problem',
-        prompt: `${n} had ${a} cookies 🍪. ${n} ate ${b} of them. How many cookies are left?`,
-        correctAnswer: String(c),
-        choices: choices(c, 0, a),
-        difficulty: 2,
-        hint: `Start at ${a} and count back ${b}.`,
-        speakText: `${n} had ${a} cookies. ${n} ate ${b} of them. How many cookies are left?`,
-      };
+      return [a, Math.floor(Math.random() * (a - 1)) + 1];
     },
+    build: (a, b, n) => ({
+      id: `wp-sub-${a}-${b}`,
+      type: 'word_problem',
+      prompt: `${n} had ${a} cookies 🍪. ${n} ate ${b} of them. How many cookies are left?`,
+      correctAnswer: String(a - b),
+      choices: subChoices(a, b),
+      difficulty: 2,
+      hint: `Start at ${a} and count back ${b}.`,
+      speakText: `${n} had ${a} cookies. ${n} ate ${b} of them. How many cookies are left?`,
+    }),
   },
   {
-    make: (n) => {
-      const a = Math.floor(Math.random() * 5) + 5;
-      const b = Math.floor(Math.random() * 4) + 1;
-      const c = a - b;
-      return {
-        id: `wp-sub2-${a}-${b}`,
-        type: 'word_problem',
-        prompt: `There are ${a} fish 🐟 in a pond. ${b} fish swim away. How many fish are left?`,
-        correctAnswer: String(c),
-        choices: choices(c, 0, a),
-        difficulty: 2,
-        hint: `${a} take away ${b}.`,
-        speakText: `There are ${a} fish in a pond. ${b} fish swim away. How many fish are left?`,
-      };
-    },
+    key: 'sub2',
+    pick: () => [Math.floor(Math.random() * 5) + 5, Math.floor(Math.random() * 4) + 1],
+    build: (a, b, _n) => ({
+      id: `wp-sub2-${a}-${b}`,
+      type: 'word_problem',
+      prompt: `There are ${a} fish 🐟 in a pond. ${b} fish swim away. How many fish are left?`,
+      correctAnswer: String(a - b),
+      choices: subChoices(a, b),
+      difficulty: 2,
+      hint: `${a} take away ${b}.`,
+      speakText: `There are ${a} fish in a pond. ${b} fish swim away. How many fish are left?`,
+    }),
   },
 ];
 
@@ -127,5 +116,19 @@ export function generateWordProblem(characterName: string, type: 'addition' | 's
     : [...ADDITION_TEMPLATES, ...SUBTRACTION_TEMPLATES];
 
   const template = templates[Math.floor(Math.random() * templates.length)];
-  return template.make(characterName);
+  const [a, b] = template.pick();
+  return template.build(a, b, characterName);
+}
+
+const ALL_TEMPLATES = [...ADDITION_TEMPLATES, ...SUBTRACTION_TEMPLATES];
+
+/**
+ * Rebuild a word problem from its id, so one she got wrong can come back in
+ * Practice Mistakes. Without this the SRS stored a card it could never show.
+ */
+export function wordProblemFromId(id: string, characterName = 'You'): Question | null {
+  const m = id.match(/^wp-([a-z0-9]+)-(\d+)[+-](\d+)$/);
+  if (!m) return null;
+  const template = ALL_TEMPLATES.find((t) => t.key === m[1]);
+  return template ? template.build(Number(m[2]), Number(m[3]), characterName) : null;
 }

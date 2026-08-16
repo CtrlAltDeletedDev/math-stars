@@ -1,80 +1,73 @@
 import { Question } from '@/types';
 
-function shuffle(arr: string[]): string[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+// Telling time on a drawn clock face.
+//
+// This used to show a Unicode clock emoji (🕒). That was tiny, rendered
+// differently on every device, and — because the emoji already names the hour —
+// let her answer without reading hands at all. Now every question draws a real
+// face, and the hint tells her *how to look* instead of announcing the answer.
+//
+// Choice order doesn't matter here: buildSession shuffles per session.
 
-// Unicode clock emoji for o'clock hours 1-12
-function clockEmoji(hour: number, half: boolean): string {
-  const clocks: Record<string, string> = {
-    '1:00': '🕐', '1:30': '🕜', '2:00': '🕑', '2:30': '🕝',
-    '3:00': '🕒', '3:30': '🕞', '4:00': '🕓', '4:30': '🕟',
-    '5:00': '🕔', '5:30': '🕠', '6:00': '🕕', '6:30': '🕡',
-    '7:00': '🕖', '7:30': '🕢', '8:00': '🕗', '8:30': '🕣',
-    '9:00': '🕘', '9:30': '🕤', '10:00': '🕙', '10:30': '🕥',
-    '11:00': '🕚', '11:30': '🕦', '12:00': '🕛', '12:30': '🕧',
-  };
-  const key = `${hour}:${half ? '30' : '00'}`;
-  return clocks[key] ?? '🕛';
-}
+const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-function makeOClockQuestion(hour: number): Question {
-  const correct = `${hour}:00`;
-  const wrongs = new Set<string>();
-  const candidates = [hour - 2, hour - 1, hour + 1, hour + 2].map((h) => {
-    const fixed = ((h - 1 + 12) % 12) + 1;
-    return `${fixed}:00`;
-  });
-  for (const c of candidates) {
-    if (c !== correct) wrongs.add(c);
-    if (wrongs.size === 3) break;
-  }
+const wrap = (h: number) => ((h - 1 + 12) % 12) + 1;
+const label = (h: number, m: number) => `${h}:${String(m).padStart(2, '0')}`;
 
-  return {
-    id: `time-oclock-${hour}`,
-    type: 'tell_time',
-    prompt: 'What time does the clock show?',
-    promptEmoji: clockEmoji(hour, false),
-    correctAnswer: correct,
-    choices: shuffle([correct, ...Array.from(wrongs)]),
-    difficulty: 1,
-    hint: `The short hand points to ${hour}, the long hand points to 12.`,
-    speakText: `What time does the clock show?`,
-  };
-}
-
-function makeHalfPastQuestion(hour: number): Question {
-  const correct = `${hour}:30`;
-  const wrongs = new Set<string>();
+/** Distractors are the misreadings that actually happen at this age. */
+function timeChoices(hour: number, minute: number): string[] {
+  const correct = label(hour, minute);
   const candidates = [
-    `${hour}:00`,
-    `${((hour % 12) + 1)}:30`,
-    `${((hour - 2 + 12) % 12) + 1}:30`,
-    `${hour}:00`,
+    label(wrap(hour + 1), minute), // read the hour hand as the next number
+    label(wrap(hour - 1), minute), // ...or the previous one
+    label(hour, minute === 0 ? 30 : 0), // read the minute hand wrong
+    label(wrap(hour + 1), minute === 0 ? 30 : 0),
+    label(hour, minute === 15 ? 45 : 15),
+    label(wrap(hour + 2), minute),
   ];
+  const wrong: string[] = [];
   for (const c of candidates) {
-    if (c !== correct) wrongs.add(c);
-    if (wrongs.size === 3) break;
+    if (c !== correct && !wrong.includes(c)) wrong.push(c);
+    if (wrong.length === 3) break;
   }
+  return [correct, ...wrong];
+}
 
+function timeQuestion(hour: number, minute: number, difficulty: number, hint: string): Question {
   return {
-    id: `time-half-${hour}`,
+    id: `time-${hour}-${minute}`,
     type: 'tell_time',
     prompt: 'What time does the clock show?',
-    promptEmoji: clockEmoji(hour, true),
-    correctAnswer: correct,
-    choices: shuffle([correct, ...Array.from(wrongs)]),
-    difficulty: 2,
-    hint: `The long hand points to 6, which means 30 minutes. The short hand is between ${hour} and ${(hour % 12) + 1}.`,
-    speakText: `What time does the clock show?`,
+    correctAnswer: label(hour, minute),
+    choices: timeChoices(hour, minute),
+    difficulty,
+    hint,
+    speakText: 'What time does the clock show?',
+    visual: { kind: 'clock', hour, minute },
   };
 }
 
-export const OCLOCK_QUESTIONS: Question[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(makeOClockQuestion);
-export const HALF_PAST_QUESTIONS: Question[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(makeHalfPastQuestion);
-export const ALL_TIME_QUESTIONS: Question[] = [...OCLOCK_QUESTIONS, ...HALF_PAST_QUESTIONS];
+const oClock = (h: number) =>
+  timeQuestion(h, 0, 1, 'When the long hand points straight up at 12, it is exactly on the hour. Which number is the short hand on?');
+
+const halfPast = (h: number) =>
+  timeQuestion(h, 30, 2, 'The long hand on 6 means half past. The short hand sits between two numbers — the hour is the one it has already passed.');
+
+const quarterPast = (h: number) =>
+  timeQuestion(h, 15, 3, 'The long hand on 3 means fifteen minutes past. Read the hour from the short hand.');
+
+const quarterTo = (h: number) =>
+  timeQuestion(h, 45, 3, 'The long hand on 9 means forty-five minutes past — nearly the next hour. The hour is still the number the short hand has passed.');
+
+export const OCLOCK_QUESTIONS: Question[] = HOURS.map(oClock);
+export const HALF_PAST_QUESTIONS: Question[] = HOURS.map(halfPast);
+export const QUARTER_QUESTIONS: Question[] = [
+  ...HOURS.map(quarterPast),
+  ...HOURS.map(quarterTo),
+];
+
+export const ALL_TIME_QUESTIONS: Question[] = [
+  ...OCLOCK_QUESTIONS,
+  ...HALF_PAST_QUESTIONS,
+  ...QUARTER_QUESTIONS,
+];

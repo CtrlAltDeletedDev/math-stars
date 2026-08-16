@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getCategoryById } from '@/data/categories';
+import { Level } from '@/types';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { useProgress } from '@/store/useProgress';
 import { calculateStars, didPassLevel } from '@/engine/scoring';
@@ -59,6 +60,14 @@ export default function Celebration() {
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const characterName = character?.name ?? 'Math Star';
 
+  // After passing, the natural next action is the next level — not replaying
+  // this one, and certainly not backing out to the map to hunt for it.
+  const nextLevel: Level | null = (() => {
+    if (!passed || isDailyChallenge || isMasterMode || !realCategory) return null;
+    const idx = realCategory.levels.findIndex((l) => l.id === levelId);
+    return idx >= 0 ? realCategory.levels[idx + 1] ?? null : null;
+  })();
+
   const [visibleStars, setVisibleStars] = useState(0);
   const [showBurst, setShowBurst] = useState(false);
   const [badgeIndex, setBadgeIndex] = useState(0);
@@ -88,40 +97,12 @@ export default function Celebration() {
     };
   }, [stars]);
 
-  function printCertificate() {
-    const win = window.open('', '_blank', 'width=640,height=480');
-    if (!win) return;
-    const starStr = '⭐'.repeat(stars || 1);
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const bg = category?.bgColor ?? '#FF9F43';
-    win.document.write(`<!DOCTYPE html><html><head><title>Certificate</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Nunito, Arial, sans-serif; background: ${bg}; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  .cert { background: #fff; border: 10px solid ${bg}; border-radius: 28px; padding: 44px 56px; text-align: center; max-width: 520px; width: 92%; box-shadow: 0 8px 40px rgba(0,0,0,0.25); }
-  h1 { font-size: 26px; color: ${bg}; margin-bottom: 6px; }
-  .sub { color: #888; font-size: 15px; margin-bottom: 18px; }
-  .emj { font-size: 84px; line-height: 1; }
-  .name { font-size: 28px; font-weight: 800; color: #222; margin: 14px 0 4px; }
-  .achv { font-size: 18px; color: ${bg}; font-weight: 800; margin-bottom: 14px; }
-  .stars { font-size: 44px; }
-  .date { color: #aaa; font-size: 13px; margin-top: 18px; }
-  @media print { body { background: #fff; } .cert { border-color: ${bg}; box-shadow: none; } }
-</style></head><body>
-<div class="cert">
-  <h1>🏆 Certificate of Achievement</h1>
-  <div class="sub">This certifies that</div>
-  <div class="emj">${emoji}</div>
-  <div class="name">${characterName}</div>
-  <div class="achv">has mastered<br>${category?.title ?? 'Math Stars'}!</div>
-  <div class="stars">${starStr}</div>
-  <div class="date">Awarded ${dateStr}</div>
-</div>
-<script>window.onload=function(){window.print();setTimeout(function(){window.close()},800);}<\/script>
-</body></html>`);
-    win.document.close();
-  }
+  // An in-page panel rather than a popup. `window.open` + document.write is
+  // blocked by default on iOS Safari, and the old markup pulled its font from
+  // Google Fonts, so it also failed offline — which is most of the time for a
+  // home-screen app.
+  const [showCertificate, setShowCertificate] = useState(false);
+  const certDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   if (!category) return null;
 
@@ -174,12 +155,13 @@ export default function Celebration() {
         )}
 
         <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 380, zIndex: 1 }}>
-          {isDailyChallenge ? (
+          {isDailyChallenge ? null : nextLevel ? (
             <BigButton
-              onPress={() => {}}
-              label="See you tomorrow! 📅"
-              color="rgba(255,255,255,0.2)"
-              style={{ flex: 1, opacity: 0.7 }}
+              onPress={() => navigate(`/game/${categoryId}/${nextLevel.id}`, { replace: true })}
+              label="Next Level →"
+              color="#fff"
+              textColor={category?.bgColor ?? '#FF9F43'}
+              style={{ flex: 1 }}
             />
           ) : isMasterMode ? (
             <BigButton
@@ -199,8 +181,8 @@ export default function Celebration() {
           <BigButton
             onPress={() => navigate('/', { replace: true })}
             label="Home 🏠"
-            color="#fff"
-            textColor={category?.bgColor ?? '#FF9F43'}
+            color={nextLevel ? 'rgba(255,255,255,0.3)' : '#fff'}
+            textColor={nextLevel ? '#fff' : (category?.bgColor ?? '#FF9F43')}
             style={{ flex: 1 }}
           />
         </div>
@@ -246,7 +228,7 @@ export default function Celebration() {
         {/* Print certificate */}
         {passed && (
           <button
-            onClick={printCertificate}
+            onClick={() => { setShowCertificate(true); setTimeout(() => window.print(), 100); }}
             style={{
               width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.15)',
               border: '1px solid rgba(255,255,255,0.35)', borderRadius: 14,
@@ -258,6 +240,50 @@ export default function Celebration() {
       </div>
 
       <BadgeModal badgeId={currentBadge?.badgeId ?? null} onDismiss={() => setBadgeIndex((i) => i + 1)} />
+
+      {/* Printable certificate. On screen it's a dismissable overlay; on paper
+          it's the only thing that prints. */}
+      {showCertificate && (
+        <div
+          id="certificate-overlay"
+          onClick={() => setShowCertificate(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1200,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+        >
+          <div
+            id="certificate"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff', border: `10px solid ${category.bgColor}`, borderRadius: 24,
+              padding: '32px 34px', textAlign: 'center', maxWidth: 460, width: '100%',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: category.bgColor }}>
+              🏆 Certificate of Achievement
+            </div>
+            <div style={{ fontFamily: 'Nunito', fontSize: 14, color: '#999', marginTop: 4 }}>This certifies that</div>
+            <div style={{ fontSize: 72, lineHeight: 1.1, margin: '8px 0' }}>{emoji}</div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#222' }}>{characterName}</div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: category.bgColor, margin: '10px 0' }}>
+              has mastered<br />{category.title}!
+            </div>
+            <div style={{ fontSize: 38 }}>{'⭐'.repeat(stars || 1)}</div>
+            <div style={{ fontFamily: 'Nunito', fontSize: 12.5, color: '#aaa', marginTop: 14 }}>Awarded {certDate}</div>
+            <button
+              className="no-print"
+              onClick={() => setShowCertificate(false)}
+              style={{
+                marginTop: 18, background: category.bgColor, color: '#fff', border: 'none',
+                borderRadius: 12, padding: '10px 24px', fontFamily: 'Nunito', fontWeight: 800,
+                fontSize: 15, cursor: 'pointer',
+              }}
+            >Close</button>
+          </div>
+        </div>
+      )}
     </BackgroundGradient>
   );
 }

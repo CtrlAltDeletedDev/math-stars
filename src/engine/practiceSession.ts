@@ -31,7 +31,7 @@ export class PracticeQueue {
   private asked = 0;
   private recentSkills: string[] = [];
 
-  constructor(private progress: UserProgress) {}
+  constructor(private progress: UserProgress, private characterName = 'You') {}
 
   /** Skills she has already unlocked, or all of them for a brand-new player. */
   private skillPool(): string[] {
@@ -63,7 +63,7 @@ export class PracticeQueue {
       .filter(isDue)
       .sort((a, b) => a.nextDueDate - b.nextDueDate);
     for (const card of due) {
-      const q = ALL_QUESTIONS_BY_ID.get(card.questionId) ?? questionFromId(card.questionId);
+      const q = ALL_QUESTIONS_BY_ID.get(card.questionId) ?? questionFromId(card.questionId, this.characterName);
       if (q) return q;
     }
     return null;

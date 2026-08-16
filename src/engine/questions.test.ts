@@ -272,7 +272,7 @@ describe('generated questions', () => {
     for (const level of levels) {
       for (let i = 0; i < 100; i++) {
         const q = generateFromParams(level.generatorParams!, 'Friend');
-        const rebuilt = questionFromId(q.id);
+        const rebuilt = questionFromId(q.id, 'Friend');
         expect(rebuilt, `no rebuild for ${q.id}`).not.toBeNull();
         expect(rebuilt!.correctAnswer, `wrong answer rebuilding ${q.id}`).toBe(q.correctAnswer);
         expect(rebuilt!.prompt).toBe(q.prompt);

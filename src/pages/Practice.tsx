@@ -28,7 +28,8 @@ export default function Practice() {
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
-  const queue = useMemo(() => new PracticeQueue(progress), []); // eslint-disable-line
+  const characterName = character?.name ?? 'You';
+  const queue = useMemo(() => new PracticeQueue(progress, characterName), []); // eslint-disable-line
   const [pick, setPick] = useState<PracticePick | null>(() => queue.next());
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);

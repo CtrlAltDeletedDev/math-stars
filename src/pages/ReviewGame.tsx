@@ -31,7 +31,7 @@ export default function ReviewGame() {
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
-  const questionsRef = useRef(buildReviewSession(progress));
+  const questionsRef = useRef(buildReviewSession(progress, 10, characterName));
   const session = useGameSession(questionsRef.current, progress.srsCards, characterName);
 
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -228,17 +228,6 @@ export default function ReviewGame() {
         <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'hidden', justifyContent: 'center' }}>
           <QuestionCard question={question} />
 
-          {!showFeedback && !selectedChoice && (
-            <button
-              onClick={() => speak(question)}
-              style={{
-                alignSelf: 'center', background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.3)', borderRadius: 20,
-                padding: '5px 16px', fontFamily: 'Nunito', fontWeight: 700,
-                fontSize: 14, color: '#fff', cursor: 'pointer',
-              }}
-            >🔊 Read again</button>
-          )}
 
           {question.hint && <HintBubble hint={question.hint} visible={showHint} />}
 

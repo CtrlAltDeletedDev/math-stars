@@ -15,4 +15,7 @@ export const GAME_CONFIG = {
   dailyGoalQuestions: 20,
   dailyGoalBonus: 3,
   dailyChallengeBonus: 5,
+  // localStorage has a hard quota; generated questions would otherwise mint
+  // cards forever. Well above a year of daily play.
+  maxSRSCards: 3000,
 } as const;
