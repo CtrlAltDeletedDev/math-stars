@@ -1,0 +1,21 @@
+# Netlify builds this repo through the GitHub app — it publishes the site and a
+# deploy preview on every pull request. This file was briefly removed during the
+# 2026 review on the assumption it was left over from an old setup; it isn't.
+# Keeping the build config in the repo means the site is reproducible from
+# source rather than from settings only visible in the Netlify dashboard.
+#
+# Note there are currently two hosts building this repo: Netlify, and GitHub
+# Pages via .github/workflows/deploy.yml. Pick one when you get a chance —
+# two hosts means two URLs that can silently drift apart.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# The app uses HashRouter, so every in-app route lives in the fragment
+# (/#/practice) and the server only ever sees "/". This redirect is what keeps a
+# hand-typed or bookmarked path from 404ing before the app can boot.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
