@@ -5,6 +5,7 @@ import { CATEGORIES } from '@/data/categories';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import PlayCalendar from '@/components/ui/PlayCalendar';
+import { todayString } from '@/engine/dates';
 
 export default function Parent() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function Parent() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `math-stars-progress-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `math-stars-progress-${todayString()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

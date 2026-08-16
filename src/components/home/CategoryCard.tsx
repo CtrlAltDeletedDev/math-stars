@@ -16,11 +16,18 @@ export default function CategoryCard({ category, progress, onPress, onMasterPres
   const total = levels.length;
   const stars = progress?.totalStarsEarned ?? 0;
 
+  // A div with a button role, not a <button>: the Master Mode control below is a
+  // real button, and nesting a button inside a button is invalid HTML with
+  // undefined hit-testing.
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={category.title}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => { setPressed(false); onPress(); }}
       onPointerLeave={() => setPressed(false)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPress(); } }}
       style={{
         background: category.bgColor,
         borderRadius: 20,
@@ -72,6 +79,6 @@ export default function CategoryCard({ category, progress, onPress, onMasterPres
           }}
         >⭐ Master Mode</button>
       )}
-    </button>
+    </div>
   );
 }

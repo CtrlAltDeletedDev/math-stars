@@ -1,26 +1,31 @@
 import { Question } from '@/types';
 
+// These are genuinely binary questions, so they offer two options. They used to
+// pad to four with 'Neither' and 'Both', which are never correct — that turned a
+// real question into a coin flip with decoration. EVEN_ODD_FIND below carries the
+// four-option assessment for this category.
+
 export const EVEN_ODD_ID: Question[] = [
-  { id: 'eo-id-0', type: 'even_odd', prompt: 'Is 0 even or odd?', promptEmoji: '0️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-1', type: 'even_odd', prompt: 'Is 1 even or odd?', promptEmoji: '1️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-2', type: 'even_odd', prompt: 'Is 2 even or odd?', promptEmoji: '2️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-3', type: 'even_odd', prompt: 'Is 3 even or odd?', promptEmoji: '3️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-4', type: 'even_odd', prompt: 'Is 4 even or odd?', promptEmoji: '4️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-5', type: 'even_odd', prompt: 'Is 5 even or odd?', promptEmoji: '5️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-6', type: 'even_odd', prompt: 'Is 6 even or odd?', promptEmoji: '6️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-7', type: 'even_odd', prompt: 'Is 7 even or odd?', promptEmoji: '7️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-8', type: 'even_odd', prompt: 'Is 8 even or odd?', promptEmoji: '8️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-9', type: 'even_odd', prompt: 'Is 9 even or odd?', promptEmoji: '9️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-10', type: 'even_odd', prompt: 'Is 10 even or odd?', promptEmoji: '🔟', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 1 },
-  { id: 'eo-id-11', type: 'even_odd', prompt: 'Is 11 even or odd?', promptEmoji: '1️⃣1️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-12', type: 'even_odd', prompt: 'Is 12 even or odd?', promptEmoji: '1️⃣2️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-13', type: 'even_odd', prompt: 'Is 13 even or odd?', promptEmoji: '1️⃣3️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-14', type: 'even_odd', prompt: 'Is 14 even or odd?', promptEmoji: '1️⃣4️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-15', type: 'even_odd', prompt: 'Is 15 even or odd?', promptEmoji: '1️⃣5️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-16', type: 'even_odd', prompt: 'Is 16 even or odd?', promptEmoji: '1️⃣6️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-17', type: 'even_odd', prompt: 'Is 17 even or odd?', promptEmoji: '1️⃣7️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-18', type: 'even_odd', prompt: 'Is 18 even or odd?', promptEmoji: '1️⃣8️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
-  { id: 'eo-id-20', type: 'even_odd', prompt: 'Is 20 even or odd?', promptEmoji: '2️⃣0️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd', 'Neither', 'Both'], difficulty: 2 },
+  { id: 'eo-id-0', type: 'even_odd', prompt: 'Is 0 even or odd?', promptEmoji: '0️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-1', type: 'even_odd', prompt: 'Is 1 even or odd?', promptEmoji: '1️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-2', type: 'even_odd', prompt: 'Is 2 even or odd?', promptEmoji: '2️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-3', type: 'even_odd', prompt: 'Is 3 even or odd?', promptEmoji: '3️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-4', type: 'even_odd', prompt: 'Is 4 even or odd?', promptEmoji: '4️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-5', type: 'even_odd', prompt: 'Is 5 even or odd?', promptEmoji: '5️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-6', type: 'even_odd', prompt: 'Is 6 even or odd?', promptEmoji: '6️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-7', type: 'even_odd', prompt: 'Is 7 even or odd?', promptEmoji: '7️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-8', type: 'even_odd', prompt: 'Is 8 even or odd?', promptEmoji: '8️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-9', type: 'even_odd', prompt: 'Is 9 even or odd?', promptEmoji: '9️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-10', type: 'even_odd', prompt: 'Is 10 even or odd?', promptEmoji: '🔟', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 1 },
+  { id: 'eo-id-11', type: 'even_odd', prompt: 'Is 11 even or odd?', promptEmoji: '1️⃣1️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-12', type: 'even_odd', prompt: 'Is 12 even or odd?', promptEmoji: '1️⃣2️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-13', type: 'even_odd', prompt: 'Is 13 even or odd?', promptEmoji: '1️⃣3️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-14', type: 'even_odd', prompt: 'Is 14 even or odd?', promptEmoji: '1️⃣4️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-15', type: 'even_odd', prompt: 'Is 15 even or odd?', promptEmoji: '1️⃣5️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-16', type: 'even_odd', prompt: 'Is 16 even or odd?', promptEmoji: '1️⃣6️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-17', type: 'even_odd', prompt: 'Is 17 even or odd?', promptEmoji: '1️⃣7️⃣', correctAnswer: 'Odd', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-18', type: 'even_odd', prompt: 'Is 18 even or odd?', promptEmoji: '1️⃣8️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 2 },
+  { id: 'eo-id-20', type: 'even_odd', prompt: 'Is 20 even or odd?', promptEmoji: '2️⃣0️⃣', correctAnswer: 'Even', choices: ['Even', 'Odd'], difficulty: 2 },
 ];
 
 export const EVEN_ODD_FIND: Question[] = [

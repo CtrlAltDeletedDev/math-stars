@@ -2,10 +2,15 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/math-game-kids-E0ifO]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -22,6 +27,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build

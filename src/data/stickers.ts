@@ -39,7 +39,7 @@ export const STICKERS: StickerDef[] = [
   // Achievements
   { id: 'sk-trophy',   emoji: '🏆', name: 'Gold Trophy',    unlockHint: 'Complete 12 levels',        check: (c) => c.totalLevelsCompleted >= 12 },
   { id: 'sk-crown',    emoji: '👑', name: 'Royal Crown',    unlockHint: 'Earn 75 stars',             check: (c) => c.totalStars >= 75 },
-  { id: 'sk-gem',      emoji: '💎', name: 'Diamond Gem',    unlockHint: 'Complete all categories',   check: (c) => c.categoriesCompleted >= 5 },
+  { id: 'sk-gem',      emoji: '💎', name: 'Diamond Gem',    unlockHint: 'Finish 5 whole categories', check: (c) => c.categoriesCompleted >= 5 },
   { id: 'sk-fireworks',emoji: '🎆', name: 'Fireworks',      unlockHint: 'Earn 100 stars',            check: (c) => c.totalStars >= 100 },
   { id: 'sk-wizard',   emoji: '🧙', name: 'Math Wizard',    unlockHint: 'Complete 20 levels',        check: (c) => c.totalLevelsCompleted >= 20 },
 ];

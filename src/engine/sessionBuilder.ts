@@ -4,14 +4,18 @@ import { CATEGORIES, ALL_QUESTIONS_BY_ID } from '@/data/categories';
 import { generateFromParams, questionFromId } from './questionGenerator';
 import { isDue } from './srs';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { shuffle, shuffleChoices } from './choices';
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// Every question handed to a game screen passes through here. Bank files are
+// free to list `choices` in any order — often with the answer written first,
+// which is how it ends up under the same button every time — so the order is
+// randomised at the last moment, on a copy, for every session.
+function withShuffledChoices(q: Question): Question {
+  return { ...q, choices: shuffleChoices(q.choices) };
+}
+
+function presentAll(questions: Question[]): Question[] {
+  return questions.map(withShuffledChoices);
 }
 
 // Interleave questions by first operand so the same number doesn't appear back-to-back.
@@ -71,7 +75,7 @@ export function buildSession(
       .map((id) => ALL_QUESTIONS_BY_ID.get(id))
       .filter(Boolean) as Question[];
 
-    return shuffle([...srsQuestions, ...fillQuestions]).slice(0, total);
+    return presentAll(shuffle([...srsQuestions, ...fillQuestions]).slice(0, total));
   }
 
   // --- Generated levels (arithmetic, skip count, multiplication) ---
@@ -80,7 +84,7 @@ export function buildSession(
     const pool = new Map<string, Question>();
     const targetPoolSize = Math.min(total * 8, 200);
     let consecutiveMisses = 0;
-    while (pool.size < targetPoolSize && consecutiveMisses < 20) {
+    while (pool.size < targetPoolSize && consecutiveMisses < 80) {
       const q = generateFromParams(level.generatorParams, characterName);
       if (!pool.has(q.id)) { pool.set(q.id, q); consecutiveMisses = 0; }
       else { consecutiveMisses++; }
@@ -105,7 +109,7 @@ export function buildSession(
       .filter((q) => !usedIds.has(q.id))
       .slice(0, total - dueSlot.length);
 
-    return spreadByFirstOperand(shuffle([...dueSlot, ...fillPool])).slice(0, total);
+    return presentAll(spreadByFirstOperand(shuffle([...dueSlot, ...fillPool])).slice(0, total));
   }
 
   return [];
@@ -118,7 +122,7 @@ function buildLevelQuestions(level: Level, srsCards: Record<string, SRSCard>, ch
   if (level.generatorParams) {
     const pool = new Map<string, Question>();
     let consecutiveMisses = 0;
-    while (pool.size < 30 && consecutiveMisses < 20) {
+    while (pool.size < 30 && consecutiveMisses < 80) {
       const q = generateFromParams(level.generatorParams, characterName);
       if (!pool.has(q.id)) { pool.set(q.id, q); consecutiveMisses = 0; }
       else { consecutiveMisses++; }
@@ -166,7 +170,7 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
     return srsSort(deduped, srsCards, perCat);
   });
 
-  return shuffle(poolPerCat.flat()).slice(0, total);
+  return presentAll(shuffle(poolPerCat.flat()).slice(0, total));
 }
 
 // Build a session purely from due SRS cards — the questions the child has
@@ -183,7 +187,7 @@ export function buildReviewSession(progress: UserProgress, n = 10): Question[] {
     if (q) questions.push(q);
     if (questions.length >= n) break;
   }
-  return shuffle(questions);
+  return presentAll(shuffle(questions));
 }
 
 export function countDueReviews(progress: UserProgress): number {
@@ -201,5 +205,5 @@ export function buildMasterSession(
     allQ.push(...buildLevelQuestions(level, srsCards, characterName));
   }
   const deduped = [...new Map(allQ.map((q) => [q.id, q])).values()];
-  return srsSort(deduped, srsCards, n);
+  return presentAll(srsSort(deduped, srsCards, n));
 }

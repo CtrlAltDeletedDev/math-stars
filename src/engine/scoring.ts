@@ -1,5 +1,6 @@
 import { UserProgress } from '@/types';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { todayString, yesterdayString } from './dates';
 
 export function calculateStars(correctFraction: number): 0 | 1 | 2 | 3 {
   if (correctFraction >= GAME_CONFIG.starsForThree) return 3;
@@ -29,12 +30,4 @@ export function updateStreak(progress: UserProgress): UserProgress {
   };
 }
 
-function todayString(): string {
-  return new Date().toISOString().split('T')[0];
-}
 
-function yesterdayString(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
-}

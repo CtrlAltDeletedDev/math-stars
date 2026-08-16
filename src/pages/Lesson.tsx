@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { getCategoryById } from '@/data/categories';
 import { LESSONS } from '@/data/lessons';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
@@ -16,8 +16,7 @@ export default function Lesson() {
 
   // Graceful fallback: no lesson data → go straight to game
   if (!category || slides.length === 0) {
-    navigate(`/game/${categoryId}/${levelId}`, { replace: true });
-    return null;
+    return <Navigate to={`/game/${categoryId}/${levelId}`} replace />;
   }
 
   const slide = slides[current];

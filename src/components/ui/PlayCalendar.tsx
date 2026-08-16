@@ -1,17 +1,14 @@
+import { todayString, daysAgoString } from '@/engine/dates';
+
 interface Props {
   playHistory: string[];
 }
 
 export default function PlayCalendar({ playHistory }: Props) {
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = todayString();
   const playSet = new Set(playHistory);
 
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    return d.toISOString().split('T')[0];
-  });
+  const days = Array.from({ length: 7 }, (_, i) => daysAgoString(6 - i));
 
   const streak = (() => {
     let s = 0;

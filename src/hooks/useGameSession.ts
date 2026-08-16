@@ -15,11 +15,20 @@ interface SessionState {
   isComplete: boolean;
 }
 
-export function useGameSession(levelOrQuestions: Level | Question[], srsCards: Record<string, SRSCard>, characterName = 'You') {
+// Accepts null so a screen with a bad :levelId in the URL can still call every
+// hook in order and then redirect. Building the session before the guard was a
+// hard crash — a stale bookmark left a six-year-old on a blank screen.
+export function useGameSession(
+  levelOrQuestions: Level | Question[] | null | undefined,
+  srsCards: Record<string, SRSCard>,
+  characterName = 'You',
+) {
   const questions = useRef<Question[]>(
-    Array.isArray(levelOrQuestions)
-      ? levelOrQuestions
-      : buildSession(levelOrQuestions as Level, srsCards, characterName),
+    !levelOrQuestions
+      ? []
+      : Array.isArray(levelOrQuestions)
+        ? levelOrQuestions
+        : buildSession(levelOrQuestions, srsCards, characterName),
   );
 
   const [state, setState] = useState<SessionState>({
@@ -35,9 +44,13 @@ export function useGameSession(levelOrQuestions: Level | Question[], srsCards: R
 
   const currentQuestion = state.questions[state.currentIndex];
 
-  function recordAnswer(selectedChoice: string): boolean {
+  // Returns the updated SRS card alongside the verdict. Callers need the card
+  // synchronously: on the last question of a session they persist the run
+  // immediately, and reading `state.srsUpdates` at that moment still shows the
+  // pre-update array, which silently dropped every session's final answer.
+  function recordAnswer(selectedChoice: string): { correct: boolean; card: SRSCard | null } {
     const question = currentQuestion;
-    if (!question) return false;
+    if (!question) return { correct: false, card: null };
 
     const correct = selectedChoice === question.correctAnswer;
 
@@ -61,7 +74,7 @@ export function useGameSession(levelOrQuestions: Level | Question[], srsCards: R
       };
     });
 
-    return correct;
+    return { correct, card: updatedCard };
   }
 
   function advance() {

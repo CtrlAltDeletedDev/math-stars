@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { getLevelById, getCategoryById } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
@@ -35,7 +35,7 @@ export default function Game() {
   const characterName = character?.name ?? 'Friend';
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
 
-  const session = useGameSession(level!, progress.srsCards, characterName);
+  const session = useGameSession(level, progress.srsCards, characterName);
 
   const challengeMode = progress.challengeMode;
   const timerSeconds = progress.slowMode ? 15 : TIMER_SECONDS;
@@ -54,25 +54,29 @@ export default function Game() {
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const remainingRef = useRef(0);
   const hasCompleted = useRef(false);
   const answeringRef = useRef(false);
-
-  if (!level || !category) return null;
 
   function startCountdown() {
     if (!challengeMode) return;
     setTimeLeft(timerSeconds);
     if (countdownRef.current) clearInterval(countdownRef.current);
+    // The countdown reads and writes a ref, and only calls setState with a plain
+    // value. Firing handleAnswer from inside a setTimeLeft updater made the
+    // updater impure — StrictMode double-invokes updaters, so a timeout could
+    // register two answers.
+    remainingRef.current = timerSeconds;
     countdownRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 0.25) {
-          clearInterval(countdownRef.current!);
-          countdownRef.current = null;
-          handleAnswer('__timeout__');
-          return 0;
-        }
-        return t - 0.25;
-      });
+      const next = remainingRef.current - 0.25;
+      remainingRef.current = next;
+      if (next <= 0) {
+        stopCountdown();
+        setTimeLeft(0);
+        handleAnswer('__timeout__');
+        return;
+      }
+      setTimeLeft(next);
     }, 250);
   }
 
@@ -106,7 +110,9 @@ export default function Game() {
     const correctCountBefore = session.correctCount;
     const srsUpdatesBefore = session.srsUpdates;
 
-    const correct = session.recordAnswer(choice);
+    const { correct, card } = session.recordAnswer(choice);
+    // Include this answer — `session.srsUpdates` has not caught up yet.
+    const finalSrsUpdates = card ? [...srsUpdatesBefore, card] : srsUpdatesBefore;
     setSelectedChoice(choice);
     setLastCorrect(correct);
     setShowFeedback(true);
@@ -143,7 +149,7 @@ export default function Game() {
         hasCompleted.current = true;
         sounds.playLevelUp();
         const { newBadges, newStickers, streakBonus } = recordLevelComplete(
-          levelId, finalCorrectCount, session.totalQuestions, srsUpdatesBefore, nextConsecutive,
+          levelId, finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
         );
         recordQuestionsAnswered(session.totalQuestions);
         navigate(`/celebration/${categoryId}/${levelId}`, {
@@ -213,8 +219,11 @@ export default function Game() {
     if (showFeedback) cancel();
   }, [showFeedback, cancel]);
 
+  // Guards live below every hook so the hook order is identical on every render.
+  if (!level || !category) return <Navigate to="/" replace />;
+
   const question = session.currentQuestion;
-  if (!question) return null;
+  if (!question) return <Navigate to={`/category/${categoryId}`} replace />;
 
   const hotStreak = session.hotStreak;
 

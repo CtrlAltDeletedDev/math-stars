@@ -7,6 +7,7 @@ import { BADGES, BadgeCheckContext } from '@/data/badges';
 import { STICKERS } from '@/data/stickers';
 import { SHOP_ITEMS } from '@/data/shop';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { todayString, yesterdayString } from '@/engine/dates';
 
 interface ProgressContextValue {
   progress: UserProgress;
@@ -55,10 +56,36 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  function debouncedSave(p: UserProgress) {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => saveProgress(p), 500);
+  // The most recent state, kept in a ref so a backgrounding tab can flush it
+  // without waiting for a re-render.
+  const pendingSave = useRef<UserProgress | null>(null);
+
+  function flushSave() {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    if (pendingSave.current) { saveProgress(pendingSave.current); pendingSave.current = null; }
   }
+
+  function debouncedSave(p: UserProgress) {
+    pendingSave.current = p;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(flushSave, 500);
+  }
+
+  // Finishing a level and immediately swiping the app away used to lose the whole
+  // session: the 500ms timer never fired, and iOS suspends timers on background.
+  // `pagehide` and a hidden `visibilitychange` are the two events that actually
+  // arrive on iOS, so both force the write out.
+  useEffect(() => {
+    const onHide = () => flushSave();
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flushSave(); };
+    window.addEventListener('pagehide', onHide);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', onHide);
+      document.removeEventListener('visibilitychange', onVisibility);
+      flushSave();
+    };
+  }, []);
 
   function checkNewBadges(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): BadgeEarned[] {
     const existingIds = new Set(prev.earnedBadges.map((b) => b.badgeId));
@@ -133,7 +160,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
     setProgress((prev) => {
       let next = updateStreak(prev);
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = todayString();
       const ph = next.playHistory ?? [];
       const isFirstPlayToday = !ph.includes(todayStr);
       if (isFirstPlayToday) {
@@ -232,7 +259,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     const dcStreakBonus = GAME_CONFIG.dailyChallengeBonus;
 
     setProgress((prev) => {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = todayString();
       if (prev.lastDailyChallengeDate === todayStr) return prev;
 
       let next = updateStreak(prev);
@@ -246,9 +273,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      const yesterdayStr = yesterdayString();
       const dcStreak = prev.lastDailyChallengeDate === yesterdayStr
         ? prev.dailyChallengeStreak + 1
         : 1;
@@ -294,7 +319,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
     setProgress((prev) => {
       let next = updateStreak(prev);
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = todayString();
       const ph = next.playHistory ?? [];
       const isFirstPlayToday = !ph.includes(todayStr);
       if (isFirstPlayToday) {
@@ -329,7 +354,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   function recordQuestionsAnswered(count: number) {
     setProgress((prev) => {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = todayString();
       const wasAtGoal = prev.dailyQuestionsDate === todayStr && prev.dailyQuestionsCount >= GAME_CONFIG.dailyGoalQuestions;
       if (wasAtGoal) return prev;
 

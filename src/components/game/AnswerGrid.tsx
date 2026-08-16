@@ -7,6 +7,16 @@ interface Props {
   triedChoices?: string[];
 }
 
+// Most answers are one or two digits and want to be big. Some are equations or
+// phrases ("12 − 8 = 4", "0, 2, 4, 6, or 8") and have to step down to fit.
+function fontSizeFor(choices: string[]): number {
+  const longest = choices.reduce((n, c) => Math.max(n, c.length), 0);
+  if (longest <= 3) return 30;
+  if (longest <= 6) return 24;
+  if (longest <= 10) return 19;
+  return 15;
+}
+
 function getColor(choice: string, selected: string | null, correct: string, tried: string[]): string {
   if (!selected) return tried.includes(choice) ? '#bbb' : '#4A90E2';
   if (choice === correct) return '#4CAF50';
@@ -24,6 +34,7 @@ function speak(text: string) {
 }
 
 export default function AnswerGrid({ choices, onSelect, selectedChoice, correctAnswer, disabled, triedChoices = [] }: Props) {
+  const fontSize = fontSizeFor(choices);
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, width: '100%' }}>
       {choices.map((choice) => {
@@ -42,7 +53,8 @@ export default function AnswerGrid({ choices, onSelect, selectedChoice, correctA
                 color: '#fff',
                 fontFamily: 'Nunito',
                 fontWeight: 800,
-                fontSize: 26,
+                fontSize,
+                lineHeight: 1.2,
                 borderRadius: 20,
                 border: 'none',
                 minHeight: 90,
@@ -52,7 +64,12 @@ export default function AnswerGrid({ choices, onSelect, selectedChoice, correctA
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingRight: 50,
+                textAlign: 'center',
+                // Room for the speaker badge in the corner only — the middle and
+                // right edge of the button stay tappable, which is where a
+                // six-year-old actually aims.
+                padding: '18px 12px 12px',
+                overflowWrap: 'anywhere',
               }}
             >
               {choice}
@@ -61,13 +78,14 @@ export default function AnswerGrid({ choices, onSelect, selectedChoice, correctA
               <button
                 onClick={(e) => { e.stopPropagation(); speak(choice); }}
                 style={{
-                  position: 'absolute', top: '50%', right: 6, transform: 'translateY(-50%)',
-                  width: 42, height: 42, borderRadius: 12,
-                  background: 'rgba(255,255,255,0.3)', border: 'none',
-                  fontSize: 18, cursor: 'pointer', display: 'flex',
+                  position: 'absolute', top: 4, right: 4,
+                  width: 32, height: 32, borderRadius: 10,
+                  background: 'rgba(255,255,255,0.28)', border: 'none',
+                  fontSize: 14, cursor: 'pointer', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
                 }}
                 title="Hear this answer"
+                aria-label={`Hear ${choice}`}
               >
                 🔊
               </button>

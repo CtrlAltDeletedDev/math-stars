@@ -1,68 +1,99 @@
 import { Question } from '@/types';
 
-function ff(
-  a: number,
-  b: number,
-  subB: boolean, // true = subtract b, false = subtract a
-): Question {
+// A fact family is the trio {part, part, whole} and the four facts that connect
+// them. Two question shapes, neither of which can be answered by reading the
+// prompt:
+//
+//   "pick the fact"  — shows one fact, asks which other one is also true.
+//   "which member"   — shows the three numbers, asks for a specific one. The
+//                      answer is in the trio, but so are the distractors, so she
+//                      has to work out *which* member, not just spot a number.
+//
+// The old version asked "a + b = sum, so sum − a = ?" and printed the answer in
+// the prompt, and built distractors as correct±1 plus "the other addend" — which
+// collided often enough that 15 questions rendered a duplicate option.
+
+function pickTheFact(a: number, b: number): Question {
   const sum = a + b;
-  const subtracted = subB ? b : a;
-  const correct = subB ? a : b;
-  const id = `ff-${a}-${b}-${subB ? 'sub2' : 'sub1'}`;
-  const wrongA = Math.max(0, correct - 1);
-  const wrongB = correct + 1;
-  const wrongC = subB ? b : a; // the other addend — common wrong answer
-  const choices = shuffle4([String(correct), String(wrongA), String(wrongB), String(wrongC)], id);
+  // For a doubles family (a === b) the "took away the wrong part" distractor
+  // would read identically to the correct fact, so use a different near miss.
+  const wrongPart = a === b ? `${sum} − ${a} = ${sum}` : `${sum} − ${a} = ${a}`;
   return {
-    id,
+    id: `ff-fact-${a}-${b}`,
     type: 'fact_family',
-    prompt: `${a} + ${b} = ${sum}, so ${sum} − ${subtracted} = ?`,
-    correctAnswer: String(correct),
-    choices,
+    prompt: `${a} + ${b} = ${sum}\n\nWhich one is ALSO true?`,
+    correctAnswer: `${sum} − ${a} = ${b}`,
+    choices: [
+      `${sum} − ${a} = ${b}`,
+      wrongPart,
+      `${sum} + ${a} = ${b}`,
+      `${a} − ${b} = ${sum}`,
+    ],
     difficulty: sum <= 10 ? 2 : 3,
-    hint: `The answer is the part that's left: ${sum} − ${subtracted} = ${correct}`,
-    speakText: `${a} plus ${b} equals ${sum}, so ${sum} minus ${subtracted} equals what?`,
+    hint: `Take one part away from the whole and you get the other part. The whole is ${sum}.`,
+    speakText: `${a} plus ${b} equals ${sum}. Which one is also true?`,
   };
 }
 
-// Simple deterministic shuffler so choices aren't always in the same order
-function shuffle4(arr: string[], seed: string): string[] {
-  const n = seed.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
-  const a = [...arr];
-  const i0 = n % 4, i1 = (n + 1) % 4;
-  [a[0], a[i0]] = [a[i0], a[0]];
-  [a[1], a[i1]] = [a[i1], a[1]];
-  return a;
+function whichMember(a: number, b: number, askFor: 'a' | 'b'): Question {
+  const sum = a + b;
+  const subtracted = askFor === 'a' ? b : a;
+  const correct = askFor === 'a' ? a : b;
+  const other = askFor === 'a' ? b : a;
+
+  // Distractors are the other two members of the family plus a near miss, so the
+  // child must identify the right member rather than recognise a familiar digit.
+  const wrong = [sum, other, correct + 1, correct - 1, sum + 1]
+    .filter((n, i, arr) => n >= 0 && n !== correct && arr.indexOf(n) === i)
+    .slice(0, 3);
+
+  return {
+    id: `ff-mem-${a}-${b}-${askFor}`,
+    type: 'fact_family',
+    prompt: `This family is ${a}, ${b}, ${sum}.\n\n${sum} − ${subtracted} = ?`,
+    correctAnswer: String(correct),
+    choices: [String(correct), ...wrong.map(String)],
+    difficulty: sum <= 10 ? 2 : 3,
+    hint: `${sum} is the whole. Take away the part you can see, and what's left is the other part.`,
+    speakText: `This family is ${a}, ${b}, ${sum}. What is ${sum} minus ${subtracted}?`,
+  };
+}
+
+function family(a: number, b: number): Question[] {
+  // A doubles family (a === b) only has one distinct subtraction fact.
+  return a === b
+    ? [pickTheFact(a, b), whichMember(a, b, 'a')]
+    : [pickTheFact(a, b), whichMember(a, b, 'a'), whichMember(a, b, 'b')];
 }
 
 // Level 1: sums up to 10
 export const FACT_FAMILIES_10: Question[] = [
-  ff(2, 1, false), ff(2, 1, true),
-  ff(3, 2, false), ff(3, 2, true),
-  ff(4, 2, false), ff(4, 2, true),
-  ff(3, 3, false),
-  ff(4, 3, false), ff(4, 3, true),
-  ff(5, 2, false), ff(5, 2, true),
-  ff(5, 4, false), ff(5, 4, true),
-  ff(6, 3, false), ff(6, 3, true),
-  ff(6, 4, false),
-  ff(7, 2, false), ff(7, 2, true),
-  ff(8, 2, false),
-  ff(5, 5, false),
+  ...family(2, 1),
+  ...family(3, 2),
+  ...family(4, 2),
+  ...family(3, 3),
+  ...family(4, 3),
+  ...family(5, 2),
+  ...family(5, 4),
+  ...family(6, 3),
+  ...family(6, 4),
+  ...family(7, 2),
+  ...family(8, 2),
+  ...family(5, 5),
 ];
 
 // Level 2: sums 11–18
 export const FACT_FAMILIES_20: Question[] = [
-  ff(6, 5, false), ff(6, 5, true),
-  ff(7, 4, false), ff(7, 4, true),
-  ff(8, 3, false), ff(8, 3, true),
-  ff(9, 2, false), ff(9, 2, true),
-  ff(7, 5, false), ff(7, 5, true),
-  ff(8, 4, false), ff(8, 4, true),
-  ff(6, 7, false), ff(6, 7, true),
-  ff(8, 5, false), ff(8, 5, true),
-  ff(9, 4, false), ff(9, 4, true),
-  ff(9, 9, false),
+  ...family(6, 5),
+  ...family(7, 4),
+  ...family(8, 3),
+  ...family(9, 2),
+  ...family(7, 5),
+  ...family(8, 4),
+  ...family(7, 6),
+  ...family(8, 5),
+  ...family(9, 4),
+  ...family(9, 9),
 ];
 
 export const ALL_FACT_FAMILIES_QUESTIONS: Question[] = [
