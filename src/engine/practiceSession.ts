@@ -1,5 +1,5 @@
 import { Question, SkillState, UserProgress } from '@/types';
-import { SKILLS, SKILLS_BY_ID, questionForRung } from '@/data/skills';
+import { SKILLS_BY_ID, questionForRung, unlockedSkillIds } from '@/data/skills';
 import { newSkillState } from './skillLadder';
 import { questionFromId } from './questionGenerator';
 import { ALL_QUESTIONS_BY_ID } from '@/data/categories';
@@ -33,9 +33,17 @@ export class PracticeQueue {
 
   constructor(private progress: UserProgress, private characterName = 'You') {}
 
-  /** Skills she has already unlocked, or all of them for a brand-new player. */
+  /**
+   * Skills practice may draw from: a parent's Focus Mode picks if there are
+   * any, otherwise whatever the tiers have unlocked.
+   *
+   * This used to return every skill unconditionally, which is why a brand-new
+   * player met fractions and the times tables in her first session.
+   */
   private skillPool(): string[] {
-    return SKILLS.map((s) => s.id);
+    const focus = (this.progress.practiceFocus ?? []).filter((id) => SKILLS_BY_ID.has(id));
+    if (focus.length > 0) return focus;
+    return unlockedSkillIds(this.progress.skills);
   }
 
   private stateFor(skillId: string): SkillState {

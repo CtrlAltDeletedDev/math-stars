@@ -43,6 +43,8 @@ export const SKILLS: Skill[] = [
     title: 'Adding',
     emoji: '➕',
     rungs: [
+      { label: 'Adding 1 more', source: { kind: 'generated', params: { operation: 'addition', fixedAddend: 1, maxSum: 20 } } },
+      { label: 'Adding 2 more', source: { kind: 'generated', params: { operation: 'addition', fixedAddend: 2, maxSum: 20 } } },
       { label: 'Adding within 5', source: { kind: 'generated', params: { operation: 'addition', maxSum: 5 } } },
       { label: 'Adding within 10', source: { kind: 'generated', params: { operation: 'addition', maxSum: 10 } } },
       { label: 'Adding within 20', source: { kind: 'generated', params: { operation: 'addition', maxSum: 20 } } },
@@ -56,6 +58,8 @@ export const SKILLS: Skill[] = [
     title: 'Taking Away',
     emoji: '➖',
     rungs: [
+      { label: 'Taking away 1', source: { kind: 'generated', params: { operation: 'subtraction', fixedSubtrahend: 1, maxMinuend: 20 } } },
+      { label: 'Taking away 2', source: { kind: 'generated', params: { operation: 'subtraction', fixedSubtrahend: 2, maxMinuend: 20 } } },
       { label: 'Subtracting within 5', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 5 } } },
       { label: 'Subtracting within 10', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 10 } } },
       { label: 'Subtracting within 20', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 20 } } },
@@ -212,6 +216,44 @@ export const SKILLS: Skill[] = [
     ],
   },
 ];
+
+/**
+ * When each skill is allowed to appear in endless practice.
+ *
+ * Practice used to draw from all sixteen skills from the very first question,
+ * so a five-year-old who could just about add to five was served fractions,
+ * change from a dollar and the seven times table — and adding was one
+ * sixteenth of what she saw. Skills now arrive in waves, keyed off how far she
+ * has climbed on adding or taking away, whichever is further.
+ *
+ * The gate is deliberately a single, predictable number rather than a
+ * per-skill rule, for the same reason the ladder itself is boring: a parent
+ * should be able to look at the Practice Levels list and know what comes next.
+ * A parent who disagrees can override the whole thing with Focus Mode.
+ */
+export const SKILL_TIERS: { atRung: number; skills: string[] }[] = [
+  { atRung: 0, skills: ['adding', 'taking-away', 'counting'] },
+  { atRung: 2, skills: ['strategies', 'number-bonds', 'comparing', 'even-odd', 'shapes'] },
+  { atRung: 4, skills: ['mystery-number', 'place-value', 'stories', 'clocks', 'money'] },
+  { atRung: 5, skills: ['counting-up', 'fractions', 'fact-families'] },
+];
+
+/** How far she has climbed on the two arithmetic ladders — the gate for everything else. */
+export function arithmeticRung(skills: Record<string, { rung: number }> | undefined): number {
+  const add = skills?.['adding']?.rung ?? 0;
+  const sub = skills?.['taking-away']?.rung ?? 0;
+  return Math.max(add, sub);
+}
+
+/** The skills endless practice may draw from right now. */
+export function unlockedSkillIds(skills: Record<string, { rung: number }> | undefined): string[] {
+  const reached = arithmeticRung(skills);
+  const open = SKILL_TIERS.filter((t) => reached >= t.atRung).flatMap((t) => t.skills);
+  // Anything she has already practised stays available, so a wave never closes
+  // behind her if she has a bad week and the ladder walks her back down.
+  const started = Object.keys(skills ?? {});
+  return SKILLS.map((s) => s.id).filter((id) => open.includes(id) || started.includes(id));
+}
 
 export const SKILLS_BY_ID = new Map(SKILLS.map((s) => [s.id, s]));
 

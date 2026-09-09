@@ -1,4 +1,4 @@
-export type CategoryId = 'addition' | 'counting' | 'shapes' | 'multiplication' | 'time' | 'measure' | 'place-value' | 'number-bonds' | 'even-odd' | 'compare' | 'fact-families' | 'missing';
+export type CategoryId = 'steps' | 'addition' | 'counting' | 'shapes' | 'multiplication' | 'time' | 'measure' | 'place-value' | 'number-bonds' | 'even-odd' | 'compare' | 'fact-families' | 'missing';
 
 export interface Level {
   id: string;

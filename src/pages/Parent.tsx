@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
-import { SKILLS, rankFor } from '@/data/skills';
+import { SKILLS, rankFor, unlockedSkillIds } from '@/data/skills';
 import { rungAccuracy, isMaxed } from '@/engine/skillLadder';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
@@ -11,9 +11,12 @@ import { todayString } from '@/engine/dates';
 
 export default function Parent() {
   const navigate = useNavigate();
-  const { progress, importProgress, toggleChallengeMode, toggleSlowMode } = useProgress();
+  const { progress, importProgress, toggleChallengeMode, toggleSlowMode, setPracticeFocus } = useProgress();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMsg, setImportMsg] = useState<string | null>(null);
+
+  const focused = progress.practiceFocus ?? [];
+  const unlocked = unlockedSkillIds(progress.skills);
 
   function handleExport() {
     const json = JSON.stringify(progress, null, 2);
@@ -121,6 +124,57 @@ export default function Parent() {
           Last 7 Days
         </div>
         <PlayCalendar playHistory={progress.playHistory ?? []} />
+
+        {/* Focus Mode — pin practice to what she's working on this week */}
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+          Focus Mode
+        </div>
+        <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
+          Working on something specific this week? Pick it here and ♾️ Practice will ask about
+          nothing else. Leave everything off to let her range over whatever she has unlocked.
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {SKILLS.map((sk) => {
+              const on = focused.includes(sk.id);
+              const available = unlocked.includes(sk.id);
+              return (
+                <button
+                  key={sk.id}
+                  onClick={() => setPracticeFocus(on ? focused.filter((f) => f !== sk.id) : [...focused, sk.id])}
+                  style={{
+                    background: on ? '#4CAF50' : 'rgba(255,255,255,0.15)',
+                    border: `2px solid ${on ? '#4CAF50' : 'rgba(255,255,255,0.35)'}`,
+                    borderRadius: 20, padding: '8px 14px', cursor: 'pointer',
+                    fontFamily: 'Nunito', fontWeight: 800, fontSize: 14,
+                    color: on || available ? '#fff' : 'rgba(255,255,255,0.55)',
+                    minHeight: 40,
+                  }}
+                >
+                  {sk.emoji} {sk.title}{!available && !on ? ' 🔒' : ''}
+                </button>
+              );
+            })}
+          </div>
+          {focused.length > 0 && (
+            <button
+              onClick={() => setPracticeFocus([])}
+              style={{
+                marginTop: 12, background: 'rgba(255,255,255,0.2)',
+                border: '2px solid rgba(255,255,255,0.4)', borderRadius: 20,
+                padding: '8px 18px', fontFamily: 'Nunito', fontWeight: 800, fontSize: 14,
+                color: '#fff', cursor: 'pointer', minHeight: 40,
+              }}
+            >
+              Clear focus ({focused.length} on)
+            </button>
+          )}
+          <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10 }}>
+            {focused.length > 0
+              ? 'Focus is on — practice is only asking about the green ones.'
+              : `🔒 means she hasn't unlocked it yet. You can still switch it on here.`}
+          </div>
+        </div>
 
         {/* Where she is on each skill ladder */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>

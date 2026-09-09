@@ -50,6 +50,14 @@ function subtractionQuestion(a: number, b: number, maxMinuend: number): Question
         b, // answered with the number being taken away
         a, // forgot to take anything away
         Math.max(0, b - 1),
+        // Place-value slips. These matter most when b is small: for "12 - 1"
+        // every mistake above lands within two of the answer, so the four
+        // options come out as four consecutive integers and the answer sits at
+        // a predictable rank — the exact tell this file exists to remove. Taking
+        // the ten away as well, or leaving it behind, are errors a first grader
+        // genuinely makes, and they land far enough out to break up the run.
+        a >= 10 ? a - 10 : -1,
+        a >= 10 ? correct - 10 : -1,
       ],
       { step: 1, isValid: (n) => n >= 0 && n <= Math.max(maxMinuend, a + b) },
     ),
@@ -70,6 +78,32 @@ export function generateSubtractionQuestion(maxMinuend: number): Question {
   const correct = randomInt(0, maxMinuend - 1);
   const a = randomInt(correct + 1, maxMinuend); // ensures b = a - correct >= 1
   return subtractionQuestion(a, a - correct, maxMinuend);
+}
+
+// --- Targeted fact practice -----------------------------------------------
+//
+// "She's working on +2 and -1 this week" is the single most common thing a
+// parent knows, and until now there was no way to ask for it. A level capped at
+// "sums to 10" spreads its questions over every pair that fits, so only about
+// one question in four was actually a +2. These two keep the operation fixed and
+// vary the number she starts from, which is exactly how the fact is drilled at
+// school: 3 + 2, then 7 + 2, then 15 + 2.
+//
+// They deliberately reuse additionQuestion/subtractionQuestion, so a targeted
+// "7 + 2" is the same question — same id, same SRS card — as a "7 + 2" that the
+// general adding level happened to produce. The fact is the fact.
+
+export function generateTargetedAdditionQuestion(addend: number, maxSum: number): Question {
+  // Start from 1, not 0: "0 + 2" teaches nothing about counting on.
+  const a = randomInt(1, Math.max(1, maxSum - addend));
+  return additionQuestion(a, addend, maxSum);
+}
+
+export function generateTargetedSubtractionQuestion(subtrahend: number, maxMinuend: number): Question {
+  // From the subtrahend upward, so the answer is never negative. Starting *at*
+  // it is kept on purpose: "2 - 2 = 0" is a real fact she is taught.
+  const a = randomInt(subtrahend, Math.max(subtrahend, maxMinuend));
+  return subtractionQuestion(a, subtrahend, maxMinuend);
 }
 
 function missingAddQuestion(a: number, sum: number, maxSum: number): Question {
@@ -288,10 +322,27 @@ export function questionFromId(id: string, characterName = 'You'): Question | nu
 
 export function generateFromParams(params: Record<string, number | string>, characterName = 'You'): Question {
   const op = params.operation as string;
-  if (op === 'addition') return generateAdditionQuestion(Number(params.maxSum));
-  if (op === 'subtraction') return generateSubtractionQuestion(Number(params.maxMinuend));
+  if (op === 'addition') {
+    if (params.fixedAddend !== undefined) {
+      return generateTargetedAdditionQuestion(Number(params.fixedAddend), Number(params.maxSum));
+    }
+    return generateAdditionQuestion(Number(params.maxSum));
+  }
+  if (op === 'subtraction') {
+    if (params.fixedSubtrahend !== undefined) {
+      return generateTargetedSubtractionQuestion(Number(params.fixedSubtrahend), Number(params.maxMinuend));
+    }
+    return generateSubtractionQuestion(Number(params.maxMinuend));
+  }
   if (op === 'mixed') {
-    if (Math.random() < 0.5) return generateAdditionQuestion(Number(params.maxSum));
+    const addFirst = Math.random() < 0.5;
+    if (addFirst && params.fixedAddend !== undefined) {
+      return generateTargetedAdditionQuestion(Number(params.fixedAddend), Number(params.maxSum));
+    }
+    if (addFirst) return generateAdditionQuestion(Number(params.maxSum));
+    if (params.fixedSubtrahend !== undefined) {
+      return generateTargetedSubtractionQuestion(Number(params.fixedSubtrahend), Number(params.maxMinuend));
+    }
     return generateSubtractionQuestion(Number(params.maxMinuend));
   }
   if (op === 'word_problem') {

@@ -239,14 +239,52 @@ describe('practice queue', () => {
     }
   });
 
-  it('covers a spread of skills rather than drilling one', () => {
+  // This used to assert the opposite — that a brand-new player saw at least 70%
+  // of all sixteen skills. That was the bug, not the spec: it meant her first
+  // session mixed fractions, change from a dollar and the times tables in with
+  // adding to five, and adding was a sixteenth of what she got asked.
+  it('starts a new player on the first wave only', () => {
     const q = new PracticeQueue(buildInitialProgress());
     const seen = new Set<string>();
     for (let i = 0; i < 300; i++) {
       const pick = q.next();
       if (pick?.skillId) seen.add(pick.skillId);
     }
+    expect([...seen].sort()).toEqual(['adding', 'counting', 'taking-away']);
+  });
+
+  it('opens up more skills as she climbs', () => {
+    const p = buildInitialProgress();
+    p.skills = { adding: { skillId: 'adding', rung: 5, recent: [], attempts: 0, correct: 0 } };
+    const q = new PracticeQueue(p);
+    const seen = new Set<string>();
+    for (let i = 0; i < 600; i++) {
+      const pick = q.next();
+      if (pick?.skillId) seen.add(pick.skillId);
+    }
+    // Every wave is open at rung 5, so she should meet most of the ladder.
     expect(seen.size).toBeGreaterThanOrEqual(Math.floor(SKILLS.length * 0.7));
+    expect(seen.has('fractions')).toBe(true);
+  });
+
+  it('sticks to the parent\'s picks when Focus Mode is on', () => {
+    const p = buildInitialProgress();
+    p.practiceFocus = ['adding', 'taking-away'];
+    const q = new PracticeQueue(p);
+    const seen = new Set<string>();
+    for (let i = 0; i < 300; i++) {
+      const pick = q.next();
+      if (pick?.skillId) seen.add(pick.skillId);
+    }
+    expect([...seen].sort()).toEqual(['adding', 'taking-away']);
+  });
+
+  it('ignores a focus list naming skills that no longer exist', () => {
+    const p = buildInitialProgress();
+    p.practiceFocus = ['no-such-skill'];
+    const q = new PracticeQueue(p);
+    // Falls back to the unlocked set rather than running dry.
+    expect(q.next()?.skillId).toBeTruthy();
   });
 
   it('brings a missed question back later in the same session', () => {
@@ -262,7 +300,7 @@ describe('practice queue', () => {
 
   it('asks questions at the rung she is actually on', () => {
     const p = buildInitialProgress();
-    p.skills = { adding: { skillId: 'adding', rung: 4, recent: [], attempts: 0, correct: 0 } };
+    p.skills = { adding: { skillId: 'adding', rung: 6, recent: [], attempts: 0, correct: 0 } };
     const q = new PracticeQueue(p);
     let maxSeen = 0;
     for (let i = 0; i < 600; i++) {
@@ -270,7 +308,8 @@ describe('practice queue', () => {
       if (pick?.skillId !== 'adding') continue;
       for (const n of pick.question.prompt.match(/\d+/g) ?? []) maxSeen = Math.max(maxSeen, Number(n));
     }
-    // Rung 5 of adding is "within 100"; rung 1 could never produce numbers this big.
+    // Rung 6 of adding is "within 100"; the bottom rungs could never produce
+    // numbers this big.
     expect(maxSeen).toBeGreaterThan(20);
   });
 });
@@ -289,9 +328,38 @@ describe('progress migration', () => {
     expect(migrated).not.toBeNull();
     expect(migrated!.totalStars).toBe(87);
     expect(migrated!.spendableStars).toBe(40);
-    expect(migrated!.version).toBe(3);
+    expect(migrated!.version).toBe(4);
     expect(migrated!.skills).toEqual({});
     expect(migrated!.practiceQuestionsAnswered).toBe(0);
+  });
+
+  // The riskiest part of the v4 change: two rungs were inserted at the BOTTOM of
+  // the adding and taking-away ladders, so a saved rung number now means
+  // something different. Without the shift a child on "adding within 20" would
+  // quietly land back on "adding within 5".
+  it('keeps her ladder position when v4 inserts rungs below her', () => {
+    const v3 = { ...buildInitialProgress(), version: 3 } as UserProgress;
+    v3.skills = {
+      adding: { skillId: 'adding', rung: 2, recent: [true], attempts: 9, correct: 7 },
+      'taking-away': { skillId: 'taking-away', rung: 1, recent: [], attempts: 4, correct: 3 },
+      clocks: { skillId: 'clocks', rung: 1, recent: [], attempts: 2, correct: 2 },
+    };
+
+    const m = normalizeProgress(v3)!;
+    // "Adding within 20" was rung 2, and is rung 4 now.
+    expect(SKILLS_BY_ID.get('adding')!.rungs[m.skills.adding.rung].label).toBe('Adding within 20');
+    expect(SKILLS_BY_ID.get('taking-away')!.rungs[m.skills['taking-away'].rung].label)
+      .toBe('Subtracting within 10');
+    // Ladders that did not change must not move.
+    expect(m.skills.clocks.rung).toBe(1);
+    // Everything else about the state survives.
+    expect(m.skills.adding.attempts).toBe(9);
+  });
+
+  it('does not shift a save that is already v4', () => {
+    const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    v4.skills = { adding: { skillId: 'adding', rung: 3, recent: [], attempts: 0, correct: 0 } };
+    expect(normalizeProgress(v4)!.skills.adding.rung).toBe(3);
   });
 
   it('rejects a save from the future', () => {

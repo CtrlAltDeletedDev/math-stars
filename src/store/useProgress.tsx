@@ -48,6 +48,7 @@ interface ProgressContextValue {
   toggleChallengeMode: () => void;
   toggleSlowMode: () => void;
   toggleAutoRead: () => void;
+  setPracticeFocus: (skillIds: string[]) => void;
   importProgress: (data: UserProgress) => boolean;
 }
 
@@ -511,6 +512,15 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  /** Focus Mode: pin endless practice to a handful of skills. Empty clears it. */
+  function setPracticeFocus(skillIds: string[]) {
+    setProgress((prev) => {
+      const next = { ...prev, practiceFocus: [...skillIds] };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
   function importProgress(data: UserProgress): boolean {
     const normalized = normalizeProgress(data);
     if (!normalized) return false;
@@ -520,7 +530,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, importProgress }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, setPracticeFocus, importProgress }}>
       {children}
     </ProgressContext.Provider>
   );

@@ -6,6 +6,8 @@ import {
   generateSubtractionQuestion,
   generateFromParams,
   questionFromId,
+  generateTargetedAdditionQuestion,
+  generateTargetedSubtractionQuestion,
 } from './questionGenerator';
 import { Question } from '@/types';
 
@@ -222,6 +224,89 @@ describe('answer position carries no information', () => {
         if (nums[3] - nums[0] === 3) consecutive++;
       }
       expect(consecutive / SAMPLE, `${label}`).toBeLessThan(0.2);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Targeted fact practice ("she's working on +2 this week")
+// ---------------------------------------------------------------------------
+
+describe('targeted facts', () => {
+  it('always uses the addend it was asked for', () => {
+    for (const addend of [1, 2, 3]) {
+      for (let i = 0; i < 500; i++) {
+        const q = generateTargetedAdditionQuestion(addend, 20);
+        const [a, b] = q.prompt.match(/(\d+) \+ (\d+)/)!.slice(1).map(Number);
+        expect(b, q.prompt).toBe(addend);
+        expect(Number(q.correctAnswer)).toBe(a + b);
+        expect(a + b).toBeLessThanOrEqual(20);
+      }
+    }
+  });
+
+  it('always takes away the amount it was asked for', () => {
+    for (const sub of [1, 2, 3]) {
+      for (let i = 0; i < 500; i++) {
+        const q = generateTargetedSubtractionQuestion(sub, 20);
+        const [a, b] = q.prompt.match(/(\d+) - (\d+)/)!.slice(1).map(Number);
+        expect(b, q.prompt).toBe(sub);
+        expect(Number(q.correctAnswer)).toBe(a - b);
+        expect(a - b).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  // The whole point. Before this existed, a ten-question round on "adding to 10"
+  // contained about three +2 questions, because both numbers were random.
+  it('fills a whole session with the fact she is working on', () => {
+    const level = CATEGORIES.flatMap((c) => c.levels).find((l) => l.id === 'steps-add-2')!;
+    const session = buildSession(level, {}, 'Friend');
+    expect(session.length).toBe(10);
+    for (const q of session) {
+      expect(q.prompt, `${q.id} is not a "+2" question`).toMatch(/^\d+ \+ 2 = \?$/);
+    }
+  });
+
+  it('varies the number she starts from rather than repeating one sum', () => {
+    const level = CATEGORIES.flatMap((c) => c.levels).find((l) => l.id === 'steps-sub-1')!;
+    const starts = new Set(buildSession(level, {}, 'Friend').map((q) => q.prompt.match(/^(\d+)/)![1]));
+    expect(starts.size).toBe(10);
+  });
+
+  it('mixes both directions on a mixed step level', () => {
+    const level = CATEGORIES.flatMap((c) => c.levels).find((l) => l.id === 'steps-mix-2')!;
+    let plus = 0;
+    let minus = 0;
+    for (let i = 0; i < 200; i++) {
+      for (const q of buildSession(level, {}, 'Friend')) {
+        expect(q.prompt, `${q.id} is not a step-of-2 question`).toMatch(/^\d+ [+-] 2 = \?$/);
+        if (q.prompt.includes('+')) plus++;
+        else minus++;
+      }
+    }
+    expect(plus).toBeGreaterThan(0);
+    expect(minus).toBeGreaterThan(0);
+  });
+
+  // A targeted drill has a small answer space, so the guard that matters is
+  // that the answer's position tells her nothing. Adjacent options are fine and
+  // sometimes unavoidable for "-1" (the real mistakes on 6 - 1 are 4, 6 and 7);
+  // a predictable *rank* is not.
+  it('does not park the answer at a predictable rank', () => {
+    for (const [label, params] of [
+      ['+2', { operation: 'addition', fixedAddend: 2, maxSum: 20 }],
+      ['-1', { operation: 'subtraction', fixedSubtrahend: 1, maxMinuend: 20 }],
+    ] as const) {
+      const ranks = [0, 0, 0, 0];
+      for (let i = 0; i < SAMPLE; i++) {
+        const q = generateFromParams(params as Record<string, number | string>);
+        const nums = q.choices.map(Number);
+        ranks[[...nums].sort((a, b) => a - b).indexOf(Number(q.correctAnswer))]++;
+      }
+      const shares = ranks.map((r) => r / SAMPLE);
+      expect(Math.max(...shares), `${label}: answer clustered at one rank`).toBeLessThan(0.45);
+      expect(Math.min(...shares), `${label}: one option is never the answer`).toBeGreaterThan(0.08);
     }
   });
 });
