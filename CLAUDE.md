@@ -48,6 +48,23 @@ so that picking one tells us something.
 `src/engine/dates.ts`. `new Date().toISOString()` gives a UTC date, which rolls over
 mid-evening in US time zones and silently breaks streaks. `npm test` guards this.
 
+**Inserting a skill rung means writing a migration.** `SkillState.rung` is a saved
+*index* into `Skill.rungs`, so adding a rung anywhere but the top silently moves every
+child already above it — she loses her place and re-climbs ground she had. v4 added two
+rungs to the bottom of `adding` and `taking-away` and shifts saved rungs by two to
+compensate; see `normalizeProgress` in `src/store/storage.ts`. `npm test` guards this.
+
+**Practice is gated, not a free-for-all.** `SKILL_TIERS` in `src/data/skills.ts` decides
+which skills endless practice may draw from, keyed off how far she has climbed on adding
+or taking away. Without it a five-year-old gets fractions and the seven times table in
+her first session. A parent can override the whole thing with Focus Mode
+(`progress.practiceFocus`).
+
+**A targeted drill is a level that holds the operation still.** "She's working on +2 this
+week" is the most common thing a parent knows. `fixedAddend` / `fixedSubtrahend` on the
+generator params vary the starting number instead of both numbers — see the
+`steps` category. A normal capped level ("sums to 10") is only ~28% +2 questions.
+
 **This is used by a six-year-old.** Tap targets stay large, text stays readable without
 fluent reading, and nothing should ever be able to leave her on a blank screen — the app
 is wrapped in an error boundary, so keep it that way.

@@ -69,4 +69,9 @@ export interface UserProgress {
   /** Adaptive practice: one entry per skill she has actually met. */
   skills: Record<string, SkillState>;
   practiceQuestionsAnswered: number;
+  /**
+   * Focus Mode: skill ids endless practice should stick to, chosen by a parent.
+   * Empty means "whatever the tiers have unlocked", which is the normal case.
+   */
+  practiceFocus: string[];
 }

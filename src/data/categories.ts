@@ -11,6 +11,82 @@ import { COMPARE_TO10_QUESTIONS, COMPARE_TO20_QUESTIONS, ALL_COMPARE_QUESTIONS }
 import { FACT_FAMILIES_10, FACT_FAMILIES_20, ALL_FACT_FAMILIES_QUESTIONS } from './factFamilies';
 
 export const CATEGORIES: Category[] = [
+  // One fact at a time.
+  //
+  // Every other addition level picks both numbers at random inside a cap, so a
+  // ten-question round on "adding to 10" contains only about three +2 questions.
+  // That is no use to a child whose class is drilling +2 this week. These levels
+  // hold the operation still and move the starting number, which is how the fact
+  // is actually taught: 3 + 2, then 7 + 2, then 15 + 2.
+  {
+    id: 'steps',
+    title: 'One Step at a Time',
+    emoji: '👣',
+    bgColor: '#5AA9E6',
+    darkColor: '#3D7FB5',
+    levels: [
+      {
+        id: 'steps-add-1',
+        categoryId: 'steps',
+        levelNumber: 1,
+        title: 'Adding 1 More',
+        description: 'One more than the number you start on!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'addition', fixedAddend: 1, maxSum: 20 },
+      },
+      {
+        id: 'steps-sub-1',
+        categoryId: 'steps',
+        levelNumber: 2,
+        title: 'Taking 1 Away',
+        description: 'One less. Count back just one!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'subtraction', fixedSubtrahend: 1, maxMinuend: 20 },
+      },
+      {
+        id: 'steps-add-2',
+        categoryId: 'steps',
+        levelNumber: 3,
+        title: 'Adding 2 More',
+        description: 'Two more. Hop, hop!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'addition', fixedAddend: 2, maxSum: 20 },
+      },
+      {
+        id: 'steps-sub-2',
+        categoryId: 'steps',
+        levelNumber: 4,
+        title: 'Taking 2 Away',
+        description: 'Two less. Hop back twice!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'subtraction', fixedSubtrahend: 2, maxMinuend: 20 },
+      },
+      {
+        id: 'steps-mix-1',
+        categoryId: 'steps',
+        levelNumber: 5,
+        title: 'Plus 1 and Minus 1',
+        description: 'One more AND one less, mixed up!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'mixed', fixedAddend: 1, fixedSubtrahend: 1, maxSum: 20, maxMinuend: 20 },
+      },
+      {
+        id: 'steps-mix-2',
+        categoryId: 'steps',
+        levelNumber: 6,
+        title: 'Plus 2 and Minus 2',
+        description: 'Two more AND two less, mixed up!',
+        questionsPerSession: 10,
+        passThreshold: 0.8,
+        generatorParams: { operation: 'mixed', fixedAddend: 2, fixedSubtrahend: 2, maxSum: 20, maxMinuend: 20 },
+      },
+    ],
+  },
   {
     id: 'addition',
     title: 'Addition & Subtraction',

@@ -2,7 +2,9 @@ import { UserProgress, CategoryProgress, LevelState } from '@/types';
 import { CATEGORIES } from '@/data/categories';
 
 const STORAGE_KEY = 'mathstars_progress_v2';
-const CURRENT_VERSION = 3;
+/** Rungs added below the existing ones on the adding/taking-away ladders in v4. */
+const LADDER_RUNGS_INSERTED_IN_V4 = 2;
+const CURRENT_VERSION = 4;
 const OLDEST_MIGRATABLE = 2;
 
 // Patch missing fields on a saved/imported progress object so the rest of
@@ -39,6 +41,20 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   // already knows.
   if (!parsed.skills) parsed.skills = {};
   if (parsed.practiceQuestionsAnswered === undefined) parsed.practiceQuestionsAnswered = 0;
+
+  // v3 → v4: two targeted rungs ("+1", "+2" / "-1", "-2") were inserted at the
+  // BOTTOM of the adding and taking-away ladders, so every rung above them
+  // shifted up by two. Without this a child sitting on "adding within 20" would
+  // silently be demoted to "adding within 5" and have to climb it again.
+  if (parsed.version < 4) {
+    for (const id of ['adding', 'taking-away']) {
+      const state = parsed.skills[id];
+      if (state && typeof state.rung === 'number') {
+        state.rung = state.rung + LADDER_RUNGS_INSERTED_IN_V4;
+      }
+    }
+  }
+  if (!parsed.practiceFocus) parsed.practiceFocus = [];
 
   // Initialize any new categories added since this save was made
   for (const cat of CATEGORIES) {
@@ -125,5 +141,6 @@ export function buildInitialProgress(): UserProgress {
     dailyQuestionsCount: 0,
     skills: {},
     practiceQuestionsAnswered: 0,
+    practiceFocus: [],
   };
 }
