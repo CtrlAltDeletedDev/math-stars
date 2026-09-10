@@ -17,3 +17,12 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+// Offline support. Registered after load so it never competes with the first
+// paint, and failures are ignored: the app works fine without it, it just
+// won't launch from the home screen without a connection.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}

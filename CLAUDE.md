@@ -28,9 +28,15 @@ src/
   hooks/       audio, speech, session
 ```
 
-`src/data/categories.ts` is the spine: it defines every category and level, and each level
-either names a `questionBankIds` list (hand-written questions) or `generatorParams`
-(procedurally generated ones).
+Two tables are the spine:
+
+- `src/data/categories.ts` — every level, each naming either a `questionBankIds` list
+  (hand-written) or `generatorParams` (procedurally generated).
+- `src/data/topics.ts` — maps all 51 levels onto the 17 skill ladders, one topic per skill.
+  `src/data/grades.ts` then says which topics a grade covers and how far up each goes.
+
+The child-facing screens are Home (one Play button + a grid of topics) and
+`Topic.tsx` (one Play button + a replay strip). There is no category screen.
 
 ## Rules that are easy to get wrong
 
@@ -54,11 +60,34 @@ child already above it — she loses her place and re-climbs ground she had. v4 
 rungs to the bottom of `adding` and `taking-away` and shifts saved rungs by two to
 compensate; see `normalizeProgress` in `src/store/storage.ts`. `npm test` guards this.
 
-**Practice is gated, not a free-for-all.** `SKILL_TIERS` in `src/data/skills.ts` decides
-which skills endless practice may draw from, keyed off how far she has climbed on adding
-or taking away. Without it a five-year-old gets fractions and the seven times table in
-her first session. A parent can override the whole thing with Focus Mode
+**The catalogue says what exists; saved state only says what happened.** Nothing derives
+*availability* from `progress`. `LevelState` has no `status` and no `unlockedAt` — whether
+she passed is derived with `passedLevel()` in `src/engine/scoring.ts`, and level records are
+sparse. This is what stops a level added to an existing category rendering as a padlock
+forever, so don't reintroduce a stored status.
+
+**Nothing is locked, and nothing is ever finished.** Every topic in her grade is always
+tappable and every activity is always replayable. The mastery ring has no complete state
+on purpose: at the top of her grade the last segment refills each window
+(`src/engine/mastery.ts`). A full bar tells a child she's done with a topic, which is
+backwards for maths facts.
+
+**Grade bounds the ladder; it does not drive it.** A parent picks K/1st/2nd, which sets
+the topics in scope and each ladder's top rung (`src/data/grades.ts`). Within the band she
+still advances on evidence. The ceiling is soft: a blocked promotion increments
+`ceilingHits` so the Parent screen can suggest moving her up. `SKILL_TIERS` used to do this
+job worse and is gone. A parent can still override scope with Focus Mode
 (`progress.practiceFocus`).
+
+**Level play must keep feeding the ladder.** `recordLevelComplete` folds every answer
+through `recordSkillAnswer`, routed by `skillForQuestion` so mixed levels credit both
+ladders. Without it, categories and skills drift back into two worlds that model the same
+maths and never talk — which is the bug this design exists to prevent.
+
+**Record what she actually did.** The first wrong tap gets a kind retry on screen but is
+still scored, fed to SRS and fed to the ladder. When it was discarded, guessing scored ~50%
+and promoted her into work she couldn't do. Keep "did she find it?" (what she sees) and
+"did she know it?" (what is recorded) separate.
 
 **A targeted drill is a level that holds the operation still.** "She's working on +2 this
 week" is the most common thing a parent knows. `fixedAddend` / `fixedSubtrahend` on the

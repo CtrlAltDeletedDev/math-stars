@@ -13,6 +13,7 @@ import { GAME_CONFIG } from '@/constants/gameConfig';
 import { todayString, yesterdayString } from '@/engine/dates';
 import { recordSkillAnswer, newSkillState, LadderMove } from '@/engine/skillLadder';
 import { pruneSRSCards } from '@/engine/srs';
+import { isServableCard } from '@/engine/sessionBuilder';
 import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
 
 interface ProgressContextValue {
@@ -44,7 +45,10 @@ interface ProgressContextValue {
     skillId: string | null,
     questionId: string,
     wasCorrect: boolean,
-  ) => { move: LadderMove; skill: SkillState | null; starsAwarded: number };
+  ) => {
+    move: LadderMove; skill: SkillState | null; starsAwarded: number;
+    newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
+  };
   selectCharacter: (characterId: string) => void;
   purchaseItem: (itemId: string) => boolean;
   setActiveTheme: (themeId: string) => void;
@@ -104,7 +108,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     if (pendingSave.current) {
       const p = pendingSave.current;
-      const ok = saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards) });
+      const ok = saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards, undefined, isServableCard) });
       if (!ok) setStorageIssue('cannot-save');
       pendingSave.current = null;
     }
@@ -230,7 +234,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         next = { ...next, playHistory: [...ph, todayStr] };
         if (next.currentStreak > 1) {
           streakBonus = Math.min(next.currentStreak, 7);
-          next = { ...next, spendableStars: next.spendableStars + streakBonus };
+          next = {
+            ...next,
+            spendableStars: next.spendableStars + streakBonus,
+            totalStars: next.totalStars + streakBonus,
+          };
         }
       }
       next = { ...next, consecutiveCorrect };
@@ -318,11 +326,15 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     let newBadges: BadgeEarned[] = [];
     let newStickers: string[] = [];
     let streakBonus = 0;
-    const dcStreakBonus = GAME_CONFIG.dailyChallengeBonus;
+    // Assigned inside the updater, below the guard. Computing it here meant a
+    // second run on the same day discarded the whole session with `return prev`
+    // while still telling her "⭐ Daily bonus: +5 stars!".
+    let dcStreakBonus = 0;
 
     setProgress((prev) => {
       const todayStr = todayString();
       if (prev.lastDailyChallengeDate === todayStr) return prev;
+      dcStreakBonus = GAME_CONFIG.dailyChallengeBonus;
 
       let next = updateStreak(prev);
       const ph = next.playHistory ?? [];
@@ -421,10 +433,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     skillId: string | null,
     questionId: string,
     wasCorrect: boolean,
-  ): { move: LadderMove; skill: SkillState | null; starsAwarded: number } {
+  ): {
+    move: LadderMove; skill: SkillState | null; starsAwarded: number;
+    newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
+  } {
     let move: LadderMove = null;
     let skill: SkillState | null = null;
     let starsAwarded = 0;
+    let newBadges: BadgeEarned[] = [];
+    let newStickers: string[] = [];
+    let streakBonus = 0;
 
     setProgress((prev) => {
       const answered = (prev.practiceQuestionsAnswered ?? 0) + 1;
@@ -453,15 +471,37 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         spendableStars: prev.spendableStars + starsAwarded,
       };
 
+      // First play of the day pays the streak bonus, whichever mode she opened.
+      //
+      // This used to only mark playHistory, while the bonus lived in
+      // recordLevelComplete and was gated on that same field — so opening
+      // Practice first cost her up to seven stars for pressing the "wrong"
+      // button, and the reward for identical effort depended on entry order.
       const todayStr = todayString();
       const ph = next.playHistory ?? [];
-      if (!ph.includes(todayStr)) next.playHistory = [...ph, todayStr];
+      if (!ph.includes(todayStr)) {
+        next.playHistory = [...ph, todayStr];
+        if (next.currentStreak > 1) {
+          streakBonus = Math.min(next.currentStreak, 7);
+          next.spendableStars += streakBonus;
+          next.totalStars += streakBonus;
+        }
+      }
+
+      // Practice awarded no badges and no stickers at all, which is a strange
+      // thing to say about the mode the whole adaptive ladder exists to serve:
+      // a child could live in it for a thousand questions and the Badges screen
+      // would still read 0.
+      newBadges = checkNewBadges(prev, next, wasCorrect ? 1 : 0, 1);
+      if (newBadges.length > 0) next.earnedBadges = [...next.earnedBadges, ...newBadges];
+      newStickers = checkNewStickers(prev, next, wasCorrect ? 1 : 0, 1);
+      if (newStickers.length > 0) next.earnedStickers = [...(next.earnedStickers ?? []), ...newStickers];
 
       debouncedSave(next);
       return next;
     });
 
-    return { move, skill, starsAwarded };
+    return { move, skill, starsAwarded, newBadges, newStickers, streakBonus };
   }
 
   function recordQuestionsAnswered(count: number) {

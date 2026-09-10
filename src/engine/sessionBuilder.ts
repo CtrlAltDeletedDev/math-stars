@@ -1,7 +1,7 @@
 import { Question, SRSCard, Level, UserProgress } from '@/types';
 import { Category } from '@/types';
 import { CATEGORIES, ALL_QUESTIONS_BY_ID } from '@/data/categories';
-import { generateFromParams, questionFromId } from './questionGenerator';
+import { generateFromParams, questionFromId, canRebuildFromId } from './questionGenerator';
 import { isDue } from './srs';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { shuffle, shuffleChoices } from './choices';
@@ -203,8 +203,20 @@ export function buildReviewSession(progress: UserProgress, n = 10, characterName
   return presentAll(shuffle(questions));
 }
 
+/**
+ * A card is only worth counting if the review session can actually build its
+ * question. Fraction and money ids can't be rebuilt, and a wrong answer parks
+ * them due forever — so they inflated this badge permanently and every tap on
+ * it dead-ended.
+ */
+export function isServableCard(questionId: string): boolean {
+  return ALL_QUESTIONS_BY_ID.has(questionId) || canRebuildFromId(questionId);
+}
+
 export function countDueReviews(progress: UserProgress): number {
-  return Object.values(progress.srsCards).filter(isDue).length;
+  return Object.values(progress.srsCards).filter(
+    (c) => isDue(c) && isServableCard(c.questionId),
+  ).length;
 }
 
 export function buildMasterSession(

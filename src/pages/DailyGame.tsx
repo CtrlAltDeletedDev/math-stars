@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { buildDailyChallengeSession } from '@/engine/sessionBuilder';
@@ -202,7 +202,8 @@ export default function DailyGame() {
   }, [showFeedback, cancel]);
 
   const question = session.currentQuestion;
-  if (!question) return null;
+  // Never a blank white page with no back button — bounce home instead.
+  if (!question) return <Navigate to="/" replace />;
 
   const hotStreak = session.hotStreak;
 

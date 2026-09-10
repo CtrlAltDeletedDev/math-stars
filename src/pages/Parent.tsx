@@ -4,6 +4,9 @@ import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import { SKILLS, rankFor, unlockedSkillIds } from '@/data/skills';
 import { rungAccuracy, isMaxed } from '@/engine/skillLadder';
+import { hasOutgrown } from '@/engine/mastery';
+import { GRADES, GradeLevel } from '@/data/grades';
+import { topicsForGrade } from '@/data/topics';
 import { passedLevel } from '@/engine/scoring';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
@@ -12,9 +15,23 @@ import { todayString } from '@/engine/dates';
 
 export default function Parent() {
   const navigate = useNavigate();
-  const { progress, importProgress, toggleChallengeMode, toggleSlowMode, setPracticeFocus } = useProgress();
+  const { progress, importProgress, toggleChallengeMode, toggleSlowMode, setPracticeFocus, setGradeLevel, storageIssue } = useProgress();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMsg, setImportMsg] = useState<string | null>(null);
+
+  // Three quick taps on the title is exactly what an excited six-year-old does,
+  // and this screen holds Import (which replaces everything) and the switches
+  // that reshape her whole practice diet. A small multiplication is enough:
+  // it stops a first grader without being a nuisance to a parent.
+  const [gate] = useState(() => ({ a: 3 + Math.floor(Math.random() * 7), b: 4 + Math.floor(Math.random() * 6) }));
+  const [gateInput, setGateInput] = useState('');
+  const [gatePassed, setGatePassed] = useState(false);
+
+  const outgrown = topicsForGrade(progress.gradeLevel)
+    .filter((t) => hasOutgrown(t.id, progress))
+    .map((t) => t.title);
+  const nextGrade: GradeLevel | null =
+    progress.gradeLevel === 'K' ? '1' : progress.gradeLevel === '1' ? '2' : null;
 
   const focused = progress.practiceFocus ?? [];
   const unlocked = unlockedSkillIds(progress.skills, progress.gradeLevel);
@@ -47,7 +64,54 @@ export default function Parent() {
       e.target.value = '';
       setTimeout(() => setImportMsg(null), 3000);
     };
+    reader.onerror = () => {
+      setImportMsg('Could not read that file.');
+      e.target.value = '';
+      setTimeout(() => setImportMsg(null), 3000);
+    };
     reader.readAsText(file);
+  }
+
+  if (!gatePassed) {
+    return (
+      <BackgroundGradient colors={['#5C6BC0', '#303F9F']}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16, padding: '24px 26px' }}>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff', textAlign: 'center' }}>
+            Grown-ups only
+          </div>
+          <div style={{ fontFamily: 'Nunito', fontSize: 15, color: 'rgba(255,255,255,0.85)', textAlign: 'center' }}>
+            What is {gate.a} × {gate.b}?
+          </div>
+          <input
+            value={gateInput}
+            onChange={(e) => setGateInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && Number(gateInput) === gate.a * gate.b) setGatePassed(true); }}
+            inputMode="numeric"
+            autoFocus
+            style={{
+              fontFamily: 'Nunito', fontWeight: 800, fontSize: 24, textAlign: 'center',
+              padding: '12px', borderRadius: 14, border: '2px solid rgba(255,255,255,0.5)',
+              background: 'rgba(255,255,255,0.2)', color: '#fff', minHeight: 52,
+            }}
+          />
+          <BigButton
+            onPress={() => { if (Number(gateInput) === gate.a * gate.b) setGatePassed(true); }}
+            label="Enter"
+            color="#fff"
+            textColor="#303F9F"
+          />
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none', border: 'none', fontFamily: 'Nunito', fontWeight: 700,
+              fontSize: 15, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', minHeight: 44,
+            }}
+          >
+            ← Back to the game
+          </button>
+        </div>
+      </BackgroundGradient>
+    );
   }
 
   const totalLevels = CATEGORIES.reduce((sum, c) => sum + c.levels.length, 0);
@@ -125,6 +189,73 @@ export default function Parent() {
           Last 7 Days
         </div>
         <PlayCalendar playHistory={progress.playHistory ?? []} />
+
+        {/* Persistence trouble is worth interrupting for — it means her stars
+            are not actually being kept. */}
+        {storageIssue && (
+          <div style={{ background: 'rgba(211,47,47,0.35)', border: '2px solid rgba(255,255,255,0.5)', borderRadius: 16, padding: '14px 18px' }}>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}>
+              ⚠️ {storageIssue === 'cannot-save' ? 'Progress is not being saved' : 'Saved progress could not be read'}
+            </div>
+            <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4, lineHeight: 1.4 }}>
+              {storageIssue === 'cannot-save'
+                ? 'This browser is refusing to store data — usually private browsing, or a full device. She can still play, but stars will disappear when the app closes.'
+                : storageIssue === 'unreadable-backed-up'
+                  ? 'The old save was damaged. We kept a copy rather than deleting it, so nothing is lost for good. She has started a fresh profile.'
+                  : 'The old save was damaged and could not be recovered. She has started a fresh profile.'}
+            </div>
+          </div>
+        )}
+
+        {/* Grade — the one setting that decides what she meets */}
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
+          Grade
+        </div>
+        <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
+          Sets which topics appear and how far each one goes. How hard the questions get inside
+          that is still decided by how she answers.
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {GRADES.map((band) => {
+              const on = progress.gradeLevel === band.id;
+              return (
+                <button
+                  key={band.id}
+                  onClick={() => setGradeLevel(band.id)}
+                  style={{
+                    flex: 1, minWidth: 100, minHeight: 48,
+                    background: on ? '#4CAF50' : 'rgba(255,255,255,0.15)',
+                    border: `2px solid ${on ? '#4CAF50' : 'rgba(255,255,255,0.35)'}`,
+                    borderRadius: 16, cursor: 'pointer',
+                    fontFamily: 'Nunito', fontWeight: 800, fontSize: 14.5, color: '#fff',
+                  }}
+                >
+                  {band.emoji} {band.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* The ceiling is soft, and this is how it tells on itself. */}
+          {outgrown.length > 0 && nextGrade && (
+            <div style={{ marginTop: 12, background: 'rgba(255,213,79,0.25)', border: '2px solid #FFD54F', borderRadius: 14, padding: '12px 14px' }}>
+              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 14.5, color: '#fff', lineHeight: 1.35 }}>
+                🌟 {outgrown.slice(0, 3).join(', ')} {outgrown.length === 1 ? 'is' : 'are'} at the top of this grade.
+              </div>
+              <button
+                onClick={() => setGradeLevel(nextGrade)}
+                style={{
+                  marginTop: 10, minHeight: 44, width: '100%',
+                  background: '#FFD54F', border: 'none', borderRadius: 12, cursor: 'pointer',
+                  fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#5D4037',
+                }}
+              >
+                Move up to {GRADES.find((g) => g.id === nextGrade)?.label} →
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Focus Mode — pin practice to what she's working on this week */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
