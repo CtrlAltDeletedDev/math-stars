@@ -1,4 +1,5 @@
 import { Level, LevelState } from '@/types';
+import { passedLevel } from '@/engine/scoring';
 import { LESSONS } from '@/data/lessons';
 
 interface Props {
@@ -23,10 +24,9 @@ export default function LevelMap({ levels, levelStates, onSelect, onLesson }: Pr
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 0' }}>
       {levels.map((level, idx) => {
         const state = levelStates[level.id];
-        const status = state?.status ?? 'locked';
-        const locked = status === 'locked';
-        const completed = status === 'completed';
-        const isNew = status === 'unlocked' && state?.unlockedAt != null && (Date.now() - state.unlockedAt < NEW_THRESHOLD_MS);
+        const locked = false; // nothing is locked any more
+        const completed = passedLevel(state);
+        const isNew = !state;
 
         return (
           <div key={level.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>

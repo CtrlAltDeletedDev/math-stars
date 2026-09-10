@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Category } from '@/types';
 import { CategoryProgress } from '@/types';
+import { passedLevel } from '@/engine/scoring';
 
 interface Props {
   category: Category;
@@ -11,9 +12,8 @@ interface Props {
 
 export default function CategoryCard({ category, progress, onPress, onMasterPress }: Props) {
   const [pressed, setPressed] = useState(false);
-  const levels = Object.values(progress?.levels ?? {});
-  const completed = levels.filter((l) => l.status === 'completed').length;
-  const total = levels.length;
+  const completed = category.levels.filter((l) => passedLevel(progress?.levels[l.id])).length;
+  const total = category.levels.length;
   const stars = progress?.totalStarsEarned ?? 0;
 
   // A div with a button role, not a <button>: the Master Mode control below is a

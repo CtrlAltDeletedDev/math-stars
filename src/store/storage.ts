@@ -1,10 +1,13 @@
-import { UserProgress, CategoryProgress, LevelState } from '@/types';
-import { CATEGORIES } from '@/data/categories';
+import { UserProgress, CategoryProgress, LevelState, SkillState } from '@/types';
+import { GAME_CONFIG } from '@/constants/gameConfig';
+import { TOPICS } from '@/data/topics';
 
 const STORAGE_KEY = 'mathstars_progress_v2';
+/** Where an unreadable save is parked instead of being thrown away. */
+export const CORRUPT_BACKUP_KEY = 'mathstars_progress_unreadable';
 /** Rungs added below the existing ones on the adding/taking-away ladders in v4. */
 const LADDER_RUNGS_INSERTED_IN_V4 = 2;
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 const OLDEST_MIGRATABLE = 2;
 
 // Patch missing fields on a saved/imported progress object so the rest of
@@ -14,10 +17,35 @@ const OLDEST_MIGRATABLE = 2;
 // Anything from OLDEST_MIGRATABLE upward is *migrated*, not rejected. This used
 // to hard-reject any version !== 2, which meant the first schema change would
 // have silently wiped every star she had earned.
+
+/** A save has to be shaped roughly right before we trust any of it. */
+function looksLikeProgress(p: UserProgress): boolean {
+  const isPlainObject = (v: unknown) =>
+    typeof v === 'object' && v !== null && !Array.isArray(v);
+  // Only fields whose *wrong* shape would crash a render are checked. Missing is
+  // fine — that is what the patching below is for. Present-but-wrong is not:
+  // `categories: []` sails through a falsiness check and then throws on the
+  // first Object.values(cat.levels) of the next render, which used to leave the
+  // app in a permanent crash loop behind "Your stars are all safe!".
+  if (p.categories !== undefined && !isPlainObject(p.categories)) return false;
+  if (p.skills !== undefined && !isPlainObject(p.skills)) return false;
+  if (p.srsCards !== undefined && !isPlainObject(p.srsCards)) return false;
+  if (p.earnedBadges !== undefined && !Array.isArray(p.earnedBadges)) return false;
+  if (p.purchasedItems !== undefined && !Array.isArray(p.purchasedItems)) return false;
+  if (p.playHistory !== undefined && !Array.isArray(p.playHistory)) return false;
+  if (p.earnedStickers !== undefined && !Array.isArray(p.earnedStickers)) return false;
+  if (p.practiceFocus !== undefined && !Array.isArray(p.practiceFocus)) return false;
+  if (p.totalStars !== undefined && typeof p.totalStars !== 'number') return false;
+  return true;
+}
+
 export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   if (!parsed || typeof parsed !== 'object') return null;
   if (typeof parsed.version !== 'number') return null;
   if (parsed.version < OLDEST_MIGRATABLE || parsed.version > CURRENT_VERSION) return null;
+  if (!looksLikeProgress(parsed)) return null;
+
+  const fromVersion = parsed.version;
 
   // Patch fields added after initial release
   if (!parsed.categories) parsed.categories = {};
@@ -46,7 +74,7 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   // BOTTOM of the adding and taking-away ladders, so every rung above them
   // shifted up by two. Without this a child sitting on "adding within 20" would
   // silently be demoted to "adding within 5" and have to climb it again.
-  if (parsed.version < 4) {
+  if (fromVersion < 4) {
     for (const id of ['adding', 'taking-away']) {
       const state = parsed.skills[id];
       if (state && typeof state.rung === 'number') {
@@ -56,64 +84,167 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   }
   if (!parsed.practiceFocus) parsed.practiceFocus = [];
 
-  // Initialize any new categories added since this save was made
-  for (const cat of CATEGORIES) {
-    if (!parsed.categories[cat.id]) {
-      parsed.categories[cat.id] = buildInitialCategoryProgress(cat.id);
-    }
+  // v4 → v5: levels stop being a lock chain, and the ladder learns from them.
+  if (fromVersion < 5) {
+    migrateToV5(parsed);
   }
+  if (parsed.gradeLevel === undefined) parsed.gradeLevel = null;
 
   parsed.version = CURRENT_VERSION;
   return parsed;
 }
 
-export function loadProgress(): UserProgress | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return normalizeProgress(JSON.parse(raw) as UserProgress);
-  } catch {
-    return null;
+/**
+ * The v5 conversion, in three parts.
+ *
+ * 1. `status` and `unlockedAt` go away. `status` was a second copy of what
+ *    `bestScore` already said, and its *absence* meant "locked" — which is why
+ *    any level added to an existing category showed a padlock forever. What
+ *    exists is now read from the catalogue; saved state only records what
+ *    happened.
+ * 2. The record goes sparse: entries for levels she never attempted carried no
+ *    information beyond that vestigial status, so they are dropped.
+ * 3. The ladder is seeded from her level history. This is the one-time repair
+ *    of the split that let a child three-star every level in a category and
+ *    still be handed rung 0 the moment she opened Practice.
+ */
+function migrateToV5(parsed: UserProgress): void {
+  const legacy = parsed as UserProgress & {
+    categories: Record<string, { levels: Record<string, LevelState & { status?: string; unlockedAt?: number }> }>;
+  };
+
+  for (const cat of Object.values(legacy.categories)) {
+    if (!cat?.levels || typeof cat.levels !== 'object') continue;
+    for (const [levelId, state] of Object.entries(cat.levels)) {
+      if (!state || typeof state !== 'object') { delete cat.levels[levelId]; continue; }
+
+      // Keep "she passed this" alive now that it is derived from the score.
+      if (state.status === 'completed' && (state.bestScore ?? 0) < GAME_CONFIG.passThreshold) {
+        state.bestScore = GAME_CONFIG.passThreshold;
+      }
+      delete state.status;
+      delete state.unlockedAt;
+
+      if (!state.totalAttempts) delete cat.levels[levelId];
+    }
+  }
+
+  // Drop categories left holding nothing.
+  for (const [catId, cat] of Object.entries(legacy.categories)) {
+    if (!cat?.levels || Object.keys(cat.levels).length === 0) delete legacy.categories[catId];
+  }
+
+  seedLaddersFromLevels(parsed);
+}
+
+/**
+ * Give each ladder the credit her level play already earned.
+ *
+ * Takes the highest rung she has demonstrably passed in each topic and lifts the
+ * skill to it. Never demotes: a ladder that is already higher stays where it is.
+ *
+ * A lucky three-star can over-promote her. That is deliberate and safe — the
+ * window is cleared, so the very next eight answers can walk her back down under
+ * the ordinary 3-of-8 demotion rule. Seeding high and letting evidence correct it
+ * is much kinder than making her re-climb ground she has already covered.
+ */
+function seedLaddersFromLevels(parsed: UserProgress): void {
+  const passed = (levelId: string): boolean => {
+    for (const cat of Object.values(parsed.categories)) {
+      const state = cat?.levels?.[levelId];
+      if (state) return state.bestScore >= GAME_CONFIG.passThreshold;
+    }
+    return false;
+  };
+
+  for (const topic of TOPICS) {
+    let seeded = -1;
+    for (const ref of topic.levels) {
+      if (passed(ref.levelId)) seeded = Math.max(seeded, ref.rung);
+    }
+    if (seeded < 0) continue;
+
+    const existing = parsed.skills[topic.id];
+    const next: SkillState = existing
+      ? { ...existing, rung: Math.max(existing.rung, seeded), recent: [] }
+      : { skillId: topic.id, rung: seeded, recent: [], attempts: 0, correct: 0, ceilingHits: 0 };
+    parsed.skills[topic.id] = next;
   }
 }
 
-export function saveProgress(progress: UserProgress): void {
+/**
+ * Read the saved profile.
+ *
+ * Returns the progress, or a reason it could not be read. An unreadable save is
+ * NEVER silently dropped: it is copied to a backup key first, because the caller
+ * will otherwise start from a blank profile and overwrite the original on her
+ * very next answer — turning a recoverable glitch into every star gone.
+ */
+export type LoadResult =
+  | { ok: true; progress: UserProgress }
+  | { ok: false; reason: 'empty' }
+  | { ok: false; reason: 'unreadable'; backedUp: boolean };
+
+export function loadProgressResult(): LoadResult {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return { ok: false, reason: 'unreadable', backedUp: false };
+  }
+  if (!raw) return { ok: false, reason: 'empty' };
+
+  let normalized: UserProgress | null = null;
+  try {
+    normalized = normalizeProgress(JSON.parse(raw) as UserProgress);
+  } catch {
+    normalized = null;
+  }
+  if (normalized) return { ok: true, progress: normalized };
+
+  let backedUp = false;
+  try {
+    localStorage.setItem(CORRUPT_BACKUP_KEY, raw);
+    backedUp = true;
+  } catch {
+    // Nothing more we can do; at least don't pretend it was saved.
+  }
+  return { ok: false, reason: 'unreadable', backedUp };
+}
+
+export function loadProgress(): UserProgress | null {
+  const result = loadProgressResult();
+  return result.ok ? result.progress : null;
+}
+
+/** Whether the last write actually landed. Silence here used to mean lost stars. */
+export function saveProgress(progress: UserProgress): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    return true;
   } catch {
-    // storage full or unavailable — silently ignore
+    // Quota exceeded, or Safari private browsing, where every write throws.
+    return false;
   }
 }
 
-function buildInitialLevelState(levelId: string, isFirst: boolean): LevelState {
-  return {
-    levelId,
-    status: isFirst ? 'unlocked' : 'locked',
-    bestScore: 0,
-    starsEarned: 0,
-    totalAttempts: 0,
-    lastPlayed: 0,
-  };
-}
-
-function buildInitialCategoryProgress(categoryId: string): CategoryProgress {
-  const category = CATEGORIES.find((c) => c.id === categoryId);
-  if (!category) return { categoryId, levels: {}, totalStarsEarned: 0 };
-
-  const levels: Record<string, LevelState> = {};
-  category.levels.forEach((level, idx) => {
-    levels[level.id] = buildInitialLevelState(level.id, idx === 0);
-  });
-
-  return { categoryId, levels, totalStarsEarned: 0 };
+/**
+ * Can we persist at all? Called once at startup so the Parent screen can say
+ * "progress isn't being saved" instead of the app quietly behaving like a
+ * goldfish for an hour of play.
+ */
+export function storageWorks(): boolean {
+  try {
+    const probe = '__mathstars_probe__';
+    localStorage.setItem(probe, '1');
+    localStorage.removeItem(probe);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function buildInitialProgress(): UserProgress {
-  const categories: Record<string, CategoryProgress> = {};
-  for (const cat of CATEGORIES) {
-    categories[cat.id] = buildInitialCategoryProgress(cat.id);
-  }
-
   return {
     version: CURRENT_VERSION,
     totalStars: 0,
@@ -121,7 +252,9 @@ export function buildInitialProgress(): UserProgress {
     currentStreak: 0,
     longestStreak: 0,
     lastPlayedDate: '',
-    categories,
+    // Empty on purpose. A CategoryProgress is created on first play; nothing
+    // reads this map to decide what she is allowed to open.
+    categories: {} as Record<string, CategoryProgress>,
     srsCards: {},
     characterId: null,
     earnedBadges: [],
@@ -142,5 +275,6 @@ export function buildInitialProgress(): UserProgress {
     skills: {},
     practiceQuestionsAnswered: 0,
     practiceFocus: [],
+    gradeLevel: null,
   };
 }

@@ -3,6 +3,7 @@ import { generateFromParams } from '@/engine/questionGenerator';
 import { generateFractionQuestion } from './fractions';
 import { generateMoneyQuestion, MoneyMode } from './moneyGen';
 import { ALL_QUESTIONS_BY_ID } from './categories';
+import { GradeLevel, isInGrade } from './grades';
 
 // The growth ladder.
 //
@@ -206,6 +207,15 @@ export const SKILLS: Skill[] = [
     ],
   },
   {
+    id: 'measuring',
+    title: 'Measuring',
+    emoji: '📏',
+    rungs: [
+      { label: 'Longer and shorter', source: { kind: 'bank', types: ['measurement'], difficulty: [1] } },
+      { label: 'Measuring with units', source: { kind: 'bank', types: ['measurement'], difficulty: [1, 2] } },
+    ],
+  },
+  {
     id: 'counting',
     title: 'Counting',
     emoji: '🔟',
@@ -218,41 +228,23 @@ export const SKILLS: Skill[] = [
 ];
 
 /**
- * When each skill is allowed to appear in endless practice.
+ * Which skills endless practice may draw from.
  *
- * Practice used to draw from all sixteen skills from the very first question,
- * so a five-year-old who could just about add to five was served fractions,
- * change from a dollar and the seven times table — and adding was one
- * sixteenth of what she saw. Skills now arrive in waves, keyed off how far she
- * has climbed on adding or taking away, whichever is further.
+ * This used to be SKILL_TIERS: waves of skills unlocked by how far she had
+ * climbed on adding or taking away. That existed for one reason — to stop a
+ * five-year-old meeting fractions and the seven times table on day one — and
+ * the grade band now does that job explicitly, in a table a parent can read.
+ * Keeping both would have been a fifth notion of "how advanced is she".
  *
- * The gate is deliberately a single, predictable number rather than a
- * per-skill rule, for the same reason the ladder itself is boring: a parent
- * should be able to look at the Practice Levels list and know what comes next.
- * A parent who disagrees can override the whole thing with Focus Mode.
+ * Anything she has already started stays available even if the grade moves,
+ * so a topic never disappears from under her mid-week.
  */
-export const SKILL_TIERS: { atRung: number; skills: string[] }[] = [
-  { atRung: 0, skills: ['adding', 'taking-away', 'counting'] },
-  { atRung: 2, skills: ['strategies', 'number-bonds', 'comparing', 'even-odd', 'shapes'] },
-  { atRung: 4, skills: ['mystery-number', 'place-value', 'stories', 'clocks', 'money'] },
-  { atRung: 5, skills: ['counting-up', 'fractions', 'fact-families'] },
-];
-
-/** How far she has climbed on the two arithmetic ladders — the gate for everything else. */
-export function arithmeticRung(skills: Record<string, { rung: number }> | undefined): number {
-  const add = skills?.['adding']?.rung ?? 0;
-  const sub = skills?.['taking-away']?.rung ?? 0;
-  return Math.max(add, sub);
-}
-
-/** The skills endless practice may draw from right now. */
-export function unlockedSkillIds(skills: Record<string, { rung: number }> | undefined): string[] {
-  const reached = arithmeticRung(skills);
-  const open = SKILL_TIERS.filter((t) => reached >= t.atRung).flatMap((t) => t.skills);
-  // Anything she has already practised stays available, so a wave never closes
-  // behind her if she has a bad week and the ladder walks her back down.
-  const started = Object.keys(skills ?? {});
-  return SKILLS.map((s) => s.id).filter((id) => open.includes(id) || started.includes(id));
+export function unlockedSkillIds(
+  skills: Record<string, { rung: number }> | undefined,
+  grade: GradeLevel | null,
+): string[] {
+  const started = new Set(Object.keys(skills ?? {}));
+  return SKILLS.map((s) => s.id).filter((id) => isInGrade(id, grade) || started.has(id));
 }
 
 export const SKILLS_BY_ID = new Map(SKILLS.map((s) => [s.id, s]));

@@ -1,5 +1,6 @@
 import { UserProgress, Level } from '@/types';
 import { CATEGORIES } from '@/data/categories';
+import { passedLevel } from './scoring';
 
 // What to play next.
 //
@@ -43,19 +44,19 @@ export function findNextUp(progress: UserProgress): NextUp | null {
   for (const cat of CATEGORIES) {
     const catProg = progress.categories?.[cat.id];
     if (!catProg) continue;
-    const done = Object.values(catProg.levels).filter((l) => l.status === 'completed').length;
+    const done = Object.values(catProg.levels).filter((l) => passedLevel(l)).length;
 
     for (const level of cat.levels) {
       const state = catProg.levels[level.id];
-      if (!state || state.status === 'locked') continue;
+      if (!state) continue;
 
-      if (state.status !== 'completed' && state.totalAttempts > 0) {
+      if (!passedLevel(state) && state.totalAttempts > 0) {
         if (!started || state.lastPlayed > started.lastPlayed) {
           started = { level, lastPlayed: state.lastPlayed };
         }
       }
-      if (state.status === 'unlocked' && state.totalAttempts === 0) {
-        const at = state.unlockedAt ?? 0;
+      if (state.totalAttempts === 0) {
+        const at = state.lastPlayed ?? 0;
         if (!newest || at > newest.unlockedAt) newest = { level, unlockedAt: at };
         if (!fallback || done < fallback.done) fallback = { level, done };
       }

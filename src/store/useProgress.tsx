@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { UserProgress, SRSCard, BadgeEarned, SkillState } from '@/types';
-import { loadProgress, saveProgress, buildInitialProgress, normalizeProgress } from './storage';
+import { buildInitialProgress, loadProgressResult, normalizeProgress, saveProgress, storageWorks } from './storage';
 import { CATEGORIES, getLevelById } from '@/data/categories';
-import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
+import { calculateStars, didPassLevel, updateStreak, passedLevel } from '@/engine/scoring';
+import { skillForQuestion } from '@/data/topics';
+import { GradeLevel, ceilingFor } from '@/data/grades';
+import { Question } from '@/types';
 import { BADGES, BadgeCheckContext } from '@/data/badges';
 import { STICKERS } from '@/data/stickers';
 import { SHOP_ITEMS } from '@/data/shop';
@@ -21,6 +24,7 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
+    answers?: { question: Question; correct: boolean }[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   recordDailyChallengeComplete: (
     correctCount: number,
@@ -49,24 +53,45 @@ interface ProgressContextValue {
   toggleSlowMode: () => void;
   toggleAutoRead: () => void;
   setPracticeFocus: (skillIds: string[]) => void;
+  setGradeLevel: (grade: GradeLevel) => void;
+  /** Non-null when saving is broken or a previous save could not be read. */
+  storageIssue: StorageIssue;
   importProgress: (data: UserProgress) => boolean;
 }
+
+/**
+ * Something the parent needs to know about persistence.
+ *  - 'cannot-save'          nothing is being written (private browsing, quota)
+ *  - 'unreadable'           a save existed but could not be parsed, and we could not back it up
+ *  - 'unreadable-backed-up' ...and the original text was preserved for recovery
+ */
+export type StorageIssue = null | 'cannot-save' | 'unreadable' | 'unreadable-backed-up';
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
 
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<UserProgress>(buildInitialProgress());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [storageIssue, setStorageIssue] = useState<StorageIssue>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const saved = loadProgress();
-    if (saved) {
-      setProgress(saved);
+    // A save we cannot read is NOT nothing. Starting from a blank profile and
+    // saving over it on her next answer turns a recoverable glitch into every
+    // star gone, with no signal that anything happened — so the raw text is
+    // parked under a backup key and the Parent screen is told.
+    const result = loadProgressResult();
+    if (result.ok) {
+      setProgress(result.progress);
       // Write the migrated shape straight back, so an older save on disk
       // converges to the current schema even if she never finishes a level
       // this session.
-      if (saved.version !== undefined) saveProgress(saved);
+      if (!saveProgress(result.progress)) setStorageIssue('cannot-save');
+    } else if (result.reason === 'unreadable') {
+      setStorageIssue(result.backedUp ? 'unreadable-backed-up' : 'unreadable');
+    } else if (!storageWorks()) {
+      // Private browsing, or a full disk: she can play, but nothing will stick.
+      setStorageIssue('cannot-save');
     }
     setIsLoaded(true);
   }, []);
@@ -79,7 +104,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     if (pendingSave.current) {
       const p = pendingSave.current;
-      saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards) });
+      const ok = saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards) });
+      if (!ok) setStorageIssue('cannot-save');
       pendingSave.current = null;
     }
   }
@@ -106,17 +132,34 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  /**
+   * How much of the app she has finished, counted against the CATALOGUE.
+   *
+   * This used to count `every(l => l.status === 'completed')` over the *saved*
+   * levels, so a category whose saved record was missing a level counted as
+   * complete — awarding "Category Champ!" for a category she could not finish.
+   * Counting against CATEGORIES means a level added later correctly makes the
+   * category incomplete again.
+   */
+  function countCompletion(p: UserProgress): { categoriesCompleted: number; totalLevelsCompleted: number } {
+    let categoriesCompleted = 0;
+    let totalLevelsCompleted = 0;
+    for (const cat of CATEGORIES) {
+      const saved = p.categories[cat.id];
+      let done = 0;
+      for (const level of cat.levels) {
+        if (passedLevel(saved?.levels[level.id])) done++;
+      }
+      totalLevelsCompleted += done;
+      if (cat.levels.length > 0 && done === cat.levels.length) categoriesCompleted++;
+    }
+    return { categoriesCompleted, totalLevelsCompleted };
+  }
+
   function checkNewBadges(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): BadgeEarned[] {
     const existingIds = new Set(prev.earnedBadges.map((b) => b.badgeId));
 
-    const categoriesCompleted = Object.values(next.categories).filter((cat) =>
-      Object.values(cat.levels).every((l) => l.status === 'completed'),
-    ).length;
-
-    const totalLevelsCompleted = Object.values(next.categories).reduce(
-      (sum, cat) => sum + Object.values(cat.levels).filter((l) => l.status === 'completed').length,
-      0,
-    );
+    const { categoriesCompleted, totalLevelsCompleted } = countCompletion(next);
 
     const ctx: BadgeCheckContext = {
       totalStars: next.totalStars,
@@ -140,12 +183,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   function checkNewStickers(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): string[] {
     const existing = new Set(prev.earnedStickers ?? []);
     const playDays = new Set(next.playHistory ?? []).size;
-    const categoriesCompleted = Object.values(next.categories).filter((cat) =>
-      Object.values(cat.levels).every((l) => l.status === 'completed'),
-    ).length;
-    const totalLevelsCompleted = Object.values(next.categories).reduce(
-      (sum, cat) => sum + Object.values(cat.levels).filter((l) => l.status === 'completed').length, 0,
-    );
+    const { categoriesCompleted, totalLevelsCompleted } = countCompletion(next);
     const ctx = {
       totalStars: next.totalStars,
       currentStreak: next.currentStreak,
@@ -166,6 +204,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
+    /**
+     * Every answer of the session, so level play feeds the adaptive ladder.
+     * Without this, passing levels moved nothing the ladder could read and a
+     * child could three-star a whole category yet still open Practice at rung 0.
+     */
+    answers: { question: Question; correct: boolean }[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
     const level = getLevelById(levelId);
     if (!level) return { newBadges: [], newStickers: [], streakBonus: 0 };
@@ -191,10 +235,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       }
       next = { ...next, consecutiveCorrect };
 
-      const catProgress = { ...next.categories[level.categoryId] };
+      // Created on first play rather than seeded up front: nothing reads this
+      // map to decide what she may open, so an absent entry just means "not
+      // played yet".
+      const existingCat = next.categories[level.categoryId];
+      const catProgress = existingCat
+        ? { ...existingCat, levels: { ...existingCat.levels } }
+        : { categoryId: level.categoryId, levels: {}, totalStarsEarned: 0 };
+
       const prevLevel = catProgress.levels[levelId] ?? {
         levelId,
-        status: 'unlocked' as const,
         bestScore: 0,
         starsEarned: 0,
         totalAttempts: 0,
@@ -203,35 +253,17 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
       const newStarDelta = Math.max(0, stars - prevLevel.starsEarned);
 
-      catProgress.levels = {
-        ...catProgress.levels,
-        [levelId]: {
-          ...prevLevel,
-          status: passed ? 'completed' : prevLevel.status,
-          bestScore: Math.max(prevLevel.bestScore, score),
-          starsEarned: Math.max(prevLevel.starsEarned, stars),
-          totalAttempts: prevLevel.totalAttempts + 1,
-          lastPlayed: Date.now(),
-        },
+      // Every merge is monotonic, so replaying a level she has already aced can
+      // only ever leave her where she was — never take stars back.
+      catProgress.levels[levelId] = {
+        ...prevLevel,
+        bestScore: Math.max(prevLevel.bestScore, score),
+        starsEarned: Math.max(prevLevel.starsEarned, stars),
+        totalAttempts: prevLevel.totalAttempts + 1,
+        lastPlayed: Date.now(),
       };
 
-      if (passed) {
-        const category = CATEGORIES.find((c) => c.id === level.categoryId);
-        if (category) {
-          const levelIndex = category.levels.findIndex((l) => l.id === levelId);
-          const nextLevel = category.levels[levelIndex + 1];
-          if (nextLevel && (!catProgress.levels[nextLevel.id] || catProgress.levels[nextLevel.id]?.status === 'locked')) {
-            catProgress.levels = {
-              ...catProgress.levels,
-              [nextLevel.id]: {
-                ...(catProgress.levels[nextLevel.id] ?? { levelId: nextLevel.id, status: 'locked', bestScore: 0, starsEarned: 0, totalAttempts: 0, lastPlayed: 0 }),
-                status: 'unlocked',
-                unlockedAt: Date.now(),
-              },
-            };
-          }
-        }
-      }
+      // No next-level unlocking: nothing is locked any more.
 
       catProgress.totalStarsEarned = (catProgress.totalStarsEarned ?? 0) + newStarDelta;
 
@@ -240,12 +272,23 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         updatedSRS[card.questionId] = card;
       }
 
+      // Ten level answers now count exactly as ten practice answers.
+      const skills = { ...(next.skills ?? {}) };
+      for (const { question, correct } of answers) {
+        const skillId = skillForQuestion(question, levelId);
+        if (!skillId) continue;
+        const before = skills[skillId] ?? newSkillState(skillId);
+        const result = recordSkillAnswer(before, correct, ceilingFor(skillId, next.gradeLevel));
+        skills[skillId] = result.state;
+      }
+
       next = {
         ...next,
         totalStars: next.totalStars + newStarDelta,
         spendableStars: next.spendableStars + newStarDelta,
         categories: { ...next.categories, [level.categoryId]: catProgress },
         srsCards: updatedSRS,
+        skills,
       };
 
       newBadges = checkNewBadges(prev, next, correctCount, totalCount);
@@ -393,7 +436,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       const skills = { ...(prev.skills ?? {}) };
       if (skillId) {
         const before = skills[skillId] ?? newSkillState(skillId);
-        const result = recordSkillAnswer(before, wasCorrect);
+        const result = recordSkillAnswer(before, wasCorrect, ceilingFor(skillId, prev.gradeLevel));
         skills[skillId] = result.state;
         move = result.move;
         skill = result.state;
@@ -524,13 +567,28 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   function importProgress(data: UserProgress): boolean {
     const normalized = normalizeProgress(data);
     if (!normalized) return false;
+    // Drop any pending write first. A debounced save queued moments before the
+    // import (toggling Slow Mode on this very screen is enough) would otherwise
+    // fire afterwards and silently put the old profile back, while the UI said
+    // "Progress imported successfully!".
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    pendingSave.current = null;
     setProgress(normalized);
-    saveProgress(normalized);
+    if (!saveProgress(normalized)) setStorageIssue('cannot-save');
     return true;
   }
 
+  /** Which grade she is working at. Sets the topics in scope and each ladder's ceiling. */
+  function setGradeLevel(grade: GradeLevel) {
+    setProgress((prev) => {
+      const next = { ...prev, gradeLevel: grade };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, setPracticeFocus, importProgress }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, setPracticeFocus, setGradeLevel, storageIssue, importProgress }}>
       {children}
     </ProgressContext.Provider>
   );

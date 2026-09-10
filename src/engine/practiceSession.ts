@@ -1,5 +1,6 @@
 import { Question, SkillState, UserProgress } from '@/types';
 import { SKILLS_BY_ID, questionForRung, unlockedSkillIds } from '@/data/skills';
+import { ceilingFor } from '@/data/grades';
 import { newSkillState } from './skillLadder';
 import { questionFromId } from './questionGenerator';
 import { ALL_QUESTIONS_BY_ID } from '@/data/categories';
@@ -43,7 +44,7 @@ export class PracticeQueue {
   private skillPool(): string[] {
     const focus = (this.progress.practiceFocus ?? []).filter((id) => SKILLS_BY_ID.has(id));
     if (focus.length > 0) return focus;
-    return unlockedSkillIds(this.progress.skills);
+    return unlockedSkillIds(this.progress.skills, this.progress.gradeLevel);
   }
 
   private stateFor(skillId: string): SkillState {
@@ -102,7 +103,11 @@ export class PracticeQueue {
     for (const skillId of shuffle([this.pickSkill(), ...this.skillPool()])) {
       const skill = SKILLS_BY_ID.get(skillId);
       if (!skill) continue;
-      const q = questionForRung(skill, this.stateFor(skillId).rung);
+      const rung = Math.min(
+        this.stateFor(skillId).rung,
+        ceilingFor(skillId, this.progress.gradeLevel),
+      );
+      const q = questionForRung(skill, rung);
       if (!q) continue;
       this.recentSkills = [...this.recentSkills, skillId].slice(-6);
       return { question: { ...q, choices: shuffleChoices(q.choices) }, skillId };

@@ -157,7 +157,7 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
   const hasStarted = (cat: Category) => {
     const catProg = progress.categories[cat.id];
     if (!catProg) return false;
-    return Object.values(catProg.levels).some((l) => l.status === 'completed' || l.totalAttempts > 0);
+    return Object.values(catProg.levels).some((l) => l.totalAttempts > 0);
   };
 
   let activeCats = CATEGORIES.filter(hasStarted);
@@ -171,8 +171,7 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
     const catProg = progress.categories[cat.id];
     const activeLevels = cat.levels.filter((l) => {
       const ls = catProg?.levels[l.id];
-      if (!ls) return false;
-      return ls.status === 'completed' || ls.totalAttempts > 0;
+      return !!ls && ls.totalAttempts > 0;
     });
     // A category she has only just unlocked still needs something to ask.
     if (activeLevels.length === 0 && cat.levels.length > 0) activeLevels.push(cat.levels[0]);

@@ -52,7 +52,7 @@ export default function Category() {
             {anyLevelStarted && (
               <button
                 onClick={() => {
-                  const firstUnlocked = category.levels.find((l) => catProgress.levels[l.id]?.status !== 'locked');
+                  const firstUnlocked = category.levels[0];
                   if (firstUnlocked) navigate(`/flashcard/${category.id}/${firstUnlocked.id}`);
                 }}
                 style={{

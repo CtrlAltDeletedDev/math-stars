@@ -4,6 +4,7 @@ import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import { SKILLS, rankFor, unlockedSkillIds } from '@/data/skills';
 import { rungAccuracy, isMaxed } from '@/engine/skillLadder';
+import { passedLevel } from '@/engine/scoring';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import PlayCalendar from '@/components/ui/PlayCalendar';
@@ -16,7 +17,7 @@ export default function Parent() {
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
   const focused = progress.practiceFocus ?? [];
-  const unlocked = unlockedSkillIds(progress.skills);
+  const unlocked = unlockedSkillIds(progress.skills, progress.gradeLevel);
 
   function handleExport() {
     const json = JSON.stringify(progress, null, 2);
@@ -50,8 +51,8 @@ export default function Parent() {
   }
 
   const totalLevels = CATEGORIES.reduce((sum, c) => sum + c.levels.length, 0);
-  const completedLevels = Object.values(progress.categories).reduce(
-    (sum, cat) => sum + Object.values(cat.levels).filter((l) => l.status === 'completed').length,
+  const completedLevels = CATEGORIES.reduce(
+    (sum, c) => sum + c.levels.filter((l) => passedLevel(progress.categories[c.id]?.levels[l.id])).length,
     0,
   );
 
@@ -223,9 +224,7 @@ export default function Parent() {
         </div>
         {CATEGORIES.map((cat) => {
           const catProg = progress.categories[cat.id];
-          const done = catProg
-            ? Object.values(catProg.levels).filter((l) => l.status === 'completed').length
-            : 0;
+          const done = cat.levels.filter((l) => passedLevel(catProg?.levels[l.id])).length;
           const total = cat.levels.length;
           const stars = catProg?.totalStarsEarned ?? 0;
           const pct = total > 0 ? (done / total) * 100 : 0;
