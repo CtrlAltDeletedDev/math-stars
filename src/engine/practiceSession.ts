@@ -32,7 +32,16 @@ export class PracticeQueue {
   private asked = 0;
   private recentSkills: string[] = [];
 
-  constructor(private progress: UserProgress, private characterName = 'You') {}
+  constructor(
+    private progress: UserProgress,
+    private characterName = 'You',
+    /**
+     * One topic to stay on for this session — set when she arrives from a
+     * topic screen's Play button. Outranks the parent's Focus Mode, because it
+     * is the more specific and more recent intent.
+     */
+    private sessionSkill: string | null = null,
+  ) {}
 
   /**
    * Skills practice may draw from: a parent's Focus Mode picks if there are
@@ -42,6 +51,7 @@ export class PracticeQueue {
    * player met fractions and the times tables in her first session.
    */
   private skillPool(): string[] {
+    if (this.sessionSkill && SKILLS_BY_ID.has(this.sessionSkill)) return [this.sessionSkill];
     const focus = (this.progress.practiceFocus ?? []).filter((id) => SKILLS_BY_ID.has(id));
     if (focus.length > 0) return focus;
     return unlockedSkillIds(this.progress.skills, this.progress.gradeLevel);

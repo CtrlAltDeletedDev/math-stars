@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { SKILLS_BY_ID, rankFor } from '@/data/skills';
@@ -29,7 +29,9 @@ export default function Practice() {
   const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
   const characterName = character?.name ?? 'You';
-  const queue = useMemo(() => new PracticeQueue(progress, characterName), []); // eslint-disable-line
+  const [searchParams] = useSearchParams();
+  const sessionSkill = searchParams.get('skill');
+  const queue = useMemo(() => new PracticeQueue(progress, characterName, sessionSkill), []); // eslint-disable-line
   const [pick, setPick] = useState<PracticePick | null>(() => queue.next());
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
