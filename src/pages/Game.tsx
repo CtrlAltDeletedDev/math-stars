@@ -89,8 +89,10 @@ export default function Game() {
     answeringRef.current = true;
     stopCountdown();
 
-    // Gentle retry: the first wrong tap doesn't count. Grey out that choice,
-    // show the hint, and let them try once more before revealing the answer.
+    // Gentle retry: she gets another go on screen. What changed is that the
+    // first wrong tap is no longer *discarded* — see below. Throwing it away
+    // meant blind guessing scored ~50% and, worse, fed the adaptive ladder a
+    // clean correct, promoting a child who was guessing into harder work.
     const currentQuestion = session.currentQuestion;
     if (
       currentQuestion &&
@@ -109,24 +111,41 @@ export default function Game() {
     const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
     const correctCountBefore = session.correctCount;
     const srsUpdatesBefore = session.srsUpdates;
+    const resultsBefore = session.results;
+    const answeredQuestion = session.currentQuestion;
 
-    const { correct, card } = session.recordAnswer(choice);
+    // Record what she actually did first. She still sees the encouraging
+    // feedback for finding the answer, but the score, the SRS card and the
+    // ladder all hear the truth: this one wasn't known.
+    const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
+    const { correct, card } = session.recordAnswer(answeredChoice);
+    const foundIt = choice === answeredQuestion?.correctAnswer;
     // Include this answer — `session.srsUpdates` has not caught up yet.
     const finalSrsUpdates = card ? [...srsUpdatesBefore, card] : srsUpdatesBefore;
+    // Same reason: `session.results` is one answer behind at this point.
+    const finalResults = answeredQuestion
+      ? [...resultsBefore, { question: answeredQuestion, correct }]
+      : resultsBefore;
     setSelectedChoice(choice);
-    setLastCorrect(correct);
+    setLastCorrect(foundIt);
     setShowFeedback(true);
     setShowHint(false);
     if (hintTimer.current) clearTimeout(hintTimer.current);
 
     const nextConsecutive = correct ? consecutiveCorrect + 1 : 0;
-    if (correct) {
-      setConsecutiveCorrect((n) => n + 1);
+    // What she sees follows "did she find it"; what is recorded follows
+    // "did she know it". Finding it on the second try still gets the happy
+    // sound, but it is not scored as a clean correct.
+    if (foundIt) {
       sounds.playCorrect();
     } else {
-      setConsecutiveCorrect(0);
       sounds.playWrong();
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
+    }
+    if (correct) {
+      setConsecutiveCorrect((n) => n + 1);
+    } else {
+      setConsecutiveCorrect(0);
       const currentQ = session.currentQuestion;
       // Bring it back later in this same session, while the correction is fresh.
       if (currentQ) session.requeue(currentQ.id);
@@ -152,6 +171,7 @@ export default function Game() {
         sounds.playLevelUp();
         const { newBadges, newStickers, streakBonus } = recordLevelComplete(
           levelId, finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
+          finalResults,
         );
         recordQuestionsAnswered(session.totalQuestions);
         navigate(`/celebration/${categoryId}/${levelId}`, {
@@ -262,7 +282,7 @@ export default function Game() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
-            onClick={() => setShowQuitConfirm(true)}
+            onClick={() => { stopCountdown(); setShowQuitConfirm(true); }}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
           >✕</button>
           <div style={{ flex: 1 }}>

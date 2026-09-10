@@ -1,14 +1,14 @@
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useProgress } from '@/store/useProgress';
-import { CATEGORIES } from '@/data/categories';
+import { topicsForGrade } from '@/data/topics';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { getTheme } from '@/data/shop';
 import { STICKERS } from '@/data/stickers';
 import { countDueReviews } from '@/engine/sessionBuilder';
-import { findNextUp } from '@/engine/nextUp';
+import { masteryFor } from '@/engine/mastery';
 import { todayString } from '@/engine/dates';
-import CategoryCard from '@/components/home/CategoryCard';
+import TopicTile from '@/components/home/TopicTile';
 import DailyChallengeCard from '@/components/home/DailyChallengeCard';
 import TodayStrip from '@/components/home/TodayStrip';
 import StarBadge from '@/components/ui/StarBadge';
@@ -21,9 +21,6 @@ export default function Home() {
   const navigate = useNavigate();
   const titleTaps = useRef(0);
   const titleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Eleven category tiles at once is a wall of doors. They start folded away
-  // behind one button, so the screen leads with what to actually play.
-  const [showAllTopics, setShowAllTopics] = useState(false);
 
   function handleTitleTap() {
     titleTaps.current += 1;
@@ -47,17 +44,16 @@ export default function Home() {
   // A <Navigate> element, not a navigate() call: routing during render is a side
   // effect in the render phase and React warns about it.
   if (!progress.characterId) return <Navigate to="/character-select" replace />;
+  // A grown-up picks the grade before anything else, so the topic grid below is
+  // already the right size the first time she sees it.
+  if (progress.gradeLevel === null) return <Navigate to="/grade" replace />;
 
   const theme = getTheme(progress.activeTheme);
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const emoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const earnedStickers = (progress.earnedStickers ?? []).length;
   const dueReviews = countDueReviews(progress);
-  const nextUp = findNextUp(progress);
-
-  const nextLabel = nextUp
-    ? nextUp.reason === 'continue' ? 'Keep going' : nextUp.reason === 'new' ? 'New level!' : 'Try this next'
-    : null;
+  const topics = topicsForGrade(progress.gradeLevel);
 
   return (
     <BackgroundGradient colors={theme.colors}>
@@ -86,55 +82,26 @@ export default function Home() {
         {/* Everything below scrolls; the three big choices come first. */}
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 4 } as React.CSSProperties}>
 
-          {/* 1 — the single most sensible next thing */}
-          {nextUp && (
-            <button
-              onClick={() => navigate(`/game/${nextUp.categoryId}/${nextUp.level.id}`)}
-              style={{
-                background: nextUp.bgColor, border: '2px solid rgba(255,255,255,0.45)', borderRadius: 20,
-                padding: '18px 18px', cursor: 'pointer', width: '100%',
-                display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
-                boxShadow: '0 5px 0 rgba(0,0,0,0.2)',
-              }}
-            >
-              <div style={{ fontSize: 44, lineHeight: 1 }}>{nextUp.categoryEmoji}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 12.5, color: 'rgba(255,255,255,0.85)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                  {nextLabel}
-                </div>
-                <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 21, color: '#fff' }}>
-                  {nextUp.level.title}
-                </div>
-                <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {nextUp.categoryTitle}
-                </div>
-              </div>
-              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff' }}>▶</div>
-            </button>
-          )}
-
-          {/* 2 — endless adaptive practice */}
+          {/* The one answer to "what should I do?" — adaptive, in-scope, always
+              right. It used to compete with a recommended level and a daily
+              challenge that a child who cannot read could not tell apart. */}
           <button
             onClick={() => navigate('/practice')}
+            aria-label="Play"
             style={{
               background: 'linear-gradient(135deg, #7E57C2, #4527A0)',
-              border: '2px solid rgba(255,255,255,0.45)', borderRadius: 18,
-              padding: '14px 18px', cursor: 'pointer', width: '100%',
-              display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
-              boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
+              border: '3px solid rgba(255,255,255,0.5)', borderRadius: 22,
+              padding: '22px 18px', cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+              boxShadow: '0 6px 0 rgba(0,0,0,0.22)', minHeight: 96,
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <div style={{ fontSize: 34 }}>♾️</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff' }}>Practice</div>
-              <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
-                A mix of everything, just right for you
-              </div>
-            </div>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>▶</div>
+            <span style={{ fontSize: 40, lineHeight: 1 }}>▶</span>
+            <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 32, color: '#fff' }}>Play</span>
           </button>
 
-          {/* 3 — the daily ritual */}
+          {/* The daily ritual, and the mistakes worth another look. */}
           <DailyChallengeCard progress={progress} onPress={() => navigate('/game/daily/challenge')} />
 
           {dueReviews > 0 && (
@@ -142,7 +109,7 @@ export default function Home() {
               onClick={() => navigate('/game/review/practice')}
               style={{
                 background: 'rgba(67,160,71,0.45)', border: '2px solid rgba(255,255,255,0.5)',
-                borderRadius: 14, padding: '10px 16px', cursor: 'pointer',
+                borderRadius: 14, padding: '12px 16px', cursor: 'pointer', minHeight: 48,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
               }}
@@ -154,33 +121,19 @@ export default function Home() {
             </button>
           )}
 
-          {/* Everything else, folded away */}
-          <button
-            onClick={() => setShowAllTopics((v) => !v)}
-            style={{
-              background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 14,
-              padding: '11px 16px', cursor: 'pointer', width: '100%',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff',
-            }}
-          >
-            <span>📚 All Topics</span>
-            <span>{showAllTopics ? '▲' : '▼'}</span>
-          </button>
-
-          {showAllTopics && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {CATEGORIES.map((cat) => (
-                <CategoryCard
-                  key={cat.id}
-                  category={cat}
-                  progress={progress.categories[cat.id]}
-                  onPress={() => navigate(`/category/${cat.id}`)}
-                  onMasterPress={() => navigate(`/game/master/${cat.id}`)}
-                />
-              ))}
-            </div>
-          )}
+          {/* Every topic in her grade, always visible, always tappable, in a
+              fixed order. Position is how a child who cannot read finds the one
+              she wants, so this must never be sorted by recency. */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, paddingTop: 2 }}>
+            {topics.map((topic) => (
+              <TopicTile
+                key={topic.id}
+                topic={topic}
+                mastery={masteryFor(topic.id, progress)}
+                onPress={() => navigate(`/topic/${topic.id}`)}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Footer */}

@@ -1,5 +1,6 @@
 import { UserProgress } from '@/types';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { LevelState } from '@/types';
 import { todayString, yesterdayString } from './dates';
 
 export function calculateStars(correctFraction: number): 0 | 1 | 2 | 3 {
@@ -31,3 +32,14 @@ export function updateStreak(progress: UserProgress): UserProgress {
 }
 
 
+
+/**
+ * Has she passed this level?
+ *
+ * Derived from `bestScore` rather than stored, so it cannot drift from the score
+ * that produced it, and a level with no saved state simply reads as not-yet-passed
+ * instead of as locked.
+ */
+export function passedLevel(state: LevelState | undefined): boolean {
+  return !!state && didPassLevel(state.bestScore);
+}

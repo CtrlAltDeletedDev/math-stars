@@ -363,3 +363,27 @@ export function generateFromParams(params: Record<string, number | string>, char
   }
   return generateAdditionQuestion(10);
 }
+
+/**
+ * Can a question id be turned back into a question?
+ *
+ * Cheap prefix check, no construction, because it runs over every SRS card on
+ * every Home render. Fraction and money questions mint ids that neither this
+ * function nor the bank can resolve, so counting them made the "Practice
+ * Mistakes -- N to review" badge promise work the review session could not
+ * deliver, landing her on "Nothing to practice!" every single time.
+ */
+export function canRebuildFromId(id: string): boolean {
+  return (
+    /^add-\d+\+\d+$/.test(id) ||
+    /^sub-\d+-\d+$/.test(id) ||
+    /^miss-add-\d+\+x=\d+$/.test(id) ||
+    /^miss-sub-\d+-x=\d+$/.test(id) ||
+    /^mul-\d+x\d+$/.test(id) ||
+    /^dbl-\d+$/.test(id) ||
+    /^mk\d+-\d+$/.test(id) ||
+    /^cnt-\d+\+\d+$/.test(id) ||
+    /^skip-\d+-\d+-\d+$/.test(id) ||
+    id.startsWith('wp-')
+  );
+}

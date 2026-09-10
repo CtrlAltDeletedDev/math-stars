@@ -72,8 +72,21 @@ function msFromDays(days: number): number {
 export function pruneSRSCards(
   cards: Record<string, SRSCard>,
   limit = GAME_CONFIG.maxSRSCards,
+  /**
+   * Whether a card can still be turned back into a question. Cards that cannot
+   * are dropped outright: they are permanently due, so the scoring below treats
+   * them as the MOST valuable thing to keep, and they would evict real ones.
+   */
+  isServable?: (questionId: string) => boolean,
 ): Record<string, SRSCard> {
-  const entries = Object.entries(cards);
+  let entries = Object.entries(cards);
+  if (isServable) {
+    const servable = entries.filter(([, c]) => isServable(c.questionId));
+    if (servable.length !== entries.length) {
+      entries = servable;
+      cards = Object.fromEntries(entries);
+    }
+  }
   if (entries.length <= limit) return cards;
 
   // Most valuable first: due or struggling cards, then the least mastered.

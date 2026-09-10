@@ -21,7 +21,7 @@ export const LADDER = {
 } as const;
 
 export function newSkillState(skillId: string): SkillState {
-  return { skillId, rung: 0, recent: [], attempts: 0, correct: 0 };
+  return { skillId, rung: 0, recent: [], attempts: 0, correct: 0, ceilingHits: 0 };
 }
 
 export type LadderMove = 'promoted' | 'demoted' | null;
@@ -37,9 +37,19 @@ export interface LadderResult {
  * Fold one answer into a skill's state, moving her a rung if the window says so.
  * Pure: returns a new state rather than mutating.
  */
-export function recordSkillAnswer(prev: SkillState, wasCorrect: boolean): LadderResult {
+export function recordSkillAnswer(
+  prev: SkillState,
+  wasCorrect: boolean,
+  /**
+   * The highest rung she may reach — her grade's ceiling for this skill. Optional
+   * so every existing caller and test keeps its old meaning: without it the limit
+   * is simply the top of the ladder, exactly as before.
+   */
+  ceiling?: number,
+): LadderResult {
   const skill = SKILLS_BY_ID.get(prev.skillId);
-  const topRung = skill ? skill.rungs.length - 1 : 0;
+  const ladderTop = skill ? skill.rungs.length - 1 : 0;
+  const topRung = Math.min(ceiling ?? ladderTop, ladderTop);
 
   const recent = [...prev.recent, wasCorrect].slice(-LADDER.window);
   const state: SkillState = {
@@ -59,10 +69,24 @@ export function recordSkillAnswer(prev: SkillState, wasCorrect: boolean): Ladder
   if (hits <= LADDER.demoteAt && prev.rung > 0) {
     return { state: { ...state, rung: prev.rung - 1, recent: [] }, move: 'demoted', fromRung: prev.rung };
   }
-  // Sitting at the top of the ladder and acing it: keep the window fresh so she
-  // isn't stuck holding a full window that can only ever trigger a demotion.
+  // Sitting at the top and acing it: keep the window fresh so she isn't stuck
+  // holding a full window that can only ever trigger a demotion.
+  //
+  // `ceilingHits` counts the times she earned a promotion the grade wouldn't
+  // give her. Two of those is the Parent screen's cue to suggest moving her up a
+  // year — the ceiling is soft, and this is how it tells on itself rather than
+  // quietly capping her forever.
   if (hits >= LADDER.promoteAt && prev.rung >= topRung) {
-    return { state: { ...state, recent: [] }, move: null, fromRung: prev.rung };
+    const blockedByGrade = topRung < ladderTop;
+    return {
+      state: {
+        ...state,
+        recent: [],
+        ceilingHits: (prev.ceilingHits ?? 0) + (blockedByGrade ? 1 : 0),
+      },
+      move: null,
+      fromRung: prev.rung,
+    };
   }
 
   return { state, move: null, fromRung: prev.rung };

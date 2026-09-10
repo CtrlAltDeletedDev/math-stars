@@ -1,7 +1,7 @@
 import { Question, SRSCard, Level, UserProgress } from '@/types';
 import { Category } from '@/types';
 import { CATEGORIES, ALL_QUESTIONS_BY_ID } from '@/data/categories';
-import { generateFromParams, questionFromId } from './questionGenerator';
+import { generateFromParams, questionFromId, canRebuildFromId } from './questionGenerator';
 import { isDue } from './srs';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { shuffle, shuffleChoices } from './choices';
@@ -157,7 +157,7 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
   const hasStarted = (cat: Category) => {
     const catProg = progress.categories[cat.id];
     if (!catProg) return false;
-    return Object.values(catProg.levels).some((l) => l.status === 'completed' || l.totalAttempts > 0);
+    return Object.values(catProg.levels).some((l) => l.totalAttempts > 0);
   };
 
   let activeCats = CATEGORIES.filter(hasStarted);
@@ -171,8 +171,7 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
     const catProg = progress.categories[cat.id];
     const activeLevels = cat.levels.filter((l) => {
       const ls = catProg?.levels[l.id];
-      if (!ls) return false;
-      return ls.status === 'completed' || ls.totalAttempts > 0;
+      return !!ls && ls.totalAttempts > 0;
     });
     // A category she has only just unlocked still needs something to ask.
     if (activeLevels.length === 0 && cat.levels.length > 0) activeLevels.push(cat.levels[0]);
@@ -204,8 +203,20 @@ export function buildReviewSession(progress: UserProgress, n = 10, characterName
   return presentAll(shuffle(questions));
 }
 
+/**
+ * A card is only worth counting if the review session can actually build its
+ * question. Fraction and money ids can't be rebuilt, and a wrong answer parks
+ * them due forever — so they inflated this badge permanently and every tap on
+ * it dead-ended.
+ */
+export function isServableCard(questionId: string): boolean {
+  return ALL_QUESTIONS_BY_ID.has(questionId) || canRebuildFromId(questionId);
+}
+
 export function countDueReviews(progress: UserProgress): number {
-  return Object.values(progress.srsCards).filter(isDue).length;
+  return Object.values(progress.srsCards).filter(
+    (c) => isDue(c) && isServableCard(c.questionId),
+  ).length;
 }
 
 export function buildMasterSession(

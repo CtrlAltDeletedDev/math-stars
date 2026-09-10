@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, Navigate } from 'react-router-dom';
 import { getCategoryById } from '@/data/categories';
 import { Level } from '@/types';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
@@ -104,7 +104,9 @@ export default function Celebration() {
   const [showCertificate, setShowCertificate] = useState(false);
   const certDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-  if (!category) return null;
+  // A stale or bookmarked /celebration URL used to render an empty page with
+  // no buttons and no way off it.
+  if (!category) return <Navigate to="/" replace />;
 
   return (
     <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
@@ -154,36 +156,43 @@ export default function Celebration() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 380, zIndex: 1 }}>
-          {isDailyChallenge ? null : nextLevel ? (
-            <BigButton
-              onPress={() => navigate(`/game/${categoryId}/${nextLevel.id}`, { replace: true })}
-              label="Next Level →"
-              color="#fff"
-              textColor={category?.bgColor ?? '#FF9F43'}
-              style={{ flex: 1 }}
-            />
-          ) : isMasterMode ? (
-            <BigButton
-              onPress={() => navigate(`/game/master/${masterCategoryId}`, { replace: true })}
-              label="Play Again 🔄"
-              color="rgba(255,255,255,0.3)"
-              style={{ flex: 1 }}
-            />
-          ) : (
-            <BigButton
-              onPress={() => navigate(`/game/${categoryId}/${levelId}`, { replace: true })}
-              label="Play Again 🔄"
-              color="rgba(255,255,255,0.3)"
-              style={{ flex: 1 }}
-            />
-          )}
+        {/* Doing it again is always on offer.
+            This screen used to swap "Play Again" out for "Next Level →" as soon
+            as a successor existed, which is 40 of the 51 levels — so for most
+            finishes there was no way to repeat a level from the one screen where
+            a child actually wants to, and the level map was three taps away
+            behind a collapsed accordion. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 380, zIndex: 1 }}>
+          <div style={{ display: 'flex', gap: 14 }}>
+            {isDailyChallenge ? null : (
+              <BigButton
+                onPress={() =>
+                  navigate(
+                    isMasterMode ? `/game/master/${masterCategoryId}` : `/game/${categoryId}/${levelId}`,
+                    { replace: true },
+                  )
+                }
+                label="Again 🔄"
+                color="rgba(255,255,255,0.3)"
+                style={{ flex: 1 }}
+              />
+            )}
+            {nextLevel && (
+              <BigButton
+                onPress={() => navigate(`/game/${categoryId}/${nextLevel.id}`, { replace: true })}
+                label="Next →"
+                color="#fff"
+                textColor={category?.bgColor ?? '#FF9F43'}
+                style={{ flex: 1 }}
+              />
+            )}
+          </div>
           <BigButton
             onPress={() => navigate('/', { replace: true })}
             label="Home 🏠"
             color={nextLevel ? 'rgba(255,255,255,0.3)' : '#fff'}
             textColor={nextLevel ? '#fff' : (category?.bgColor ?? '#FF9F43')}
-            style={{ flex: 1 }}
+            style={{ width: '100%' }}
           />
         </div>
 

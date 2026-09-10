@@ -3,7 +3,8 @@ import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor } from '@/d
 import { recordSkillAnswer, newSkillState, LADDER, isMaxed } from './skillLadder';
 import { PracticeQueue } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
-import { UserProgress } from '@/types';
+import { passedLevel } from './scoring';
+import { UserProgress, SkillState } from '@/types';
 
 // ---------------------------------------------------------------------------
 // The ladder definitions
@@ -239,32 +240,65 @@ describe('practice queue', () => {
     }
   });
 
-  // This used to assert the opposite — that a brand-new player saw at least 70%
-  // of all sixteen skills. That was the bug, not the spec: it meant her first
-  // session mixed fractions, change from a dollar and the times tables in with
-  // adding to five, and adding was a sixteenth of what she got asked.
-  it('starts a new player on the first wave only', () => {
-    const q = new PracticeQueue(buildInitialProgress());
-    const seen = new Set<string>();
-    for (let i = 0; i < 300; i++) {
-      const pick = q.next();
-      if (pick?.skillId) seen.add(pick.skillId);
-    }
-    expect([...seen].sort()).toEqual(['adding', 'counting', 'taking-away']);
-  });
-
-  it('opens up more skills as she climbs', () => {
+  // The tiered "waves" this used to assert are gone; the grade band decides what
+  // she meets. A five-year-old must never be handed fractions or the times
+  // tables, and that is now a statement about her grade, not about her rung.
+  it('keeps second-grade topics away from a kindergartener', () => {
     const p = buildInitialProgress();
-    p.skills = { adding: { skillId: 'adding', rung: 5, recent: [], attempts: 0, correct: 0 } };
+    p.gradeLevel = 'K';
     const q = new PracticeQueue(p);
     const seen = new Set<string>();
-    for (let i = 0; i < 600; i++) {
+    for (let i = 0; i < 400; i++) {
       const pick = q.next();
       if (pick?.skillId) seen.add(pick.skillId);
     }
-    // Every wave is open at rung 5, so she should meet most of the ladder.
+    for (const outOfScope of ['fractions', 'money', 'clocks', 'place-value', 'even-odd', 'counting-up']) {
+      expect(seen.has(outOfScope), `K should not be served ${outOfScope}`).toBe(false);
+    }
+    expect(seen.has('adding')).toBe(true);
+  });
+
+  it('opens the whole ladder to a second grader', () => {
+    const p = buildInitialProgress();
+    p.gradeLevel = '2';
+    const q = new PracticeQueue(p);
+    const seen = new Set<string>();
+    for (let i = 0; i < 900; i++) {
+      const pick = q.next();
+      if (pick?.skillId) seen.add(pick.skillId);
+    }
     expect(seen.size).toBeGreaterThanOrEqual(Math.floor(SKILLS.length * 0.7));
     expect(seen.has('fractions')).toBe(true);
+  });
+
+  it('never serves a question above her grade ceiling', () => {
+    // Her ladder says "adding within 200" but she is set to first grade, whose
+    // ceiling is "within 20". The seeded rung must not leak harder questions.
+    const p = buildInitialProgress();
+    p.gradeLevel = '1';
+    p.skills = { adding: { skillId: 'adding', rung: 7, recent: [], attempts: 0, correct: 0 } };
+    p.practiceFocus = ['adding'];
+    const q = new PracticeQueue(p);
+    let maxSeen = 0;
+    for (let i = 0; i < 400; i++) {
+      const pick = q.next();
+      if (pick?.skillId !== 'adding') continue;
+      for (const n of pick.question.prompt.match(/\d+/g) ?? []) maxSeen = Math.max(maxSeen, Number(n));
+    }
+    expect(maxSeen, 'first grade tops out at sums within 20').toBeLessThanOrEqual(20);
+  });
+
+  it('keeps a topic she has started even after the grade moves on', () => {
+    const p = buildInitialProgress();
+    p.gradeLevel = 'K';
+    p.skills = { clocks: { skillId: 'clocks', rung: 0, recent: [], attempts: 3, correct: 2 } };
+    const q = new PracticeQueue(p);
+    const seen = new Set<string>();
+    for (let i = 0; i < 400; i++) {
+      const pick = q.next();
+      if (pick?.skillId) seen.add(pick.skillId);
+    }
+    expect(seen.has('clocks'), 'a topic must not vanish from under her').toBe(true);
   });
 
   it('sticks to the parent\'s picks when Focus Mode is on', () => {
@@ -318,6 +352,40 @@ describe('practice queue', () => {
 // The v2 -> v3 migration
 // ---------------------------------------------------------------------------
 
+describe('the grade ceiling', () => {
+  it('stops the rung at the ceiling and counts the blocked promotion', () => {
+    // First grade tops adding out at rung 4. Acing a full window there must not
+    // promote her into second-grade work.
+    let state = { skillId: 'adding', rung: 4, recent: [], attempts: 0, correct: 0 } as SkillState;
+    for (let i = 0; i < LADDER.window; i++) {
+      state = recordSkillAnswer(state, true, 4).state;
+    }
+    expect(state.rung, 'must not climb past the grade ceiling').toBe(4);
+    expect(state.ceilingHits, 'a blocked promotion is recorded for the parent').toBe(1);
+    expect(state.recent, 'window is cleared so she is not stuck facing a demotion').toEqual([]);
+  });
+
+  it('still promotes below the ceiling', () => {
+    let state = { skillId: 'adding', rung: 2, recent: [], attempts: 0, correct: 0 } as SkillState;
+    for (let i = 0; i < LADDER.window; i++) {
+      state = recordSkillAnswer(state, true, 4).state;
+    }
+    expect(state.rung).toBe(3);
+    expect(state.ceilingHits ?? 0).toBe(0);
+  });
+
+  it('does not count topping out the real ladder as outgrowing the grade', () => {
+    // At the very top of the ladder there is nowhere to be promoted to, which is
+    // not the same thing as the grade holding her back.
+    const top = SKILLS_BY_ID.get('comparing')!.rungs.length - 1;
+    let state = { skillId: 'comparing', rung: top, recent: [], attempts: 0, correct: 0 } as SkillState;
+    for (let i = 0; i < LADDER.window; i++) {
+      state = recordSkillAnswer(state, true, top).state;
+    }
+    expect(state.ceilingHits ?? 0).toBe(0);
+  });
+});
+
 describe('progress migration', () => {
   it('keeps a v2 save instead of wiping it', () => {
     const v2 = { ...buildInitialProgress(), version: 2, totalStars: 87, spendableStars: 40 } as UserProgress;
@@ -328,9 +396,12 @@ describe('progress migration', () => {
     expect(migrated).not.toBeNull();
     expect(migrated!.totalStars).toBe(87);
     expect(migrated!.spendableStars).toBe(40);
-    expect(migrated!.version).toBe(4);
+    expect(migrated!.version).toBe(5);
     expect(migrated!.skills).toEqual({});
     expect(migrated!.practiceQuestionsAnswered).toBe(0);
+    expect(migrated!.gradeLevel, 'grade is unset until a parent picks one').toBeNull();
+    // Records are sparse now: nothing is stored for levels she never attempted.
+    expect(migrated!.categories).toEqual({});
   });
 
   // The riskiest part of the v4 change: two rungs were inserted at the BOTTOM of
@@ -360,6 +431,100 @@ describe('progress migration', () => {
     const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
     v4.skills = { adding: { skillId: 'adding', rung: 3, recent: [], attempts: 0, correct: 0 } };
     expect(normalizeProgress(v4)!.skills.adding.rung).toBe(3);
+  });
+
+  // The headline bug this redesign exists to fix: level play and practice were
+  // two separate worlds, so a child could three-star every level in a category
+  // and still be handed rung 0 the moment she opened Practice.
+  it('seeds the ladder from levels she has already passed', () => {
+    const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    v4.skills = {};
+    v4.categories = {
+      addition: {
+        categoryId: 'addition',
+        totalStarsEarned: 9,
+        levels: {
+          // "Adding to 20" is rung 4 of the adding ladder.
+          'addition-3': { levelId: 'addition-3', bestScore: 1, starsEarned: 3, totalAttempts: 2, lastPlayed: 1 },
+        },
+      },
+    } as UserProgress['categories'];
+
+    const m = normalizeProgress(v4)!;
+    expect(m.skills.adding, 'level play must seed the ladder').toBeDefined();
+    expect(m.skills.adding.rung).toBeGreaterThanOrEqual(4);
+    // A fresh window, so the ordinary 3-of-8 rule can walk back an over-seed.
+    expect(m.skills.adding.recent).toEqual([]);
+  });
+
+  it('never demotes a ladder that is already above the seed', () => {
+    const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    v4.skills = { adding: { skillId: 'adding', rung: 6, recent: [true], attempts: 40, correct: 33 } };
+    v4.categories = {
+      addition: {
+        categoryId: 'addition', totalStarsEarned: 3,
+        levels: { 'addition-1': { levelId: 'addition-1', bestScore: 1, starsEarned: 3, totalAttempts: 1, lastPlayed: 1 } },
+      },
+    } as UserProgress['categories'];
+
+    const m = normalizeProgress(v4)!;
+    expect(m.skills.adding.rung).toBe(6);
+    expect(m.skills.adding.attempts, 'history survives seeding').toBe(40);
+  });
+
+  it('does not seed from a level she attempted but failed', () => {
+    const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    v4.skills = {};
+    v4.categories = {
+      addition: {
+        categoryId: 'addition', totalStarsEarned: 0,
+        levels: { 'addition-3': { levelId: 'addition-3', bestScore: 0.4, starsEarned: 0, totalAttempts: 3, lastPlayed: 1 } },
+      },
+    } as UserProgress['categories'];
+    expect(normalizeProgress(v4)!.skills.adding).toBeUndefined();
+  });
+
+  it('keeps "completed" alive when it converts status into a score', () => {
+    // v4 stored status separately; a level marked completed with a stale
+    // bestScore must still read as passed once status is gone.
+    const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    v4.categories = {
+      counting: {
+        categoryId: 'counting', totalStarsEarned: 1,
+        levels: {
+          'count-1': { levelId: 'count-1', status: 'completed', bestScore: 0, starsEarned: 1, totalAttempts: 1, lastPlayed: 1 },
+        },
+      },
+    } as unknown as UserProgress['categories'];
+
+    const m = normalizeProgress(v4)!;
+    expect(passedLevel(m.categories.counting.levels['count-1'])).toBe(true);
+    expect('status' in m.categories.counting.levels['count-1']).toBe(false);
+  });
+
+  it('drops the empty level rows that used to mean "locked"', () => {
+    const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    v4.categories = {
+      shapes: {
+        categoryId: 'shapes', totalStarsEarned: 0,
+        levels: {
+          'shapes-1': { levelId: 'shapes-1', status: 'unlocked', bestScore: 0, starsEarned: 0, totalAttempts: 0, lastPlayed: 0 },
+          'shapes-2': { levelId: 'shapes-2', status: 'locked', bestScore: 0, starsEarned: 0, totalAttempts: 0, lastPlayed: 0 },
+        },
+      },
+    } as unknown as UserProgress['categories'];
+
+    const m = normalizeProgress(v4)!;
+    // Nothing derives availability from saved state any more, so an all-zero row
+    // carries no information — and its absence can no longer mean "locked".
+    expect(m.categories.shapes).toBeUndefined();
+  });
+
+  it('refuses a save whose shape would crash a render', () => {
+    const bad = { ...buildInitialProgress(), version: 4, categories: [] } as unknown as UserProgress;
+    expect(normalizeProgress(bad), 'categories as an array must be rejected').toBeNull();
+    const bad2 = { ...buildInitialProgress(), version: 4, earnedBadges: {} } as unknown as UserProgress;
+    expect(normalizeProgress(bad2)).toBeNull();
   });
 
   it('rejects a save from the future', () => {

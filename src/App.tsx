@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import CharacterSelect from './pages/CharacterSelect';
-import Category from './pages/Category';
+import Topic from './pages/Topic';
+import GradeSelect from './pages/GradeSelect';
+import CategoryRedirect from './pages/CategoryRedirect';
 import Game from './pages/Game';
 import Celebration from './pages/Celebration';
 import Badges from './pages/Badges';
@@ -22,7 +24,10 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/character-select" element={<CharacterSelect />} />
-      <Route path="/category/:id" element={<Category />} />
+      <Route path="/topic/:skillId" element={<Topic />} />
+      {/* Old category links (a bookmark, a back-stack entry) still resolve. */}
+      <Route path="/category/:id" element={<CategoryRedirect />} />
+      <Route path="/grade" element={<GradeSelect />} />
       <Route path="/practice" element={<Practice />} />
       <Route path="/game/daily/challenge" element={<DailyGame />} />
       <Route path="/game/review/practice" element={<ReviewGame />} />

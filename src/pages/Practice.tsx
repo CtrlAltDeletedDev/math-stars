@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { SKILLS_BY_ID, rankFor } from '@/data/skills';
@@ -29,7 +29,9 @@ export default function Practice() {
   const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
   const characterName = character?.name ?? 'You';
-  const queue = useMemo(() => new PracticeQueue(progress, characterName), []); // eslint-disable-line
+  const [searchParams] = useSearchParams();
+  const sessionSkill = searchParams.get('skill');
+  const queue = useMemo(() => new PracticeQueue(progress, characterName, sessionSkill), []); // eslint-disable-line
   const [pick, setPick] = useState<PracticePick | null>(() => queue.next());
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -71,7 +73,8 @@ export default function Practice() {
 
     const question = pick.question;
 
-    // Same gentle retry as the levels: the first wrong tap is free.
+    // Same gentle retry as the levels — and, as there, the first wrong tap is
+    // recorded rather than thrown away, so guessing cannot climb the ladder.
     if (choice !== question.correctAnswer && triedChoices.length === 0) {
       answeringRef.current = false;
       setTriedChoices([choice]);
@@ -80,21 +83,26 @@ export default function Practice() {
       return;
     }
 
-    const correct = choice === question.correctAnswer;
+    const correct = triedChoices.length === 0 && choice === question.correctAnswer;
+    const foundIt = choice === question.correctAnswer;
     setSelectedChoice(choice);
-    setLastCorrect(correct);
+    setLastCorrect(foundIt);
     setShowFeedback(true);
     setShowHint(false);
     setAnswered((n) => n + 1);
     setStreak((s) => (correct ? s + 1 : 0));
-    if (correct) {
-      setCorrectCount((n) => n + 1);
+    // Two different questions, deliberately answered differently:
+    //   "did she find it?"  -> what she sees and hears. Finding it on the second
+    //                          try still deserves the happy sound.
+    //   "did she know it?"  -> what gets scored, requeued and fed to the ladder.
+    if (foundIt) {
+      if (correct) setCorrectCount((n) => n + 1);
       sounds.playCorrect();
     } else {
       sounds.playWrong();
-      queue.missed(question, pick.skillId);
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
     }
+    if (!correct) queue.missed(question, pick.skillId);
 
     const { move, skill } = recordPracticeAnswer(pick.skillId, question.id, correct);
     recordQuestionsAnswered(1);

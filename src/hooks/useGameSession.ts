@@ -10,7 +10,7 @@ interface SessionState {
   correctCount: number;
   streak: number;
   hotStreak: number;
-  results: { questionId: string; correct: boolean }[];
+  results: { question: Question; correct: boolean }[];
   srsUpdates: SRSCard[];
   isComplete: boolean;
 }
@@ -68,7 +68,7 @@ export function useGameSession(
         correctCount: newCorrectCount,
         streak: newStreak,
         hotStreak: newHotStreak,
-        results: [...prev.results, { questionId: question.id, correct }],
+        results: [...prev.results, { question, correct }],
         srsUpdates: [...prev.srsUpdates, updatedCard],
         isComplete: isLast,
       };
@@ -114,6 +114,8 @@ export function useGameSession(
     hotStreak: state.hotStreak,
     isComplete: state.isComplete,
     srsUpdates: state.srsUpdates,
+    // Exposed so a finished level can feed the adaptive ladder, not just the score.
+    results: state.results,
     recordAnswer,
     advance,
     requeue,

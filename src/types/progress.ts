@@ -1,3 +1,5 @@
+import { GradeLevel } from '@/data/grades';
+
 export interface SRSCard {
   questionId: string;
   easeFactor: number;
@@ -7,16 +9,24 @@ export interface SRSCard {
   lastSeen: number;
 }
 
-export type LevelStatus = 'locked' | 'unlocked' | 'completed';
-
+/**
+ * What happened on one level. Note what is NOT here: nothing about whether she
+ * is *allowed* to play it.
+ *
+ * `status` used to live here as locked/unlocked/completed. It was a second copy
+ * of information `bestScore` already carries, the two could disagree, and its
+ * absence meant "locked" — so any level added to an existing category rendered
+ * as a padlock forever. Availability is now read from the catalogue alone;
+ * whether she has passed is derived with `passedLevel()` in engine/scoring.ts.
+ *
+ * These records are sparse: an entry exists only for a level she has attempted.
+ */
 export interface LevelState {
   levelId: string;
-  status: LevelStatus;
   bestScore: number;
   starsEarned: number;
   totalAttempts: number;
   lastPlayed: number;
-  unlockedAt?: number;
 }
 
 export interface CategoryProgress {
@@ -34,6 +44,12 @@ export interface SkillState {
   recent: boolean[];
   attempts: number;
   correct: number;
+  /**
+   * How many times the sliding window said "promote" and the grade ceiling said
+   * no. Two or more means she has outgrown the band — the Parent screen uses it
+   * to suggest moving her up a year.
+   */
+  ceilingHits?: number;
 }
 
 export interface BadgeEarned {
@@ -74,4 +90,6 @@ export interface UserProgress {
    * Empty means "whatever the tiers have unlocked", which is the normal case.
    */
   practiceFocus: string[];
+  /** Set once by a parent; null until the grade screen has been through. */
+  gradeLevel: GradeLevel | null;
 }
