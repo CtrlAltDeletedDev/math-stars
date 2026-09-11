@@ -9,12 +9,12 @@ import BackgroundGradient from '@/components/ui/BackgroundGradient';
 // This is the only configuration the app has, and it is deliberately coarse:
 // a parent knows what year their child is in, and knows it changes once a year.
 // Everything finer — which rung inside a topic, which facts come up — is still
-// decided by her answers, not by this screen.
+// decided by the child's answers, not by this screen.
 //
 // A child tapping the wrong one is harmless: it is reversible from the Parent
 // screen and nothing is deleted by changing it.
 
-/** Nudge toward what her existing ladder already suggests. */
+/** Nudge toward what the existing ladder already suggests. */
 function suggestGrade(addingRung: number): GradeLevel {
   if (addingRung >= 5) return '2';
   if (addingRung >= 4) return '1';
@@ -48,11 +48,11 @@ export default function GradeSelect() {
           FOR GROWN-UPS
         </div>
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>
-          Which grade is she in?
+          Which grade are they in?
         </div>
         <div style={{ fontFamily: 'Nunito', fontSize: 14.5, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 1.45, marginBottom: 6 }}>
-          This picks which topics she'll see. How hard the questions get is still
-          decided by how she answers them — and you can change this any time.
+          This picks which topics they'll see. How hard the questions get is still
+          decided by how they answer them — and you can change this any time.
         </div>
 
         {GRADES.map((band) => {
