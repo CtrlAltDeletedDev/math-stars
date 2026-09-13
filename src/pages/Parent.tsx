@@ -12,6 +12,7 @@ import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import PlayCalendar from '@/components/ui/PlayCalendar';
 import { todayString } from '@/engine/dates';
+import { workingOn, topMistakes, hardestFacts, daysPlayedIn } from '@/engine/report';
 
 export default function Parent() {
   const navigate = useNavigate();
@@ -122,6 +123,14 @@ export default function Parent() {
 
   const daysPlayed = progress.playHistory ? new Set(progress.playHistory).size : 0;
 
+  // The top of the screen answers "so what do I do this week?". Everything it
+  // needs was already being recorded; none of it was being shown.
+  const focusSkill = workingOn(progress);
+  const patterns = topMistakes(progress, 2);
+  const shakyFacts = hardestFacts(progress, 5);
+  const daysThisWeek = daysPlayedIn(progress, 7);
+  const hasSomethingToSay = focusSkill || patterns.length > 0 || shakyFacts.length > 0;
+
   return (
     <BackgroundGradient colors={['#5C6BC0', '#283593']}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 20px', gap: 14, overflow: 'auto' }}>
@@ -137,6 +146,76 @@ export default function Parent() {
           >←</button>
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff' }}>📊 Parent Dashboard</div>
         </div>
+
+        {/* What to do this week.
+            This used to open on a star count, a badge count and "6/51 levels",
+            none of which changes what anyone does tomorrow. */}
+        {hasSomethingToSay && (
+          <div style={{ background: 'rgba(255,255,255,0.16)', border: '2px solid rgba(255,255,255,0.35)', borderRadius: 20, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 12.5, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>
+              This week · played {daysThisWeek} of the last 7 days
+            </div>
+
+            {focusSkill && (
+              <div>
+                <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 21, color: '#fff', lineHeight: 1.25 }}>
+                  {focusSkill.emoji} Working on {focusSkill.title}
+                </div>
+                <div style={{ fontFamily: 'Nunito', fontSize: 14.5, color: 'rgba(255,255,255,0.82)', marginTop: 3 }}>
+                  {focusSkill.rungLabel} · {Math.round((focusSkill.accuracy ?? 0) * 100)}% right over {focusSkill.attempts} questions
+                </div>
+                <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setPracticeFocus([focusSkill.skillId])}
+                    style={actionBtn(focused.length === 1 && focused[0] === focusSkill.skillId)}
+                  >
+                    {focused.length === 1 && focused[0] === focusSkill.skillId ? '✓ Practice is focused here' : 'Focus practice on this'}
+                  </button>
+                  <button onClick={() => navigate('/worksheet')} style={actionBtn(false)}>
+                    Print a worksheet
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {patterns.length > 0 && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.18)', paddingTop: 13 }}>
+                <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 7 }}>
+                  What the wrong answers have in common
+                </div>
+                {patterns.map((m) => (
+                  <div key={`${m.skillId}-${m.tag}`} style={{ marginBottom: 10 }}>
+                    <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 14.5, color: '#fff', lineHeight: 1.35 }}>
+                      {m.skillTitle}: {m.label}
+                    </div>
+                    <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                      {m.count} times · {Math.round(m.share * 100)}% of her mistakes here
+                    </div>
+                    <div style={{ fontFamily: 'Nunito', fontSize: 13.5, color: 'rgba(255,255,255,0.88)', marginTop: 4, lineHeight: 1.4 }}>
+                      💡 {m.suggestion}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {shakyFacts.length > 0 && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.18)', paddingTop: 13 }}>
+                <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 8 }}>
+                  Facts that keep coming back
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {shakyFacts.map((f) => (
+                    <div key={f.questionId} style={{
+                      background: 'rgba(255,255,255,0.18)', borderRadius: 10, padding: '6px 12px',
+                      fontFamily: 'Nunito', fontWeight: 700, fontSize: 14.5, color: '#fff',
+                    }}>{f.prompt.replace(/\n+/g, ' ')}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Summary stats */}
         <div style={{
@@ -438,6 +517,17 @@ export default function Parent() {
     </BackgroundGradient>
   );
 }
+
+const actionBtn = (on: boolean): React.CSSProperties => ({
+  // Share the row and stay the same size as each other. Sized to their own text
+  // they wrap raggedly at phone width, which is the only width that matters on
+  // the tablet this is read on.
+  flex: '1 1 150px',
+  background: on ? '#4CAF50' : 'rgba(255,255,255,0.22)',
+  border: `2px solid ${on ? '#4CAF50' : 'rgba(255,255,255,0.4)'}`,
+  borderRadius: 14, padding: '10px 14px', minHeight: 44, cursor: 'pointer',
+  fontFamily: 'Nunito', fontWeight: 800, fontSize: 14, color: '#fff',
+});
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
