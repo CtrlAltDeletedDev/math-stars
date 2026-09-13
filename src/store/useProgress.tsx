@@ -93,7 +93,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       // Write the migrated shape straight back, so an older save on disk
       // converges to the current schema even if she never finishes a level
       // this session.
-      if (!saveProgress(result.progress)) setStorageIssue('cannot-save');
+      if (!savePruned(result.progress)) setStorageIssue('cannot-save');
     } else if (result.reason === 'unreadable') {
       setStorageIssue(result.backedUp ? 'unreadable-backed-up' : 'unreadable');
     } else if (!storageWorks()) {
@@ -107,11 +107,23 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   // without waiting for a re-render.
   const pendingSave = useRef<UserProgress | null>(null);
 
+  /**
+   * Every write goes through the same prune.
+   *
+   * Only `flushSave` used to, so the startup rewrite and an import wrote the
+   * card map unpruned -- and an imported profile carrying tens of thousands of
+   * cards could blow the quota on its very first write, before anything had a
+   * chance to trim it.
+   */
+  function savePruned(p: UserProgress): boolean {
+    return saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards, undefined, isServableCard) });
+  }
+
   function flushSave() {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     if (pendingSave.current) {
       const p = pendingSave.current;
-      const ok = saveProgress({ ...p, srsCards: pruneSRSCards(p.srsCards, undefined, isServableCard) });
+      const ok = savePruned(p);
       if (!ok) setStorageIssue('cannot-save');
       pendingSave.current = null;
     }
@@ -682,7 +694,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     pendingSave.current = null;
     setProgress(normalized);
-    if (!saveProgress(normalized)) setStorageIssue('cannot-save');
+    if (!savePruned(normalized)) setStorageIssue('cannot-save');
     return true;
   }
 
