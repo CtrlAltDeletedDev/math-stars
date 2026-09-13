@@ -1,5 +1,7 @@
 import { Question } from '@/types';
 import { generateWordProblem, wordProblemFromId } from '@/data/wordProblems';
+import { fractionFromId } from '@/data/fractions';
+import { moneyFromId } from '@/data/moneyGen';
 import { buildChoices, randomInt } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
@@ -317,6 +319,8 @@ export function questionFromId(id: string, characterName = 'You'): Question | nu
   if (m) return countOnQuestion(+m[1], +m[2]);
   m = id.match(/^skip-(\d+)-(\d+)-(\d+)$/);
   if (m) return skipCountQuestion(+m[1], +m[2], +m[3], +m[2] + +m[1] * +m[3]);
+  if (id.startsWith('frac-')) return fractionFromId(id);
+  if (id.startsWith('money-')) return moneyFromId(id);
   return null;
 }
 
@@ -384,6 +388,15 @@ export function canRebuildFromId(id: string): boolean {
     /^mk\d+-\d+$/.test(id) ||
     /^cnt-\d+\+\d+$/.test(id) ||
     /^skip-\d+-\d+-\d+$/.test(id) ||
-    id.startsWith('wp-')
+    id.startsWith('wp-') ||
+    // Fractions and money were excluded here, which meant pruneSRSCards deleted
+    // every one of their cards on the next save. Both are deterministic; the
+    // stricter check below is the shape the rebuilders actually accept.
+    /^frac-(shaded|which)-(circle|bar)-\d+(-\d+)?$/.test(id) ||
+    /^frac-set-\d+-\d+$/.test(id) ||
+    /^frac-cmp-(biggest|smallest)-\d+(-\d+)+$/.test(id) ||
+    /^money-(name|like)-[a-z]+(-\d+)?$/.test(id) ||
+    /^money-mixed-\d+(-\d+)*$/.test(id) ||
+    /^money-change-\d+-\d+$/.test(id)
   );
 }

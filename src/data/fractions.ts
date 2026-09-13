@@ -134,7 +134,11 @@ function compareFractions(dens: number[], want: 'biggest' | 'smallest'): Questio
   const pool = [...new Set(dens)].sort((a, b) => a - b);
   const chosen = shuffle(pool).slice(0, Math.min(3, pool.length));
   if (chosen.length < 2) chosen.push(chosen[0] === 2 ? 4 : 2);
+  return compareChosen(chosen, want);
+}
 
+/** The build half, split out so a card's id can be turned back into it. */
+function compareChosen(chosen: number[], want: 'biggest' | 'smallest'): Question {
   const sorted = [...chosen].sort((a, b) => a - b); // smaller denominator = bigger piece
   const target = want === 'biggest' ? sorted[0] : sorted[sorted.length - 1];
 
@@ -171,4 +175,40 @@ export function generateFractionQuestion(
   if (Math.random() < 0.25) return whichShows(den, pickShape());
   const nums = properNumerators(den);
   return whatFractionShaded(den, nums[randomInt(0, nums.length - 1)], pickShape());
+}
+
+/**
+ * Rebuild a fraction question from its SRS card id.
+ *
+ * Without this, `isServableCard` rejected every `frac-*` card and
+ * `pruneSRSCards` deleted the lot on the next save -- so fractions had no
+ * spaced repetition at all. Cards were minted, used in memory, and wiped.
+ * Every id is deterministic, so nothing about that was necessary.
+ */
+export function fractionFromId(id: string): Question | null {
+  let m = id.match(/^frac-shaded-(circle|bar)-(\d+)-(\d+)$/);
+  if (m) {
+    const [, shape, num, den] = m;
+    if (!isProper(+num, +den)) return null;
+    return whatFractionShaded(+den, +num, shape as 'circle' | 'bar');
+  }
+  m = id.match(/^frac-which-(circle|bar)-(\d+)$/);
+  if (m) {
+    const den = +m[2];
+    if (den < 2) return null;
+    return whichShows(den, m[1] as 'circle' | 'bar');
+  }
+  m = id.match(/^frac-set-(\d+)-(\d+)$/);
+  if (m) {
+    const [, den, whole] = m;
+    if (+den < 2 || +whole < 1 || +whole % +den !== 0) return null;
+    return fractionOfSet(+den, +whole);
+  }
+  m = id.match(/^frac-cmp-(biggest|smallest)-(\d+(?:-\d+)*)$/);
+  if (m) {
+    const chosen = m[2].split('-').map(Number);
+    if (chosen.length < 2 || chosen.some((d) => d < 2)) return null;
+    return compareChosen(chosen, m[1] as 'biggest' | 'smallest');
+  }
+  return null;
 }
