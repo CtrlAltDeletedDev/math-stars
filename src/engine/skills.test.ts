@@ -579,9 +579,10 @@ describe('progress migration', () => {
     expect(migrated).not.toBeNull();
     expect(migrated!.totalStars).toBe(87);
     expect(migrated!.spendableStars).toBe(40);
-    expect(migrated!.version).toBe(5);
+    expect(migrated!.version).toBe(6);
     expect(migrated!.skills).toEqual({});
     expect(migrated!.practiceQuestionsAnswered).toBe(0);
+    expect(migrated!.errorPatterns, 'v6 is additive: she starts accumulating from here').toEqual({});
     expect(migrated!.gradeLevel, 'grade is unset until a parent picks one').toBeNull();
     // Records are sparse now: nothing is stored for levels she never attempted.
     expect(migrated!.categories).toEqual({});

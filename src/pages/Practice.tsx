@@ -104,7 +104,13 @@ export default function Practice() {
     }
     if (!correct) queue.missed(question, pick.skillId, pick.rung);
 
-    const { move, skill } = recordPracticeAnswer(pick.skillId, question.id, correct, pick.rung);
+    // The option she reached for first is what was scored, so it is the one
+    // whose meaning is worth keeping — not whatever she landed on after the
+    // retry told her it was wrong.
+    const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
+    const { move, skill } = recordPracticeAnswer(
+      pick.skillId, question.id, correct, pick.rung, { question, chosen: answeredChoice },
+    );
     recordQuestionsAnswered(1);
 
     if (move === 'promoted' && skill) {

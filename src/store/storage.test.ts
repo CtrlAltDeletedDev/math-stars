@@ -97,6 +97,54 @@ describe('a damaged SRS card cannot reach the scheduler', () => {
   });
 });
 
+describe('what her mistakes meant', () => {
+  it('starts empty and additive for a save from before v6', () => {
+    const old = { ...buildInitialProgress(), version: 5 } as UserProgress;
+    delete (old as Partial<UserProgress>).errorPatterns;
+    const p = normalizeProgress(old)!;
+    expect(p).not.toBeNull();
+    expect(p.errorPatterns).toEqual({});
+    expect(p.version).toBe(6);
+  });
+
+  it('keeps real counts untouched', () => {
+    const patterns = { adding: { 'off-by-one': 4, 'wrong-operation': 2 } };
+    const p = normalizeProgress(save({ errorPatterns: patterns } as Partial<UserProgress>))!;
+    expect(p.errorPatterns).toEqual(patterns);
+  });
+
+  it('drops a tag this build does not know', () => {
+    // This feeds a sentence a parent is meant to act on. A tag from a future
+    // build, or a hand-edited file, must not turn into advice.
+    const p = normalizeProgress(save({
+      errorPatterns: { adding: { 'off-by-one': 3, 'invented-tag': 99 } },
+    } as unknown as Partial<UserProgress>))!;
+    expect(p.errorPatterns.adding).toEqual({ 'off-by-one': 3 });
+  });
+
+  it('drops a skill the catalogue does not have', () => {
+    const p = normalizeProgress(save({
+      errorPatterns: { adding: { 'off-by-one': 1 }, 'not-a-skill': { 'off-by-one': 50 } },
+    } as unknown as Partial<UserProgress>))!;
+    expect(Object.keys(p.errorPatterns)).toEqual(['adding']);
+  });
+
+  it('drops counts that are not usable numbers', () => {
+    const p = normalizeProgress(save({
+      errorPatterns: { adding: { 'off-by-one': -5, 'wrong-operation': NaN, 'place-value': 'lots', reversed: 2.7 } },
+    } as unknown as Partial<UserProgress>))!;
+    expect(p.errorPatterns.adding).toEqual({ reversed: 2 });
+  });
+
+  it('leaves out a skill whose counts were all rejected', () => {
+    // An empty bucket would render as a topic with findings and nothing in it.
+    const p = normalizeProgress(save({
+      errorPatterns: { adding: { 'off-by-one': 0 } },
+    } as unknown as Partial<UserProgress>))!;
+    expect(p.errorPatterns).toEqual({});
+  });
+});
+
 describe('a healthy save is left alone', () => {
   it('passes a fresh profile through unchanged', () => {
     const fresh = buildInitialProgress();

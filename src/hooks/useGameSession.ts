@@ -10,7 +10,7 @@ interface SessionState {
   correctCount: number;
   streak: number;
   hotStreak: number;
-  results: { question: Question; correct: boolean }[];
+  results: { question: Question; correct: boolean; chosen: string }[];
   srsUpdates: SRSCard[];
   isComplete: boolean;
 }
@@ -73,7 +73,7 @@ export function useGameSession(
         correctCount: newCorrectCount,
         streak: newStreak,
         hotStreak: newHotStreak,
-        results: [...prev.results, { question, correct }],
+        results: [...prev.results, { question, correct, chosen: selectedChoice }],
         srsUpdates: [...prev.srsUpdates, updatedCard],
         isComplete: isLast,
       };

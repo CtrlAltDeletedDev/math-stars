@@ -4,6 +4,7 @@ import { buildInitialProgress, loadProgressResult, normalizeProgress, saveProgre
 import { CATEGORIES, getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak, passedLevel } from '@/engine/scoring';
 import { skillForQuestion, SKILL_FOR_LEVEL, RUNG_FOR_LEVEL } from '@/data/topics';
+import { ErrorTag } from '@/types';
 import { GradeLevel, ceilingFor } from '@/data/grades';
 import { Question } from '@/types';
 import { BADGES, BadgeCheckContext } from '@/data/badges';
@@ -25,14 +26,14 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers?: { question: Question; correct: boolean }[],
+    answers?: { question: Question; correct: boolean; chosen?: string }[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   recordDailyChallengeComplete: (
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers?: { question: Question; correct: boolean }[],
+    answers?: { question: Question; correct: boolean; chosen?: string }[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number };
   recordMasterComplete: (
     categoryId: string,
@@ -40,7 +41,7 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers?: { question: Question; correct: boolean }[],
+    answers?: { question: Question; correct: boolean; chosen?: string }[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   recordQuestionsAnswered: (count: number) => void;
   recordPracticeAnswer: (
@@ -48,6 +49,7 @@ interface ProgressContextValue {
     questionId: string,
     wasCorrect: boolean,
     servedRung?: number | null,
+    picked?: { question: Question; chosen: string },
   ) => {
     move: LadderMove; skill: SkillState | null; starsAwarded: number;
     newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
@@ -228,7 +230,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
      * Without this, passing levels moved nothing the ladder could read and a
      * child could three-star a whole category yet still open Practice at rung 0.
      */
-    answers: { question: Question; correct: boolean }[] = [],
+    answers: { question: Question; correct: boolean; chosen?: string }[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
     const level = getLevelById(levelId);
     if (!level) return { newBadges: [], newStickers: [], streakBonus: 0 };
@@ -307,9 +309,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       const levelRung = RUNG_FOR_LEVEL.get(levelId);
 
       const skills = { ...(next.skills ?? {}) };
-      for (const { question, correct } of answers) {
+      let errorPatterns = next.errorPatterns ?? {};
+      for (const { question, correct, chosen } of answers) {
         const skillId = skillForQuestion(question, levelId);
         if (!skillId) continue;
+        if (!correct) errorPatterns = noteError(errorPatterns, skillId, question, chosen);
         // A level teaches one rung of one topic. A question that a mixed level
         // routes to a *second* ladder sits at no known rung there, so it counts
         // toward her totals and her SRS but must not move her.
@@ -328,6 +332,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         categories: { ...next.categories, [level.categoryId]: catProgress },
         srsCards: updatedSRS,
         skills,
+        errorPatterns,
       };
 
       newBadges = checkNewBadges(prev, next, correctCount, totalCount);
@@ -347,6 +352,33 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
+   * Note what a wrong answer meant.
+   *
+   * The generators build distractors that are specific mistakes and tag them;
+   * this is where that survives the tap. Counts per skill, never an event log:
+   * see the note on `errorPatterns` in types/progress.ts.
+   *
+   * A right answer records nothing, and so does a wrong answer on a question
+   * whose options carry no meaning -- the hand-written banks are not tagged yet.
+   * Silence is honest; a bucket of 'unknown' would look like a finding.
+   */
+  function noteError(
+    patterns: UserProgress['errorPatterns'],
+    skillId: string,
+    question: Question,
+    chosen: string | undefined,
+  ): UserProgress['errorPatterns'] {
+    if (!chosen) return patterns;
+    const tag: ErrorTag | undefined = question.distractorMeaning?.[chosen];
+    if (!tag) return patterns;
+    const forSkill = patterns[skillId] ?? {};
+    return {
+      ...patterns,
+      [skillId]: { ...forSkill, [tag]: (forSkill[tag] ?? 0) + 1 },
+    };
+  }
+
+  /**
    * Fold a mixed session's answers into the ladders, as evidence about her
    * totals but not about where she is standing.
    *
@@ -359,18 +391,21 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
    */
   function foldMixedAnswers(
     skills: Record<string, SkillState>,
-    answers: { question: Question; correct: boolean }[],
+    patterns: UserProgress['errorPatterns'],
+    answers: { question: Question; correct: boolean; chosen?: string }[],
     levelId: string,
     grade: UserProgress['gradeLevel'],
-  ): Record<string, SkillState> {
+  ): { skills: Record<string, SkillState>; errorPatterns: UserProgress['errorPatterns'] } {
     const next = { ...skills };
-    for (const { question, correct } of answers) {
+    let errorPatterns = patterns;
+    for (const { question, correct, chosen } of answers) {
       const skillId = skillForQuestion(question, levelId);
       if (!skillId) continue;
       const before = next[skillId] ?? newSkillState(skillId);
       next[skillId] = recordSkillAnswer(before, correct, ceilingFor(skillId, grade), null).state;
+      if (!correct) errorPatterns = noteError(errorPatterns, skillId, question, chosen);
     }
-    return next;
+    return { skills: next, errorPatterns };
   }
 
   function recordDailyChallengeComplete(
@@ -378,7 +413,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers: { question: Question; correct: boolean }[] = [],
+    answers: { question: Question; correct: boolean; chosen?: string }[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number } {
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -430,7 +465,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       next = {
         ...next,
         srsCards: updatedSRS,
-        skills: foldMixedAnswers(next.skills ?? {}, answers, 'daily', next.gradeLevel),
+        ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, 'daily', next.gradeLevel),
       };
 
       newBadges = checkNewBadges(prev, next, correctCount, totalCount);
@@ -451,7 +486,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers: { question: Question; correct: boolean }[] = [],
+    answers: { question: Question; correct: boolean; chosen?: string }[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -487,7 +522,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       next = {
         ...next,
         srsCards: updatedSRS,
-        skills: foldMixedAnswers(next.skills ?? {}, answers, categoryId, next.gradeLevel),
+        ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, categoryId, next.gradeLevel),
       };
 
       newBadges = checkNewBadges(prev, next, correctCount, totalCount);
@@ -511,6 +546,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     wasCorrect: boolean,
     /** The rung the queue served this from; null for an SRS review. */
     servedRung?: number | null,
+    /** The question and the option she picked, so a mistake can say what it meant. */
+    picked?: { question: Question; chosen: string },
   ): {
     move: LadderMove; skill: SkillState | null; starsAwarded: number;
     newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
@@ -530,6 +567,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       starsAwarded = answered % 10 === 0 ? 1 : 0;
 
       const skills = { ...(prev.skills ?? {}) };
+      let errorPatterns = prev.errorPatterns ?? {};
       if (skillId) {
         const before = skills[skillId] ?? newSkillState(skillId);
         const result = recordSkillAnswer(
@@ -538,12 +576,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         skills[skillId] = result.state;
         move = result.move;
         skill = result.state;
+        if (!wasCorrect && picked) {
+          errorPatterns = noteError(errorPatterns, skillId, picked.question, picked.chosen);
+        }
       }
 
       const card = prev.srsCards[questionId] ?? createNewSRSCard(questionId);
       const next: UserProgress = {
         ...updateStreak(prev),
         skills,
+        errorPatterns,
         practiceQuestionsAnswered: answered,
         srsCards: { ...prev.srsCards, [questionId]: updateSRSCard(card, wasCorrect) },
         consecutiveCorrect: wasCorrect ? prev.consecutiveCorrect + 1 : 0,

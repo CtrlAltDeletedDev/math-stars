@@ -2,13 +2,20 @@ import { UserProgress, CategoryProgress, LevelState, SkillState, SRSCard } from 
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { TOPICS } from '@/data/topics';
 import { SKILLS_BY_ID } from '@/data/skills';
+import { ErrorTag } from '@/types';
+
+/** The tags a save is allowed to contain. Anything else came from somewhere else. */
+const ERROR_TAGS = new Set<ErrorTag>([
+  'off-by-one', 'wrong-operation', 'answered-a-given-number', 'answered-the-whole',
+  'place-value', 'wrong-multiple', 'counted-the-wrong-thing', 'reversed', 'unknown',
+]);
 
 const STORAGE_KEY = 'mathstars_progress_v2';
 /** Where an unreadable save is parked instead of being thrown away. */
 export const CORRUPT_BACKUP_KEY = 'mathstars_progress_unreadable';
 /** Rungs added below the existing ones on the adding/taking-away ladders in v4. */
 const LADDER_RUNGS_INSERTED_IN_V4 = 2;
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 const OLDEST_MIGRATABLE = 2;
 
 // Patch missing fields on a saved/imported progress object so the rest of
@@ -88,6 +95,32 @@ function sanitizeSkills(skills: Record<string, SkillState>): Record<string, Skil
   return clean;
 }
 
+/**
+ * Counts only, for skills that exist, for tags that exist.
+ *
+ * An imported file could otherwise put anything in here, and this feeds a
+ * sentence a parent is meant to act on -- "8 of her last 10 subtraction
+ * mistakes were adding instead". A wrong number there is worse than no
+ * sentence at all.
+ */
+function sanitizeErrorPatterns(
+  patterns: Record<string, Partial<Record<ErrorTag, number>>>,
+): Record<string, Partial<Record<ErrorTag, number>>> {
+  const clean: Record<string, Partial<Record<ErrorTag, number>>> = {};
+  for (const [skillId, tags] of Object.entries(patterns)) {
+    if (!SKILLS_BY_ID.has(skillId)) continue;
+    if (!tags || typeof tags !== 'object' || Array.isArray(tags)) continue;
+    const kept: Partial<Record<ErrorTag, number>> = {};
+    for (const [tag, count] of Object.entries(tags)) {
+      if (!ERROR_TAGS.has(tag as ErrorTag)) continue;
+      if (typeof count !== 'number' || !Number.isFinite(count) || count <= 0) continue;
+      kept[tag as ErrorTag] = Math.floor(count);
+    }
+    if (Object.keys(kept).length > 0) clean[skillId] = kept;
+  }
+  return clean;
+}
+
 /** Same reasoning for cards: a malformed one is never usable, only dangerous. */
 function sanitizeSRSCards(cards: Record<string, SRSCard>): Record<string, SRSCard> {
   const clean: Record<string, SRSCard> = {};
@@ -151,9 +184,16 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   }
   if (parsed.gradeLevel === undefined) parsed.gradeLevel = null;
 
+  // v5 → v6: what her wrong answers meant. Purely additive -- there is nothing
+  // to convert, she simply starts accumulating from here.
+  if (!parsed.errorPatterns || typeof parsed.errorPatterns !== 'object') {
+    parsed.errorPatterns = {};
+  }
+
   // Last, so it also cleans up anything the migrations above produced.
   parsed.skills = sanitizeSkills(parsed.skills);
   parsed.srsCards = sanitizeSRSCards(parsed.srsCards);
+  parsed.errorPatterns = sanitizeErrorPatterns(parsed.errorPatterns);
 
   parsed.version = CURRENT_VERSION;
   return parsed;
@@ -341,5 +381,6 @@ export function buildInitialProgress(): UserProgress {
     practiceQuestionsAnswered: 0,
     practiceFocus: [],
     gradeLevel: null,
+    errorPatterns: {},
   };
 }
