@@ -4,6 +4,7 @@ import { recordSkillAnswer, newSkillState, LADDER, isMaxed } from './skillLadder
 import { PracticeQueue } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
+import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, allCatalogueLevelIds } from '@/data/topics';
 import { UserProgress, SkillState } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -223,6 +224,116 @@ describe('the promote/demote rule', () => {
     const st = run(Array(50).fill(true));
     expect(st.attempts).toBe(50);
     expect(st.correct).toBe(50);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Which rung the evidence is about
+// ---------------------------------------------------------------------------
+
+describe('an answer only moves her when it came from her own rung', () => {
+  const feed = (
+    start: SkillState,
+    results: boolean[],
+    servedRung: number | null,
+    ceiling?: number,
+  ) => results.reduce(
+    (st, r) => recordSkillAnswer(st, r, ceiling, servedRung).state,
+    start,
+  );
+
+  it('does not promote her for acing an easier rung', () => {
+    // The reported case: a child standing on rung 2 replays "Adding 1 more"
+    // (rung 0) four times. Every level is one full window, so each replay used
+    // to be one guaranteed promotion -- four replays walked her to rung 6,
+    // "Adding within 100", on nothing harder than n + 1.
+    let st: SkillState = { ...newSkillState('adding'), rung: 2 };
+    for (let replay = 0; replay < 4; replay++) {
+      st = feed(st, Array(LADDER.window).fill(true), 0);
+    }
+    expect(st.rung).toBe(2);
+    expect(st.attempts).toBe(4 * LADDER.window); // but the effort still counted
+    expect(st.correct).toBe(4 * LADDER.window);
+  });
+
+  it('does not demote her for failing a harder rung', () => {
+    // The mirror image, and the reason the replay strip was unsafe in both
+    // directions: a curious tap on a level well above her should not cost her
+    // the ground she has.
+    let st: SkillState = { ...newSkillState('adding'), rung: 3 };
+    st = feed(st, Array(LADDER.window * 3).fill(false), 6);
+    expect(st.rung).toBe(3);
+    expect(st.attempts).toBe(LADDER.window * 3);
+  });
+
+  it('still promotes on evidence from the rung she is standing on', () => {
+    const start: SkillState = { ...newSkillState('adding'), rung: 2 };
+    const st = feed(start, Array(LADDER.window).fill(true), 2);
+    expect(st.rung).toBe(3);
+  });
+
+  it('still demotes on evidence from the rung she is standing on', () => {
+    const start: SkillState = { ...newSkillState('adding'), rung: 2 };
+    const st = feed(start, Array(LADDER.window).fill(false), 2);
+    expect(st.rung).toBe(1);
+  });
+
+  it('never folds an answer marked as belonging to no rung', () => {
+    // What an SRS review passes, and what a mixed level passes for a question
+    // routed to a second ladder: real effort, no claim about where she stands.
+    const start: SkillState = { ...newSkillState('adding'), rung: 2 };
+    const st = feed(start, Array(LADDER.window * 4).fill(true), null);
+    expect(st.rung).toBe(2);
+    expect(st.recent).toEqual([]);
+    expect(st.attempts).toBe(LADDER.window * 4);
+  });
+
+  it('leaves the window untouched by off-rung answers', () => {
+    // Off-rung answers must not even dilute the window, or a replay could still
+    // push a genuine promotion over the line.
+    let st: SkillState = { ...newSkillState('adding'), rung: 1 };
+    st = feed(st, [true, true, true], 1);       // three real answers
+    st = feed(st, Array(20).fill(false), 0);    // a long easy replay, all wrong
+    expect(st.recent).toEqual([true, true, true]);
+    st = feed(st, [true, true, true, true, true], 1);
+    expect(st.rung).toBe(2); // the 8 on-rung answers still promote her
+  });
+
+  it('treats the ceiling as her rung when her saved rung sits above it', () => {
+    // A child moved *down* a grade keeps her saved rung but is served at the
+    // ceiling. Those answers are evidence about the ceiling rung, which is the
+    // only ground she is actually standing on.
+    const start: SkillState = { ...newSkillState('adding'), rung: 6 };
+    const st = feed(start, Array(LADDER.window).fill(false), 4, 4);
+    expect(st.rung).toBe(3); // demoted from the ceiling, not frozen
+  });
+
+  it('keeps its old meaning when the caller says nothing', () => {
+    // Every pre-existing caller and test omits the argument, and must still get
+    // the original behaviour.
+    const start: SkillState = { ...newSkillState('adding'), rung: 2 };
+    const st = Array(LADDER.window).fill(true)
+      .reduce((s: SkillState, r: boolean) => recordSkillAnswer(s, r).state, start);
+    expect(st.rung).toBe(3);
+  });
+});
+
+describe('every catalogue level names the rung it teaches', () => {
+  it('has a rung for every level, so level play is never off-rung by accident', () => {
+    // recordLevelComplete passes `RUNG_FOR_LEVEL.get(levelId) ?? null`, and null
+    // means "do not move her". A level missing from the table would therefore
+    // stop feeding the ladder silently rather than loudly.
+    const missing = allCatalogueLevelIds().filter((id) => !RUNG_FOR_LEVEL.has(id));
+    expect(missing).toEqual([]);
+  });
+
+  it('never claims a rung the skill does not have', () => {
+    for (const [levelId, rung] of RUNG_FOR_LEVEL) {
+      const skillId = SKILL_FOR_LEVEL.get(levelId)!;
+      const skill = SKILLS_BY_ID.get(skillId)!;
+      expect(rung, `${levelId} -> ${skillId}`).toBeLessThan(skill.rungs.length);
+      expect(rung, `${levelId} -> ${skillId}`).toBeGreaterThanOrEqual(0);
+    }
   });
 });
 

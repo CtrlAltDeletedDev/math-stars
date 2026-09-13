@@ -102,9 +102,9 @@ export default function Practice() {
       sounds.playWrong();
       hintTimer.current = setTimeout(() => setShowHint(true), 400);
     }
-    if (!correct) queue.missed(question, pick.skillId);
+    if (!correct) queue.missed(question, pick.skillId, pick.rung);
 
-    const { move, skill } = recordPracticeAnswer(pick.skillId, question.id, correct);
+    const { move, skill } = recordPracticeAnswer(pick.skillId, question.id, correct, pick.rung);
     recordQuestionsAnswered(1);
 
     if (move === 'promoted' && skill) {

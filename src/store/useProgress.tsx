@@ -3,7 +3,7 @@ import { UserProgress, SRSCard, BadgeEarned, SkillState } from '@/types';
 import { buildInitialProgress, loadProgressResult, normalizeProgress, saveProgress, storageWorks } from './storage';
 import { CATEGORIES, getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak, passedLevel } from '@/engine/scoring';
-import { skillForQuestion } from '@/data/topics';
+import { skillForQuestion, SKILL_FOR_LEVEL, RUNG_FOR_LEVEL } from '@/data/topics';
 import { GradeLevel, ceilingFor } from '@/data/grades';
 import { Question } from '@/types';
 import { BADGES, BadgeCheckContext } from '@/data/badges';
@@ -45,6 +45,7 @@ interface ProgressContextValue {
     skillId: string | null,
     questionId: string,
     wasCorrect: boolean,
+    servedRung?: number | null,
   ) => {
     move: LadderMove; skill: SkillState | null; starsAwarded: number;
     newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
@@ -280,13 +281,29 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         updatedSRS[card.questionId] = card;
       }
 
-      // Ten level answers now count exactly as ten practice answers.
+      // Ten level answers now count exactly as ten practice answers -- but only
+      // as evidence about the rung the level actually teaches.
+      //
+      // Every level is 8 or 10 questions, which is exactly one ladder window, so
+      // a replay used to be one guaranteed promote-or-demote. The replay strip
+      // offers every level in the grade regardless of where she is standing, so
+      // four replays of "Adding 1 more" walked a child from rung 2 to rung 6,
+      // "Adding within 100", on nothing harder than n + 1.
+      const levelSkill = SKILL_FOR_LEVEL.get(levelId) ?? null;
+      const levelRung = RUNG_FOR_LEVEL.get(levelId);
+
       const skills = { ...(next.skills ?? {}) };
       for (const { question, correct } of answers) {
         const skillId = skillForQuestion(question, levelId);
         if (!skillId) continue;
+        // A level teaches one rung of one topic. A question that a mixed level
+        // routes to a *second* ladder sits at no known rung there, so it counts
+        // toward her totals and her SRS but must not move her.
+        const servedRung = skillId === levelSkill ? levelRung ?? null : null;
         const before = skills[skillId] ?? newSkillState(skillId);
-        const result = recordSkillAnswer(before, correct, ceilingFor(skillId, next.gradeLevel));
+        const result = recordSkillAnswer(
+          before, correct, ceilingFor(skillId, next.gradeLevel), servedRung,
+        );
         skills[skillId] = result.state;
       }
 
@@ -441,6 +458,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     skillId: string | null,
     questionId: string,
     wasCorrect: boolean,
+    /** The rung the queue served this from; null for an SRS review. */
+    servedRung?: number | null,
   ): {
     move: LadderMove; skill: SkillState | null; starsAwarded: number;
     newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
@@ -462,7 +481,9 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       const skills = { ...(prev.skills ?? {}) };
       if (skillId) {
         const before = skills[skillId] ?? newSkillState(skillId);
-        const result = recordSkillAnswer(before, wasCorrect, ceilingFor(skillId, prev.gradeLevel));
+        const result = recordSkillAnswer(
+          before, wasCorrect, ceilingFor(skillId, prev.gradeLevel), servedRung,
+        );
         skills[skillId] = result.state;
         move = result.move;
         skill = result.state;

@@ -193,14 +193,17 @@ describe('answer position carries no information', () => {
     for (const level of levels) {
       const counts = [0, 0, 0, 0];
       let seen = 0;
-      for (let i = 0; i < 60; i++) {
+      // Sample to a fixed size rather than a fixed sheet count: a level with 14
+      // bank questions and one with 20 otherwise get very different statistical
+      // power, and the small ones flake at this tolerance.
+      for (let i = 0; i < 400 && seen < 4000; i++) {
         for (const q of generateSheet(level.id)) {
           if (q.choices.length !== 4) continue; // binary questions counted separately
           counts[slotOf(q)]++;
           seen++;
         }
       }
-      if (seen < 200) continue;
+      if (seen < 2000) continue;
       expectFlat(counts, `worksheet ${level.id}`, 0.06);
     }
   });
