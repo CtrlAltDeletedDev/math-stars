@@ -1,4 +1,5 @@
 import { GradeLevel } from '@/data/grades';
+import { ErrorTag } from './question';
 
 export interface SRSCard {
   questionId: string;
@@ -92,4 +93,15 @@ export interface UserProgress {
   practiceFocus: string[];
   /** Set once by a parent; null until the grade screen has been through. */
   gradeLevel: GradeLevel | null;
+  /**
+   * How often each kind of mistake has been made, per skill.
+   *
+   * Counts, not events. A log of every wrong answer would be the obvious shape
+   * and the wrong one: localStorage has a hard quota, `maxSRSCards` exists
+   * because generated questions already push thousands of entries into it, and
+   * nothing a parent wants to read needs more than the totals. Seventeen skills
+   * by eight tags is a few kilobytes at worst, against roughly 500 KB for the
+   * card map.
+   */
+  errorPatterns: Record<string, Partial<Record<ErrorTag, number>>>;
 }

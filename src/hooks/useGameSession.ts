@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Question, SRSCard } from '@/types';
 import { Level } from '@/types';
 import { buildSession } from '@/engine/sessionBuilder';
-import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
+import { nextCardInSession } from '@/engine/srs';
 
 interface SessionState {
   questions: Question[];
@@ -10,7 +10,7 @@ interface SessionState {
   correctCount: number;
   streak: number;
   hotStreak: number;
-  results: { question: Question; correct: boolean }[];
+  results: { question: Question; correct: boolean; chosen: string }[];
   srsUpdates: SRSCard[];
   isComplete: boolean;
 }
@@ -30,6 +30,11 @@ export function useGameSession(
         ? levelOrQuestions
         : buildSession(levelOrQuestions, srsCards, characterName),
   );
+
+  // What this session has already decided about each card. A requeued question
+  // is answered twice, and the second answer has to build on the first rather
+  // than on the card as it stood before she started.
+  const inFlightCards = useRef<Record<string, SRSCard>>({});
 
   const [state, setState] = useState<SessionState>({
     questions: questions.current,
@@ -54,8 +59,8 @@ export function useGameSession(
 
     const correct = selectedChoice === question.correctAnswer;
 
-    const existingCard = srsCards[question.id] ?? createNewSRSCard(question.id);
-    const updatedCard = updateSRSCard(existingCard, correct);
+    const updatedCard = nextCardInSession(question.id, correct, srsCards, inFlightCards.current);
+    inFlightCards.current[question.id] = updatedCard;
 
     setState((prev) => {
       const newCorrectCount = prev.correctCount + (correct ? 1 : 0);
@@ -68,7 +73,7 @@ export function useGameSession(
         correctCount: newCorrectCount,
         streak: newStreak,
         hotStreak: newHotStreak,
-        results: [...prev.results, { question, correct }],
+        results: [...prev.results, { question, correct, chosen: selectedChoice }],
         srsUpdates: [...prev.srsUpdates, updatedCard],
         isComplete: isLast,
       };

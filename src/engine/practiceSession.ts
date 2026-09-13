@@ -4,6 +4,7 @@ import { ceilingFor } from '@/data/grades';
 import { newSkillState } from './skillLadder';
 import { questionFromId } from './questionGenerator';
 import { ALL_QUESTIONS_BY_ID } from '@/data/categories';
+import { skillForQuestion } from '@/data/topics';
 import { isDue } from './srs';
 import { shuffle, shuffleChoices } from './choices';
 
@@ -22,13 +23,20 @@ import { shuffle, shuffleChoices } from './choices';
 export interface PracticePick {
   question: Question;
   skillId: string | null; // null for an SRS review question
+  /**
+   * The rung this was served from, so the ladder can tell evidence about her
+   * current rung from evidence about some other one. Null for an SRS review,
+   * which is deliberately drawn from wherever she has been struggling and so
+   * says nothing about where she is standing now.
+   */
+  rung: number | null;
 }
 
 /** A wrong answer comes back this many questions later. */
 const REQUEUE_GAP = 4;
 
 export class PracticeQueue {
-  private requeue: { at: number; question: Question; skillId: string | null }[] = [];
+  private requeue: { at: number; question: Question; skillId: string | null; rung: number | null }[] = [];
   private asked = 0;
   private recentSkills: string[] = [];
 
@@ -89,8 +97,8 @@ export class PracticeQueue {
   }
 
   /** Called after every answer so a miss can come back later in the session. */
-  missed(question: Question, skillId: string | null) {
-    this.requeue.push({ at: this.asked + REQUEUE_GAP, question, skillId });
+  missed(question: Question, skillId: string | null, rung: number | null = null) {
+    this.requeue.push({ at: this.asked + REQUEUE_GAP, question, skillId, rung });
   }
 
   next(): PracticePick | null {
@@ -100,17 +108,39 @@ export class PracticeQueue {
     const dueIdx = this.requeue.findIndex((r) => r.at <= this.asked);
     if (dueIdx >= 0) {
       const [item] = this.requeue.splice(dueIdx, 1);
-      return { question: { ...item.question, choices: shuffleChoices(item.question.choices) }, skillId: item.skillId };
+      return {
+        question: { ...item.question, choices: shuffleChoices(item.question.choices) },
+        skillId: item.skillId,
+        rung: item.rung,
+      };
     }
 
     // 2. An SRS review, occasionally, so old mistakes resurface across days.
     if (this.asked % 5 === 0) {
       const review = this.dueReview();
-      if (review) return { question: { ...review, choices: shuffleChoices(review.choices) }, skillId: null };
+      if (review) {
+        // Routed to a ladder like any other answer. It carries no rung -- a
+        // review is drawn from wherever she has been struggling, so it says
+        // nothing about where she is standing -- but it used to carry no skill
+        // either, which made up to a fifth of every practice session invisible
+        // to the learner model.
+        return {
+          question: { ...review, choices: shuffleChoices(review.choices) },
+          skillId: skillForQuestion(review, ''),
+          rung: null,
+        };
+      }
     }
 
     // 3. Fresh question at her current rung.
-    for (const skillId of shuffle([this.pickSkill(), ...this.skillPool()])) {
+    //
+    // The weighted pick goes FIRST and the rest are a shuffled fallback. They
+    // used to be shuffled together, so `pickSkill()` — and with it the whole
+    // `recentSkills` anti-repeat weighting — won only ~2/(n+1) of the time and
+    // the rotation was effectively uniform.
+    const preferred = this.pickSkill();
+    const fallback = shuffle(this.skillPool().filter((id) => id !== preferred));
+    for (const skillId of [preferred, ...fallback]) {
       const skill = SKILLS_BY_ID.get(skillId);
       if (!skill) continue;
       const rung = Math.min(
@@ -120,7 +150,7 @@ export class PracticeQueue {
       const q = questionForRung(skill, rung);
       if (!q) continue;
       this.recentSkills = [...this.recentSkills, skillId].slice(-6);
-      return { question: { ...q, choices: shuffleChoices(q.choices) }, skillId };
+      return { question: { ...q, choices: shuffleChoices(q.choices) }, skillId, rung };
     }
     return null;
   }

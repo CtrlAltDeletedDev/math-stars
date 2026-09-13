@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CATEGORIES, ALL_QUESTIONS_BY_ID } from '@/data/categories';
 import { buildSession } from './sessionBuilder';
+import { generateSheet } from './worksheet';
 import {
   generateAdditionQuestion,
   generateSubtractionQuestion,
@@ -10,6 +11,10 @@ import {
   generateTargetedSubtractionQuestion,
 } from './questionGenerator';
 import { Question } from '@/types';
+import { canRebuildFromId } from './questionGenerator';
+import { isServableCard } from './sessionBuilder';
+import { generateFractionQuestion } from '@/data/fractions';
+import { generateMoneyQuestion } from '@/data/moneyGen';
 
 const ALL = [...ALL_QUESTIONS_BY_ID.values()];
 const SAMPLE = 3000;
@@ -177,6 +182,33 @@ describe('answer position carries no information', () => {
       }
       if (seen < 200) continue;
       expectFlat(counts, `level ${level.id}`, 0.06);
+    }
+  });
+
+  // The worksheet used to render `q.choices` straight out of the bank, and the
+  // guard above only ever covered buildSession, so the printed sheet put the
+  // answer in the first box 77% of the time. Any future path that hands
+  // questions to a child has to be covered here too.
+  it('is evenly spread on a printed worksheet', () => {
+    const levels = CATEGORIES.flatMap((c) => c.levels)
+      .filter((l) => l.questionBankIds?.length || l.generatorParams);
+    expect(levels.length).toBeGreaterThan(0);
+
+    for (const level of levels) {
+      const counts = [0, 0, 0, 0];
+      let seen = 0;
+      // Sample to a fixed size rather than a fixed sheet count: a level with 14
+      // bank questions and one with 20 otherwise get very different statistical
+      // power, and the small ones flake at this tolerance.
+      for (let i = 0; i < 400 && seen < 4000; i++) {
+        for (const q of generateSheet(level.id)) {
+          if (q.choices.length !== 4) continue; // binary questions counted separately
+          counts[slotOf(q)]++;
+          seen++;
+        }
+      }
+      if (seen < 2000) continue;
+      expectFlat(counts, `worksheet ${level.id}`, 0.06);
     }
   });
 
@@ -362,6 +394,65 @@ describe('generated questions', () => {
         expect(rebuilt!.correctAnswer, `wrong answer rebuilding ${q.id}`).toBe(q.correctAnswer);
         expect(rebuilt!.prompt).toBe(q.prompt);
       }
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fractions and money, which had no spaced repetition at all
+// ---------------------------------------------------------------------------
+
+describe('every fraction and money question survives a round trip', () => {
+  // `isServableCard` rejected every frac-* and money-* id, so `pruneSRSCards`
+  // deleted their cards on the next save: two whole topics minted cards, used
+  // them in memory, and wiped them 500ms later. A card that cannot be rebuilt
+  // is a card that gets deleted, so this is the test that keeps them alive.
+  const cases: [string, () => Question][] = [
+    ['halves', () => generateFractionQuestion([2], 'recognise')],
+    ['to fourths', () => generateFractionQuestion([2, 3, 4], 'recognise')],
+    ['to eighths', () => generateFractionQuestion([2, 3, 4, 6, 8], 'recognise')],
+    ['of a set', () => generateFractionQuestion([2, 3, 4], 'ofSet')],
+    ['comparing', () => generateFractionQuestion([2, 3, 4, 6, 8], 'compare')],
+    ['naming coins', () => generateMoneyQuestion('name')],
+    ['like coins', () => generateMoneyQuestion('like')],
+    ['mixed coins', () => generateMoneyQuestion('mixed')],
+    ['change from 25', () => generateMoneyQuestion('change25')],
+    ['change from a dollar', () => generateMoneyQuestion('change100')],
+  ];
+
+  it.each(cases)('%s rebuilds to the same question', (_label, gen) => {
+    for (let i = 0; i < 300; i++) {
+      const q = gen();
+      const rebuilt = questionFromId(q.id, 'Friend');
+      expect(rebuilt, `no rebuild for ${q.id}`).not.toBeNull();
+      expect(rebuilt!.correctAnswer, `wrong answer rebuilding ${q.id}`).toBe(q.correctAnswer);
+      expect(rebuilt!.prompt, `wrong prompt rebuilding ${q.id}`).toBe(q.prompt);
+      expect(rebuilt!.choices, `answer missing from ${q.id}`).toContain(q.correctAnswer);
+      expect([...new Set(rebuilt!.choices)].length).toBe(rebuilt!.choices.length);
+    }
+  });
+
+  it.each(cases)('%s is recognised as servable, so it is never pruned', (_label, gen) => {
+    for (let i = 0; i < 300; i++) {
+      const q = gen();
+      expect(canRebuildFromId(q.id), `${q.id} would be deleted on the next save`).toBe(true);
+      expect(isServableCard(q.id)).toBe(true);
+    }
+  });
+
+  it('refuses an id it cannot honestly rebuild', () => {
+    // A card written by an older build, or a hand-edited import. Returning a
+    // wrong question would be worse than returning none.
+    for (const bad of [
+      'frac-shaded-circle-5-4',   // numerator above the denominator
+      'frac-shaded-wedge-1-4',    // not a shape this app draws
+      'frac-set-3-10',            // 10 does not divide into 3 equal groups
+      'frac-cmp-biggest-2',       // nothing to compare against
+      'money-name-doubloon',
+      'money-mixed-3',            // 3¢ is not a coin
+      'money-change-20-20',       // nothing left to work out
+    ]) {
+      expect(questionFromId(bad), `${bad} should not rebuild`).toBeNull();
     }
   });
 });

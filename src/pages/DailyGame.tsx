@@ -90,10 +90,16 @@ export default function DailyGame() {
     const isLastQuestion = session.currentIndex >= session.totalQuestions - 1;
     const correctCountBefore = session.correctCount;
     const srsUpdatesBefore = session.srsUpdates;
+    const resultsBefore = session.results;
+    const answeredQuestion = session.currentQuestion;
 
     const { correct, card } = session.recordAnswer(choice);
     // Include this answer — `session.srsUpdates` has not caught up yet.
     const finalSrsUpdates = card ? [...srsUpdatesBefore, card] : srsUpdatesBefore;
+    // Same reason: `session.results` is one answer behind at this point.
+    const finalResults = answeredQuestion
+      ? [...resultsBefore, { question: answeredQuestion, correct }]
+      : resultsBefore;
     setSelectedChoice(choice);
     setLastCorrect(correct);
     setShowFeedback(true);
@@ -130,6 +136,7 @@ export default function DailyGame() {
         sounds.playLevelUp();
         const { newBadges, newStickers, streakBonus, dcStreakBonus } = recordDailyChallengeComplete(
           finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
+          finalResults,
         );
         recordQuestionsAnswered(session.totalQuestions);
         navigate('/celebration/daily/challenge', {

@@ -52,6 +52,31 @@ export function updateSRSCard(card: SRSCard, correct: boolean): SRSCard {
   };
 }
 
+/**
+ * The next state of one card *within a session already in progress*.
+ *
+ * A missed question is requeued a few slots later so the correction gets
+ * tested while it is fresh, which means one question can be answered twice in
+ * a single session. The session used to derive both answers from the same
+ * pre-session card and then merge them last-write-wins, so the second
+ * (correct) card overwrote the first: `intervalDays: 1` and the ease penalty
+ * both vanished, and a fact she got wrong was scheduled as if she had simply
+ * got it right. Exactly backwards -- that is the fact most worth seeing again
+ * tomorrow.
+ *
+ * `inFlight` holds what this session has already decided, so a second answer
+ * builds on the first instead of replacing it.
+ */
+export function nextCardInSession(
+  questionId: string,
+  correct: boolean,
+  saved: Record<string, SRSCard>,
+  inFlight: Record<string, SRSCard>,
+): SRSCard {
+  const base = inFlight[questionId] ?? saved[questionId] ?? createNewSRSCard(questionId);
+  return updateSRSCard(base, correct);
+}
+
 export function isDue(card: SRSCard): boolean {
   return card.nextDueDate <= Date.now();
 }

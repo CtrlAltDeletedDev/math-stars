@@ -1,13 +1,21 @@
-import { UserProgress, CategoryProgress, LevelState, SkillState } from '@/types';
+import { UserProgress, CategoryProgress, LevelState, SkillState, SRSCard } from '@/types';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { TOPICS } from '@/data/topics';
+import { SKILLS_BY_ID } from '@/data/skills';
+import { ErrorTag } from '@/types';
+
+/** The tags a save is allowed to contain. Anything else came from somewhere else. */
+const ERROR_TAGS = new Set<ErrorTag>([
+  'off-by-one', 'wrong-operation', 'answered-a-given-number', 'answered-the-whole',
+  'place-value', 'wrong-multiple', 'counted-the-wrong-thing', 'reversed', 'unknown',
+]);
 
 const STORAGE_KEY = 'mathstars_progress_v2';
 /** Where an unreadable save is parked instead of being thrown away. */
 export const CORRUPT_BACKUP_KEY = 'mathstars_progress_unreadable';
 /** Rungs added below the existing ones on the adding/taking-away ladders in v4. */
 const LADDER_RUNGS_INSERTED_IN_V4 = 2;
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 const OLDEST_MIGRATABLE = 2;
 
 // Patch missing fields on a saved/imported progress object so the rest of
@@ -37,6 +45,92 @@ function looksLikeProgress(p: UserProgress): boolean {
   if (p.practiceFocus !== undefined && !Array.isArray(p.practiceFocus)) return false;
   if (p.totalStars !== undefined && typeof p.totalStars !== 'number') return false;
   return true;
+}
+
+/**
+ * Make the contents of `skills` safe to use, not just its shape.
+ *
+ * `looksLikeProgress` checks that `skills` is an object and stops there, so a
+ * save with `recent: null` sailed through and then threw on the first answer
+ * (`[...prev.recent, wasCorrect]`) and on the Parent screen (`recent.length`).
+ * The import path takes an arbitrary parent-chosen file, so that was reachable
+ * without any disk corruption -- and it crashed *behind* the screen that says
+ * her stars are safe.
+ *
+ * Repair what can be repaired, because her rung is the valuable part and a
+ * damaged window is not worth losing it over. Drop a skill the catalogue does
+ * not have: a renamed or removed id could never promote (its ladder top reads
+ * as 0) and never recorded a ceiling hit, so it sat frozen and silent forever.
+ * The catalogue says what exists; saved state only says what happened.
+ */
+function sanitizeSkills(skills: Record<string, SkillState>): Record<string, SkillState> {
+  const clean: Record<string, SkillState> = {};
+
+  for (const [id, state] of Object.entries(skills)) {
+    const skill = SKILLS_BY_ID.get(id);
+    if (!skill) continue; // not in the catalogue, so it means nothing
+    if (!state || typeof state !== 'object' || Array.isArray(state)) continue;
+
+    const rung = Number.isInteger(state.rung) && state.rung >= 0
+      ? Math.min(state.rung, skill.rungs.length - 1)
+      : 0;
+    const recent = Array.isArray(state.recent)
+      ? state.recent.filter((r) => typeof r === 'boolean')
+      : [];
+    const attempts = typeof state.attempts === 'number' && state.attempts >= 0 ? state.attempts : 0;
+    const correct = typeof state.correct === 'number' && state.correct >= 0 ? state.correct : 0;
+
+    clean[id] = {
+      skillId: id,
+      rung,
+      recent,
+      attempts,
+      correct: Math.min(correct, attempts),
+      ceilingHits: typeof state.ceilingHits === 'number' && state.ceilingHits >= 0
+        ? state.ceilingHits
+        : 0,
+    };
+  }
+
+  return clean;
+}
+
+/**
+ * Counts only, for skills that exist, for tags that exist.
+ *
+ * An imported file could otherwise put anything in here, and this feeds a
+ * sentence a parent is meant to act on -- "8 of her last 10 subtraction
+ * mistakes were adding instead". A wrong number there is worse than no
+ * sentence at all.
+ */
+function sanitizeErrorPatterns(
+  patterns: Record<string, Partial<Record<ErrorTag, number>>>,
+): Record<string, Partial<Record<ErrorTag, number>>> {
+  const clean: Record<string, Partial<Record<ErrorTag, number>>> = {};
+  for (const [skillId, tags] of Object.entries(patterns)) {
+    if (!SKILLS_BY_ID.has(skillId)) continue;
+    if (!tags || typeof tags !== 'object' || Array.isArray(tags)) continue;
+    const kept: Partial<Record<ErrorTag, number>> = {};
+    for (const [tag, count] of Object.entries(tags)) {
+      if (!ERROR_TAGS.has(tag as ErrorTag)) continue;
+      if (typeof count !== 'number' || !Number.isFinite(count) || count <= 0) continue;
+      kept[tag as ErrorTag] = Math.floor(count);
+    }
+    if (Object.keys(kept).length > 0) clean[skillId] = kept;
+  }
+  return clean;
+}
+
+/** Same reasoning for cards: a malformed one is never usable, only dangerous. */
+function sanitizeSRSCards(cards: Record<string, SRSCard>): Record<string, SRSCard> {
+  const clean: Record<string, SRSCard> = {};
+  for (const [id, card] of Object.entries(cards)) {
+    if (!card || typeof card !== 'object' || Array.isArray(card)) continue;
+    if (typeof card.nextDueDate !== 'number' || !Number.isFinite(card.nextDueDate)) continue;
+    if (typeof card.easeFactor !== 'number' || !Number.isFinite(card.easeFactor)) continue;
+    clean[id] = { ...card, questionId: card.questionId ?? id };
+  }
+  return clean;
 }
 
 export function normalizeProgress(parsed: UserProgress): UserProgress | null {
@@ -89,6 +183,17 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
     migrateToV5(parsed);
   }
   if (parsed.gradeLevel === undefined) parsed.gradeLevel = null;
+
+  // v5 → v6: what her wrong answers meant. Purely additive -- there is nothing
+  // to convert, she simply starts accumulating from here.
+  if (!parsed.errorPatterns || typeof parsed.errorPatterns !== 'object') {
+    parsed.errorPatterns = {};
+  }
+
+  // Last, so it also cleans up anything the migrations above produced.
+  parsed.skills = sanitizeSkills(parsed.skills);
+  parsed.srsCards = sanitizeSRSCards(parsed.srsCards);
+  parsed.errorPatterns = sanitizeErrorPatterns(parsed.errorPatterns);
 
   parsed.version = CURRENT_VERSION;
   return parsed;
@@ -276,5 +381,6 @@ export function buildInitialProgress(): UserProgress {
     practiceQuestionsAnswered: 0,
     practiceFocus: [],
     gradeLevel: null,
+    errorPatterns: {},
   };
 }

@@ -46,28 +46,60 @@ export function recordSkillAnswer(
    * is simply the top of the ladder, exactly as before.
    */
   ceiling?: number,
+  /**
+   * The rung the question actually came from.
+   *
+   *   a number   fold it into the window only if it is the rung she is standing
+   *              on — an answer from easier or harder ground says nothing about
+   *              whether *this* rung is comfortable
+   *   null       the caller knows it came from no rung on this ladder (an SRS
+   *              review, or a mixed level's question routed to a second skill)
+   *   undefined  the caller doesn't know; fold it, which is what every caller
+   *              did before this argument existed
+   */
+  servedRung?: number | null,
 ): LadderResult {
   const skill = SKILLS_BY_ID.get(prev.skillId);
   const ladderTop = skill ? skill.rungs.length - 1 : 0;
   const topRung = Math.min(ceiling ?? ladderTop, ladderTop);
 
-  const recent = [...prev.recent, wasCorrect].slice(-LADDER.window);
-  const state: SkillState = {
+  // What she is actually being served. A saved rung above the ceiling — a child
+  // whose grade was moved *down* — is served at the ceiling, so that is the rung
+  // her answers are evidence about.
+  const standingRung = Math.min(prev.rung, topRung);
+
+  // Attempts and accuracy count no matter where the question came from; only
+  // the promote/demote window is choosy. Keeping these separate is what lets a
+  // replay still feed the parent's lifetime figures and the SRS without also
+  // moving her up a ladder she never climbed.
+  const counted: SkillState = {
     ...prev,
-    recent,
     attempts: prev.attempts + 1,
     correct: prev.correct + (wasCorrect ? 1 : 0),
   };
+
+  if (servedRung !== undefined && servedRung !== standingRung) {
+    return { state: counted, move: null, fromRung: prev.rung };
+  }
+
+  const recent = [...prev.recent, wasCorrect].slice(-LADDER.window);
+  const state: SkillState = { ...counted, recent };
 
   if (recent.length < LADDER.window) return { state, move: null, fromRung: prev.rung };
 
   const hits = recent.filter(Boolean).length;
 
-  if (hits >= LADDER.promoteAt && prev.rung < topRung) {
-    return { state: { ...state, rung: prev.rung + 1, recent: [] }, move: 'promoted', fromRung: prev.rung };
+  // Moves are relative to `standingRung`, not the saved index. They are almost
+  // always the same number. Where they differ -- a child whose grade was moved
+  // down, so her saved rung 6 is served at a ceiling of 4 -- demoting from the
+  // saved index took her 6 -> 5 -> 4 while she kept getting the same rung-4
+  // questions, so three failed windows changed nothing she could see. She now
+  // lands where the evidence actually puts her.
+  if (hits >= LADDER.promoteAt && standingRung < topRung) {
+    return { state: { ...state, rung: standingRung + 1, recent: [] }, move: 'promoted', fromRung: standingRung };
   }
-  if (hits <= LADDER.demoteAt && prev.rung > 0) {
-    return { state: { ...state, rung: prev.rung - 1, recent: [] }, move: 'demoted', fromRung: prev.rung };
+  if (hits <= LADDER.demoteAt && standingRung > 0) {
+    return { state: { ...state, rung: standingRung - 1, recent: [] }, move: 'demoted', fromRung: standingRung };
   }
   // Sitting at the top and acing it: keep the window fresh so she isn't stuck
   // holding a full window that can only ever trigger a demotion.
@@ -76,7 +108,7 @@ export function recordSkillAnswer(
   // give her. Two of those is the Parent screen's cue to suggest moving her up a
   // year — the ceiling is soft, and this is how it tells on itself rather than
   // quietly capping her forever.
-  if (hits >= LADDER.promoteAt && prev.rung >= topRung) {
+  if (hits >= LADDER.promoteAt && standingRung >= topRung) {
     const blockedByGrade = topRung < ladderTop;
     return {
       state: {

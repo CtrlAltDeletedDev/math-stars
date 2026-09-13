@@ -1,35 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '@/data/categories';
-import { generateFromParams } from '@/engine/questionGenerator';
-import { ALL_QUESTIONS_BY_ID } from '@/data/categories';
 import { Question } from '@/types';
+import { generateSheet, WORKSHEET_QUESTION_COUNT } from '@/engine/worksheet';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
-
-function generateSheet(levelId: string): Question[] {
-  const level = CATEGORIES.flatMap((c) => c.levels).find((l) => l.id === levelId);
-  if (!level) return [];
-
-  if (level.generatorParams) {
-    const seen = new Set<string>();
-    const qs: Question[] = [];
-    let attempts = 0;
-    while (qs.length < 20 && attempts < 200) {
-      attempts++;
-      const q = generateFromParams(level.generatorParams, 'You');
-      if (!seen.has(q.id)) { seen.add(q.id); qs.push(q); }
-    }
-    return qs;
-  }
-
-  if (level.questionBankIds) {
-    const shuffled = [...level.questionBankIds].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 20).map((id) => ALL_QUESTIONS_BY_ID.get(id)).filter(Boolean) as Question[];
-  }
-
-  return [];
-}
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -56,7 +31,7 @@ export default function Worksheet() {
         {!questions ? (
           <>
             <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 16, color: 'rgba(255,255,255,0.85)' }}>
-              Choose a level to generate a printable practice sheet with 20 questions.
+              Choose a level to generate a printable practice sheet with {WORKSHEET_QUESTION_COUNT} questions.
             </div>
             <select
               value={selectedLevel}

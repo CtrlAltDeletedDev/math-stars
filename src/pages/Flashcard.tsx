@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { getLevelById, getCategoryById } from '@/data/categories';
 import { buildSession } from '@/engine/sessionBuilder';
@@ -31,7 +31,10 @@ export default function Flashcard() {
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
-  if (!level || !category) return null;
+  // A stale bookmark or a renamed level id must never render an empty screen:
+  // nothing throws, so the error boundary cannot catch it and she is simply
+  // stuck with no way back. Matches the guard in Game.tsx.
+  if (!level || !category) return <Navigate to="/" replace />;
 
   const questions = questionsRef.current;
 

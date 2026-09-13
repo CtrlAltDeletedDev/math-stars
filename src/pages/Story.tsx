@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { STORIES } from '@/data/stories';
 import { getCategoryById } from '@/data/categories';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
@@ -13,7 +13,7 @@ export default function Story() {
   const story = STORIES.find((s) => s.categoryId === categoryId);
   const category = getCategoryById(categoryId);
 
-  if (!story || !category) return null;
+  if (!story || !category) return <Navigate to="/" replace />;
 
   const isLast = panel >= story.panels.length - 1;
   const current = story.panels[panel];
