@@ -1,5 +1,5 @@
 import { Question } from '@/types';
-import { buildChoices, randomInt, shuffle } from '@/engine/choices';
+import { buildChoices, buildTaggedChoices, randomInt, shuffle } from '@/engine/choices';
 
 // Money, generated rather than hand-listed, so it can climb: name a coin →
 // count coins of one kind → count a mixed handful → work out change.
@@ -42,12 +42,12 @@ function countLikeCoins(
     type: 'money',
     prompt: `How much is ${n} ${coin.plural}?`,
     correctAnswer: cents(correct),
-    choices: buildChoices(correct, [
-      correct + coin.value,
-      correct - coin.value,
-      n + coin.value, // added instead of counting up
-      correct + 1,
-    ], { step: coin.value, isValid: (v) => v > 0 }).map((v) => `${v}¢`),
+    ...buildTaggedChoices(correct, [
+      [correct + coin.value, 'wrong-multiple'], // one coin too many
+      [correct - coin.value, 'wrong-multiple'], // one coin too few
+      [n + coin.value, 'wrong-operation'], // added instead of counting up
+      [correct + 1, 'off-by-one'],
+    ], { step: coin.value, isValid: (v) => v > 0, format: cents }),
     difficulty: 2,
     hint: `Count by ${coin.value}s: ${Array.from({ length: Math.min(n, 4) }, (_, i) => coin.value * (i + 1)).join(', ')}...`,
     speakText: `How much is ${n} ${coin.plural}?`,
@@ -73,13 +73,13 @@ function countMixedCoins(purse = randomPurse()): Question {
     type: 'money',
     prompt: 'How much money is this?',
     correctAnswer: cents(correct),
-    choices: buildChoices(correct, [
-      correct + 5,
-      correct - 5,
-      correct + 10,
-      purse.length, // counted the coins instead of their value
-      correct + 1,
-    ], { step: 5, isValid: (v) => v > 0 }).map((v) => `${v}¢`),
+    ...buildTaggedChoices(correct, [
+      [correct + 5, 'wrong-multiple'], // one coin out
+      [correct - 5, 'wrong-multiple'],
+      [correct + 10, 'wrong-multiple'],
+      [purse.length, 'counted-the-wrong-thing'], // counted the coins instead of their value
+      [correct + 1, 'off-by-one'],
+    ], { step: 5, isValid: (v) => v > 0, format: cents }),
     difficulty: 3,
     hint: 'Start with the biggest coins and count on.',
     speakText: 'How much money is this?',
@@ -99,13 +99,13 @@ function changeFrom(have: number, spend: number, maxTotal = have): Question {
     type: 'money',
     prompt: `You have ${cents(have)} and you spend ${cents(spend)}.\n\nHow much is left?`,
     correctAnswer: cents(correct),
-    choices: buildChoices(correct, [
-      have + spend, // added instead of subtracting
-      spend,
-      have,
-      correct + 1,
-      correct - 1,
-    ], { step: 5, isValid: (v) => v >= 0 }).map((v) => `${v}¢`),
+    ...buildTaggedChoices(correct, [
+      [have + spend, 'wrong-operation'], // added instead of subtracting
+      [spend, 'answered-a-given-number'],
+      [have, 'answered-the-whole'],
+      [correct + 1, 'off-by-one'],
+      [correct - 1, 'off-by-one'],
+    ], { step: 5, isValid: (v) => v >= 0, format: cents }),
     difficulty: maxTotal > 25 ? 4 : 3,
     hint: `Count up from ${cents(spend)} to ${cents(have)}.`,
     speakText: `You have ${have} cents and you spend ${spend} cents. How much is left?`,

@@ -2,7 +2,7 @@ import { Question } from '@/types';
 import { generateWordProblem, wordProblemFromId } from '@/data/wordProblems';
 import { fractionFromId } from '@/data/fractions';
 import { moneyFromId } from '@/data/moneyGen';
-import { buildChoices, randomInt } from './choices';
+import { buildChoices, buildTaggedChoices, randomInt } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
 // nearest the answer. Picking a wrong option should tell us something: that she
@@ -16,15 +16,15 @@ function additionQuestion(a: number, b: number, maxSum: number): Question {
     type: 'addition',
     prompt: `${a} + ${b} = ?`,
     correctAnswer: String(correct),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       correct,
       [
-        correct - 1, // counted one short (the classic counting-on slip)
-        correct + 1, // counted one too far
-        Math.abs(a - b), // subtracted instead of adding
-        a, // forgot to add the second number
-        b,
-        correct + 10, // dropped a ten
+        [correct - 1, 'off-by-one'], // counted one short (the classic counting-on slip)
+        [correct + 1, 'off-by-one'], // counted one too far
+        [Math.abs(a - b), 'wrong-operation'], // subtracted instead of adding
+        [a, 'answered-a-given-number'], // forgot to add the second number
+        [b, 'answered-a-given-number'],
+        [correct + 10, 'place-value'], // dropped a ten
       ],
       { step: 1 },
     ),
@@ -39,18 +39,18 @@ function subtractionQuestion(a: number, b: number, maxMinuend: number): Question
     type: 'subtraction',
     prompt: `${a} - ${b} = ?`,
     correctAnswer: String(correct),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       correct,
       // Deliberately balanced above and below the answer. A pool weighted
       // upward (a+b, a, correct+1) would park the answer at the same rank in the
       // sorted options, which is the pattern this rewrite exists to remove.
       [
-        a + b, // added instead of subtracting — the most common error by far
-        correct + 1, // counted one short on the way down
-        correct - 1, // counted one too far
+        [a + b, 'wrong-operation'], // added instead of subtracting — the most common error by far
+        [correct + 1, 'off-by-one'], // counted one short on the way down
+        [correct - 1, 'off-by-one'], // counted one too far
         correct - 2,
-        b, // answered with the number being taken away
-        a, // forgot to take anything away
+        [b, 'answered-a-given-number'], // answered with the number being taken away
+        [a, 'answered-a-given-number'], // forgot to take anything away
         Math.max(0, b - 1),
         // Place-value slips. These matter most when b is small: for "12 - 1"
         // every mistake above lands within two of the answer, so the four
@@ -58,8 +58,8 @@ function subtractionQuestion(a: number, b: number, maxMinuend: number): Question
         // a predictable rank — the exact tell this file exists to remove. Taking
         // the ten away as well, or leaving it behind, are errors a first grader
         // genuinely makes, and they land far enough out to break up the run.
-        a >= 10 ? a - 10 : -1,
-        a >= 10 ? correct - 10 : -1,
+        [a >= 10 ? a - 10 : -1, 'place-value'],
+        [a >= 10 ? correct - 10 : -1, 'place-value'],
       ],
       { step: 1, isValid: (n) => n >= 0 && n <= Math.max(maxMinuend, a + b) },
     ),
@@ -115,14 +115,14 @@ function missingAddQuestion(a: number, sum: number, maxSum: number): Question {
     type: 'missing_number',
     prompt: `${a} + ? = ${sum}`,
     correctAnswer: String(missing),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       missing,
       [
-        sum, // answered with the total instead of the part
-        a, // answered with the part already shown
-        sum + a, // added the two visible numbers
-        missing - 1,
-        missing + 1,
+        [sum, 'answered-the-whole'], // answered with the total instead of the part
+        [a, 'answered-a-given-number'], // answered with the part already shown
+        [sum + a, 'wrong-operation'], // added the two visible numbers
+        [missing - 1, 'off-by-one'],
+        [missing + 1, 'off-by-one'],
       ],
       { step: 1 },
     ),
@@ -139,14 +139,14 @@ function missingSubQuestion(a: number, result: number, maxSum: number): Question
     type: 'missing_number',
     prompt: `${a} − ? = ${result}`,
     correctAnswer: String(missing),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       missing,
       [
-        a, // answered with the starting number
-        result, // answered with what's left
-        a + result, // added the two visible numbers
-        missing - 1,
-        missing + 1,
+        [a, 'answered-the-whole'], // answered with the starting number
+        [result, 'reversed'], // answered with what's left
+        [a + result, 'wrong-operation'], // added the two visible numbers
+        [missing - 1, 'off-by-one'],
+        [missing + 1, 'off-by-one'],
       ],
       { step: 1 },
     ),
@@ -177,15 +177,15 @@ function skipCountQuestion(by: number, start: number, steps: number, maxStart: n
     type: 'skip_count',
     prompt: `${sequence.join(', ')}, ?`,
     correctAnswer: String(correct),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       correct,
       [
         // Wrong multiples — the mistakes that mean something when counting by `by`.
-        correct + by, // skipped a step
-        correct - by, // repeated the last number
-        last + 1, // counted by ones instead of by `by`
-        correct + 1, // off by one on the multiple
-        correct + by * 2,
+        [correct + by, 'wrong-multiple'], // skipped a step
+        [correct - by, 'wrong-multiple'], // repeated the last number
+        [last + 1, 'counted-the-wrong-thing'], // counted by ones instead of by `by`
+        [correct + 1, 'off-by-one'], // off by one on the multiple
+        [correct + by * 2, 'wrong-multiple'],
       ],
       { step: by, isValid: (n) => n >= 0 && n <= maxStart + by * 12 },
     ),
@@ -206,13 +206,13 @@ function multiplicationQuestion(table: number, b: number): Question {
     type: 'multiplication',
     prompt: `${table} × ${b} = ?`,
     correctAnswer: String(correct),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       correct,
       [
-        correct + table, // one group too many
-        correct - table, // one group too few
-        table + b, // added instead of multiplying
-        correct + table * 2,
+        [correct + table, 'wrong-multiple'], // one group too many
+        [correct - table, 'wrong-multiple'], // one group too few
+        [table + b, 'wrong-operation'], // added instead of multiplying
+        [correct + table * 2, 'wrong-multiple'],
         // No correct±1 here: nobody answers 41 for 5 × 8. The step-based
         // top-up supplies wrong *multiples*, which is the mistake that happens.
       ],
@@ -243,7 +243,11 @@ function doublesQuestion(a: number): Question {
     type: 'addition',
     prompt: `${a} + ${a} = ?`,
     correctAnswer: String(correct),
-    choices: buildChoices(correct, [correct - 1, correct + 1, correct - 2, correct + 2, a], { step: 1 }),
+    ...buildTaggedChoices(correct, [
+      [correct - 1, 'off-by-one'], [correct + 1, 'off-by-one'],
+      correct - 2, correct + 2,
+      [a, 'answered-a-given-number'], // gave one half instead of the double
+    ], { step: 1 }),
     difficulty: a <= 5 ? 1 : 2,
     hint: `A double! ${a} and another ${a}.`,
     speakText: `${a} plus ${a}?`,
@@ -257,7 +261,11 @@ function makeTenQuestion(target: number, a: number): Question {
     type: 'missing_number',
     prompt: `${a} + ? = ${target}`,
     correctAnswer: String(correct),
-    choices: buildChoices(correct, [target, a, target + a, correct - 1, correct + 1], { step: 1 }),
+    ...buildTaggedChoices(correct, [
+      [target, 'answered-the-whole'], [a, 'answered-a-given-number'],
+      [target + a, 'wrong-operation'],
+      [correct - 1, 'off-by-one'], [correct + 1, 'off-by-one'],
+    ], { step: 1 }),
     difficulty: target <= 10 ? 1 : 2,
     hint: `How many more to get from ${a} up to ${target}?`,
     speakText: `${a} plus what makes ${target}?`,
@@ -271,7 +279,11 @@ function countOnQuestion(a: number, b: number): Question {
     type: 'addition',
     prompt: `${a} + ${b} = ?`,
     correctAnswer: String(correct),
-    choices: buildChoices(correct, [correct - 1, correct + 1, a, b, correct + 10], { step: 1 }),
+    ...buildTaggedChoices(correct, [
+      [correct - 1, 'off-by-one'], [correct + 1, 'off-by-one'],
+      [a, 'answered-a-given-number'], [b, 'answered-a-given-number'],
+      [correct + 10, 'place-value'],
+    ], { step: 1 }),
     difficulty: 1,
     hint: `Start at ${a} and count on ${b}: ${Array.from({ length: b }, (_, i) => a + i + 1).join(', ')}.`,
     speakText: `${a} plus ${b}?`,

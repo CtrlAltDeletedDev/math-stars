@@ -1,5 +1,5 @@
 import { Question } from '@/types';
-import { buildChoices, randomInt, shuffle } from '@/engine/choices';
+import { buildTaggedChoices, randomInt, shuffle } from '@/engine/choices';
 
 // Fractions for a first/second grader: halves, thirds, fourths, then fractions
 // of a set, then comparing. Everything is drawn as well as written, because
@@ -106,12 +106,12 @@ function fractionOfSet(den: number, whole: number): Question {
     type: 'fraction',
     prompt: `What is one ${name} of ${whole}?`,
     correctAnswer: String(correct),
-    choices: buildChoices(
+    ...buildTaggedChoices(
       correct,
       [
-        whole - correct, // gave the rest instead of the share
-        whole, // gave the whole
-        den, // answered with the number of groups
+        [whole - correct, 'reversed'], // gave the rest instead of the share
+        [whole, 'answered-the-whole'], // gave the whole
+        [den, 'counted-the-wrong-thing'], // answered with the number of groups
         correct * 2,
       ],
       { step: 1, isValid: (n) => n >= 0 && n <= whole * 2 },
