@@ -4,6 +4,7 @@ import { ceilingFor } from '@/data/grades';
 import { newSkillState } from './skillLadder';
 import { questionFromId } from './questionGenerator';
 import { ALL_QUESTIONS_BY_ID } from '@/data/categories';
+import { skillForQuestion } from '@/data/topics';
 import { isDue } from './srs';
 import { shuffle, shuffleChoices } from './choices';
 
@@ -118,7 +119,16 @@ export class PracticeQueue {
     if (this.asked % 5 === 0) {
       const review = this.dueReview();
       if (review) {
-        return { question: { ...review, choices: shuffleChoices(review.choices) }, skillId: null, rung: null };
+        // Routed to a ladder like any other answer. It carries no rung -- a
+        // review is drawn from wherever she has been struggling, so it says
+        // nothing about where she is standing -- but it used to carry no skill
+        // either, which made up to a fifth of every practice session invisible
+        // to the learner model.
+        return {
+          question: { ...review, choices: shuffleChoices(review.choices) },
+          skillId: skillForQuestion(review, ''),
+          rung: null,
+        };
       }
     }
 

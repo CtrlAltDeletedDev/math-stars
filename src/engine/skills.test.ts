@@ -318,6 +318,78 @@ describe('an answer only moves her when it came from her own rung', () => {
   });
 });
 
+describe('a practice pick says which rung it came from', () => {
+  const dueCard = (questionId: string) => ({
+    questionId, easeFactor: 2.5, intervalDays: 1,
+    nextDueDate: Date.now() - 1000, repetitions: 0, lastSeen: 0,
+  });
+
+  it('reports the rung it served for a fresh question', () => {
+    const p = buildInitialProgress();
+    p.gradeLevel = '2';
+    p.practiceFocus = ['adding'];
+    p.skills = { adding: { skillId: 'adding', rung: 3, recent: [], attempts: 0, correct: 0 } };
+    const q = new PracticeQueue(p);
+    let sawFresh = false;
+    for (let i = 0; i < 40; i++) {
+      const pick = q.next();
+      if (pick?.skillId === 'adding' && pick.rung !== null) { sawFresh = true; expect(pick.rung).toBe(3); }
+    }
+    expect(sawFresh).toBe(true);
+  });
+
+  it('reports the ceiling, not the saved rung, when her grade clamps her', () => {
+    // Her ladder says rung 7 but first grade tops out at 4, so that is the rung
+    // she is actually served -- and therefore the one her answers are about.
+    const p = buildInitialProgress();
+    p.gradeLevel = '1';
+    p.practiceFocus = ['adding'];
+    p.skills = { adding: { skillId: 'adding', rung: 7, recent: [], attempts: 0, correct: 0 } };
+    const q = new PracticeQueue(p);
+    let sawFresh = false;
+    for (let i = 0; i < 40; i++) {
+      const pick = q.next();
+      if (pick?.skillId === 'adding' && pick.rung !== null) { sawFresh = true; expect(pick.rung).toBe(4); }
+    }
+    expect(sawFresh).toBe(true);
+  });
+
+  it('routes an SRS review to a ladder but gives it no rung', () => {
+    // Focus is deliberately on a different topic, so a pick routed to `adding`
+    // can only be the review -- not a fresh question that happens to look alike.
+    const p = buildInitialProgress();
+    p.gradeLevel = '2';
+    p.practiceFocus = ['clocks'];
+    p.srsCards = { 'add-3+4': dueCard('add-3+4') };
+    const q = new PracticeQueue(p);
+
+    let review = null;
+    for (let i = 1; i <= 5; i++) review = q.next(); // every fifth slot is a review
+    expect(review).not.toBeNull();
+    expect(review!.question.id).toBe('add-3+4');
+    expect(review!.skillId, 'a review used to be invisible to the ladder').toBe('adding');
+    expect(review!.rung, 'a review says nothing about where she is standing').toBeNull();
+  });
+
+  it('a requeued miss keeps the rung it was first served from', () => {
+    const p = buildInitialProgress();
+    p.gradeLevel = '2';
+    p.practiceFocus = ['adding'];
+    p.skills = { adding: { skillId: 'adding', rung: 2, recent: [], attempts: 0, correct: 0 } };
+    const q = new PracticeQueue(p);
+    const first = q.next()!;
+    q.missed(first.question, first.skillId, first.rung);
+    for (let i = 0; i < 10; i++) {
+      const pick = q.next();
+      if (pick?.question.id === first.question.id) {
+        expect(pick.rung).toBe(first.rung);
+        return;
+      }
+    }
+    throw new Error('the requeued question never came back');
+  });
+});
+
 describe('every catalogue level names the rung it teaches', () => {
   it('has a rung for every level, so level play is never off-rung by accident', () => {
     // recordLevelComplete passes `RUNG_FOR_LEVEL.get(levelId) ?? null`, and null

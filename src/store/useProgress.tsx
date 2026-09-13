@@ -32,6 +32,7 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
+    answers?: { question: Question; correct: boolean }[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number };
   recordMasterComplete: (
     categoryId: string,
@@ -39,6 +40,7 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
+    answers?: { question: Question; correct: boolean }[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   recordQuestionsAnswered: (count: number) => void;
   recordPracticeAnswer: (
@@ -332,11 +334,39 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return { newBadges, newStickers, streakBonus };
   }
 
+  /**
+   * Fold a mixed session's answers into the ladders, as evidence about her
+   * totals but not about where she is standing.
+   *
+   * The daily challenge, a category master run and a review session all draw
+   * across topics and rungs on purpose, so no answer in them can say whether
+   * her *current* rung is comfortable — that is what `servedRung: null` means.
+   * Before this, these three modes wrote nothing the ladder could read at all,
+   * which is the same "two worlds" split CLAUDE.md says the design exists to
+   * prevent, just moved to different screens.
+   */
+  function foldMixedAnswers(
+    skills: Record<string, SkillState>,
+    answers: { question: Question; correct: boolean }[],
+    levelId: string,
+    grade: UserProgress['gradeLevel'],
+  ): Record<string, SkillState> {
+    const next = { ...skills };
+    for (const { question, correct } of answers) {
+      const skillId = skillForQuestion(question, levelId);
+      if (!skillId) continue;
+      const before = next[skillId] ?? newSkillState(skillId);
+      next[skillId] = recordSkillAnswer(before, correct, ceilingFor(skillId, grade), null).state;
+    }
+    return next;
+  }
+
   function recordDailyChallengeComplete(
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
+    answers: { question: Question; correct: boolean }[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number } {
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -385,7 +415,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
       const updatedSRS: Record<string, SRSCard> = { ...next.srsCards };
       for (const card of srsUpdates) updatedSRS[card.questionId] = card;
-      next = { ...next, srsCards: updatedSRS };
+      next = {
+        ...next,
+        srsCards: updatedSRS,
+        skills: foldMixedAnswers(next.skills ?? {}, answers, 'daily', next.gradeLevel),
+      };
 
       newBadges = checkNewBadges(prev, next, correctCount, totalCount);
       if (newBadges.length > 0) next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
@@ -405,6 +439,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
+    answers: { question: Question; correct: boolean }[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -437,7 +472,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
       const updatedSRS: Record<string, SRSCard> = { ...next.srsCards };
       for (const card of srsUpdates) updatedSRS[card.questionId] = card;
-      next = { ...next, srsCards: updatedSRS };
+      next = {
+        ...next,
+        srsCards: updatedSRS,
+        skills: foldMixedAnswers(next.skills ?? {}, answers, categoryId, next.gradeLevel),
+      };
 
       newBadges = checkNewBadges(prev, next, correctCount, totalCount);
       if (newBadges.length > 0) next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
