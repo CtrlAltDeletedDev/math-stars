@@ -343,7 +343,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         next = { ...next, playHistory: [...ph, todayStr] };
         if (next.currentStreak > 1) {
           streakBonus = Math.min(next.currentStreak, 7);
-          next = { ...next, spendableStars: next.spendableStars + streakBonus };
+          next = {
+            ...next,
+            spendableStars: next.spendableStars + streakBonus,
+            totalStars: next.totalStars + streakBonus,
+          };
         }
       }
 
@@ -400,7 +404,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         next = { ...next, playHistory: [...ph, todayStr] };
         if (next.currentStreak > 1) {
           streakBonus = Math.min(next.currentStreak, 7);
-          next = { ...next, spendableStars: next.spendableStars + streakBonus };
+          next = {
+            ...next,
+            spendableStars: next.spendableStars + streakBonus,
+            totalStars: next.totalStars + streakBonus,
+          };
         }
       }
       next = {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { buildReviewSession } from '@/engine/sessionBuilder';
@@ -154,7 +154,7 @@ export default function ReviewGame() {
   }
 
   const question = session.currentQuestion;
-  if (!question) return null;
+  if (!question) return <Navigate to="/" replace />;
 
   const hotStreak = session.hotStreak;
 

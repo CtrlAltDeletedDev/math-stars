@@ -110,7 +110,14 @@ export class PracticeQueue {
     }
 
     // 3. Fresh question at her current rung.
-    for (const skillId of shuffle([this.pickSkill(), ...this.skillPool()])) {
+    //
+    // The weighted pick goes FIRST and the rest are a shuffled fallback. They
+    // used to be shuffled together, so `pickSkill()` — and with it the whole
+    // `recentSkills` anti-repeat weighting — won only ~2/(n+1) of the time and
+    // the rotation was effectively uniform.
+    const preferred = this.pickSkill();
+    const fallback = shuffle(this.skillPool().filter((id) => id !== preferred));
+    for (const skillId of [preferred, ...fallback]) {
       const skill = SKILLS_BY_ID.get(skillId);
       if (!skill) continue;
       const rung = Math.min(

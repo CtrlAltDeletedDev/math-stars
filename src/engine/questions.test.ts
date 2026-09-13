@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CATEGORIES, ALL_QUESTIONS_BY_ID } from '@/data/categories';
 import { buildSession } from './sessionBuilder';
+import { generateSheet } from './worksheet';
 import {
   generateAdditionQuestion,
   generateSubtractionQuestion,
@@ -177,6 +178,30 @@ describe('answer position carries no information', () => {
       }
       if (seen < 200) continue;
       expectFlat(counts, `level ${level.id}`, 0.06);
+    }
+  });
+
+  // The worksheet used to render `q.choices` straight out of the bank, and the
+  // guard above only ever covered buildSession, so the printed sheet put the
+  // answer in the first box 77% of the time. Any future path that hands
+  // questions to a child has to be covered here too.
+  it('is evenly spread on a printed worksheet', () => {
+    const levels = CATEGORIES.flatMap((c) => c.levels)
+      .filter((l) => l.questionBankIds?.length || l.generatorParams);
+    expect(levels.length).toBeGreaterThan(0);
+
+    for (const level of levels) {
+      const counts = [0, 0, 0, 0];
+      let seen = 0;
+      for (let i = 0; i < 60; i++) {
+        for (const q of generateSheet(level.id)) {
+          if (q.choices.length !== 4) continue; // binary questions counted separately
+          counts[slotOf(q)]++;
+          seen++;
+        }
+      }
+      if (seen < 200) continue;
+      expectFlat(counts, `worksheet ${level.id}`, 0.06);
     }
   });
 
