@@ -47,6 +47,10 @@ const TAG_COPY: Record<Exclude<ErrorTag, 'unknown'>, { label: string; suggestion
     label: 'giving the leftover instead of the part asked for',
     suggestion: 'Have her say the question back in her own words before answering it.',
   },
+  'added-story-numbers': {
+    label: 'adding the two numbers in a story that was really asking "how many more" or "how many are the rest"',
+    suggestion: 'Ask "do we already know the whole?" before she solves it. If the big number is the whole, draw it as a bar with the part she knows underneath — the answer is the gap.',
+  },
 };
 
 /** Below this a "pattern" is one or two slips, which is just a child having a day. */

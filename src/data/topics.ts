@@ -71,6 +71,7 @@ export const TOPICS: Topic[] = [
       { levelId: 'steps-sub-2', rung: 1 },
       { levelId: 'subtraction-1', rung: 2 },
       { levelId: 'subtraction-2', rung: 3 },
+      { levelId: 'subtraction-3', rung: 4 },
     ],
   },
   {
@@ -91,7 +92,16 @@ export const TOPICS: Topic[] = [
     emoji: '📖',
     bgColor: '#8D6E63',
     darkColor: '#4E342E',
-    levels: [{ levelId: 'word-problems', rung: 2 }],
+    levels: [
+      { levelId: 'word-problems', rung: 2 },
+      { levelId: 'story-20', rung: 3 },
+      { levelId: 'story-part', rung: 4 },
+      { levelId: 'story-compare', rung: 5 },
+      { levelId: 'story-fewer', rung: 6 },
+      { levelId: 'story-needs', rung: 7 },
+      { levelId: 'story-sentence', rung: 8 },
+      { levelId: 'story-mix-20', rung: 9 },
+    ],
   },
   {
     id: 'counting',
@@ -151,6 +161,9 @@ export const TOPICS: Topic[] = [
     levels: [
       { levelId: 'ff-to10', rung: 0 },
       { levelId: 'ff-to20', rung: 1 },
+      { levelId: 'ff-helper', rung: 2 },
+      { levelId: 'ff-restate', rung: 3 },
+      { levelId: 'ff-both', rung: 4 },
     ],
   },
   {

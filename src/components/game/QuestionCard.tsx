@@ -2,6 +2,7 @@ import { Question } from '@/types';
 import DotAid from './DotAid';
 import QuestionVisual from './QuestionVisual';
 import NumberLine from './NumberLine';
+import HopLine from './HopLine';
 
 interface Props {
   question: Question;
@@ -16,10 +17,36 @@ function speak(text: string) {
   window.speechSynthesis.speak(u);
 }
 
+/**
+ * Sums past ten get the 0–20 hop line instead of dots, which stop at ten: the
+ * line is how her class works "14 − 6", and 14 dots with 6 crossed out is a
+ * counting exercise rather than a strategy.
+ */
+function hopLineMax(q: Question): number | null {
+  if (q.type !== 'addition' && q.type !== 'subtraction') return null;
+  const m = q.prompt.match(/^(\d+)\s*[+-]\s*(\d+)/);
+  if (!m) return null;
+  const a = Number(m[1]), b = Number(m[2]);
+  if (a <= 10 && b <= 10) return null; // DotAid has it
+  const top = q.type === 'addition' ? a + b : a;
+  return top <= 20 ? 20 : null;
+}
+
+// A one-line sum wants to be huge; a three-sentence story at that size runs off
+// a phone screen and pushes the answers out of reach.
+function promptFontSize(prompt: string): number {
+  if (prompt.length > 110) return 20;
+  if (prompt.length > 70) return 22;
+  if (prompt.length > 40) return 25;
+  return 30;
+}
+
 export default function QuestionCard({ question }: Props) {
   const speakText = question.speakText ?? question.prompt;
   const showDots = question.type === 'addition' || question.type === 'subtraction';
   const showNumberLine = question.type === 'skip_count';
+  const hopMax = hopLineMax(question);
+  const isLong = question.prompt.length > 40;
 
   return (
     <div style={{
@@ -47,7 +74,7 @@ export default function QuestionCard({ question }: Props) {
       </button>
 
       {question.promptEmoji && (
-        <div style={{ fontSize: 44, lineHeight: 1.2, textAlign: 'center', letterSpacing: 4 }}>
+        <div style={{ fontSize: isLong ? 32 : 44, lineHeight: 1.2, textAlign: 'center', letterSpacing: 4 }}>
           {question.promptEmoji}
         </div>
       )}
@@ -55,7 +82,7 @@ export default function QuestionCard({ question }: Props) {
       <div style={{
         fontFamily: 'Nunito',
         fontWeight: 800,
-        fontSize: 30,
+        fontSize: promptFontSize(question.prompt),
         color: '#333',
         textAlign: 'center',
         lineHeight: 1.3,
@@ -66,9 +93,11 @@ export default function QuestionCard({ question }: Props) {
       </div>
 
       {/* After the prompt: she should read (or hear) the question, then look. */}
-      {question.visual && <QuestionVisual visual={question.visual} />}
+      {/* Keyed by question so scratch work never carries over to the next one. */}
+      {question.visual && <QuestionVisual key={question.id} visual={question.visual} />}
 
       {showDots && <DotAid prompt={question.prompt} type={question.type} />}
+      {hopMax !== null && <HopLine key={question.id} max={hopMax} />}
       {showNumberLine && <NumberLine prompt={question.prompt} />}
     </div>
   );

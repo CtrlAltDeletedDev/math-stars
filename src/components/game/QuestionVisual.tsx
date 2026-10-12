@@ -1,4 +1,5 @@
 import { QuestionVisual as VisualSpec } from '@/types';
+import HopLine from './HopLine';
 
 // Drawn illustrations for questions where a picture is the explanation.
 // "1/4" is meaningless to a six-year-old until she has seen a quarter of a pizza.
@@ -161,6 +162,7 @@ function Clock({ hour, minute }: { hour: number; minute: number }) {
 }
 
 export default function QuestionVisual({ visual }: { visual: VisualSpec }) {
+  if (visual.kind === 'numberLine') return <HopLine max={visual.max} />;
   if (visual.kind === 'clock') return <Clock hour={visual.hour} minute={visual.minute} />;
   if (visual.kind === 'coins') return <Coins coins={visual.coins} />;
   if (visual.kind === 'fractionSet') return <FractionSet fractions={visual.fractions} />;

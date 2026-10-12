@@ -7,7 +7,7 @@ import { ErrorTag } from '@/types';
 /** The tags a save is allowed to contain. Anything else came from somewhere else. */
 const ERROR_TAGS = new Set<ErrorTag>([
   'off-by-one', 'wrong-operation', 'answered-a-given-number', 'answered-the-whole',
-  'place-value', 'wrong-multiple', 'counted-the-wrong-thing', 'reversed', 'unknown',
+  'place-value', 'wrong-multiple', 'counted-the-wrong-thing', 'reversed', 'added-story-numbers', 'unknown',
 ]);
 
 const STORAGE_KEY = 'mathstars_progress_v2';

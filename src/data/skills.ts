@@ -75,8 +75,10 @@ export const SKILLS: Skill[] = [
     rungs: [
       { label: 'Missing addend to 10', source: { kind: 'generated', params: { operation: 'missing', maxSum: 10, kind: 'addition' } } },
       { label: 'Missing addend to 20', source: { kind: 'generated', params: { operation: 'missing', maxSum: 20, kind: 'addition' } } },
-      { label: 'Missing number, both ways, to 20', source: { kind: 'generated', params: { operation: 'missing', maxSum: 20, kind: 'both' } } },
-      { label: 'Missing number, both ways, to 50', source: { kind: 'generated', params: { operation: 'missing', maxSum: 50, kind: 'both' } } },
+      // "Anywhere" includes 17 = ? + 6 and ? − 6 = 11: the equals sign does not
+      // mean "the answer goes next".
+      { label: 'Missing number anywhere, to 20', source: { kind: 'generated', params: { operation: 'missing', maxSum: 20, kind: 'any' } } },
+      { label: 'Missing number anywhere, to 50', source: { kind: 'generated', params: { operation: 'missing', maxSum: 50, kind: 'any' } } },
     ],
   },
   {
@@ -138,6 +140,15 @@ export const SKILLS: Skill[] = [
       { label: 'Adding stories', source: { kind: 'generated', params: { operation: 'word_problem', wordType: 'addition' } } },
       { label: 'Taking away stories', source: { kind: 'generated', params: { operation: 'word_problem', wordType: 'subtraction' } } },
       { label: 'Mixed stories', source: { kind: 'generated', params: { operation: 'word_problem', wordType: 'mixed' } } },
+      // Everything from here is within 20 and shaped like the first-grade unit
+      // on story problems. Appended, never inserted: a rung is a saved index.
+      { label: 'Adding and taking-away stories to 20', source: { kind: 'generated', params: { operation: 'story', storyType: 'result' } } },
+      { label: 'Some and the rest (missing part)', source: { kind: 'generated', params: { operation: 'story', storyType: 'part' } } },
+      { label: 'How many more? How many fewer?', source: { kind: 'generated', params: { operation: 'story', storyType: 'compare' } } },
+      { label: '"7 fewer than" and "4 more than"', source: { kind: 'generated', params: { operation: 'story', storyType: 'compareQty' } } },
+      { label: 'How many more are needed?', source: { kind: 'generated', params: { operation: 'story', storyType: 'change' } } },
+      { label: 'Which number sentence matches?', source: { kind: 'generated', params: { operation: 'story', storyType: 'equation' } } },
+      { label: 'Every kind of story to 20', source: { kind: 'generated', params: { operation: 'story', storyType: 'mixed' } } },
     ],
   },
   {
@@ -185,6 +196,9 @@ export const SKILLS: Skill[] = [
     rungs: [
       { label: 'Families to 10', source: { kind: 'bank', types: ['fact_family'], difficulty: [2] } },
       { label: 'Families to 20', source: { kind: 'bank', types: ['fact_family'], difficulty: [2, 3] } },
+      { label: 'Which adding fact helps subtract?', source: { kind: 'generated', params: { operation: 'related', mode: 'helper', maxWhole: 20 } } },
+      { label: 'Subtraction as a missing addend', source: { kind: 'generated', params: { operation: 'related', mode: 'restate', maxWhole: 20 } } },
+      { label: 'Same mystery number, both ways', source: { kind: 'generated', params: { operation: 'related', mode: 'both', maxWhole: 20 } } },
     ],
   },
   {

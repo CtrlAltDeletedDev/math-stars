@@ -1,8 +1,9 @@
-import { Question } from '@/types';
+import { ErrorTag, Question } from '@/types';
 import { generateWordProblem, wordProblemFromId } from '@/data/wordProblems';
+import { generateStoryProblem, storyProblemFromId, StoryType, STORY_ID_PATTERN } from '@/data/storyProblems';
 import { fractionFromId } from '@/data/fractions';
 import { moneyFromId } from '@/data/moneyGen';
-import { buildChoices, buildTaggedChoices, randomInt } from './choices';
+import { buildTaggedChoices, randomInt, shuffle } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
 // nearest the answer. Picking a wrong option should tell us something: that she
@@ -156,7 +157,8 @@ function missingSubQuestion(a: number, result: number, maxSum: number): Question
   };
 }
 
-export function generateMissingNumberQuestion(maxSum: number, kind: 'addition' | 'subtraction' | 'both'): Question {
+export function generateMissingNumberQuestion(maxSum: number, kind: 'addition' | 'subtraction' | 'both' | 'any'): Question {
+  if (kind === 'any') return generateAnyPositionMissing(maxSum);
   const useAdd = kind === 'addition' || (kind === 'both' && Math.random() < 0.5);
   if (useAdd) {
     const sum = randomInt(2, maxSum);
@@ -166,6 +168,182 @@ export function generateMissingNumberQuestion(maxSum: number, kind: 'addition' |
   const a = randomInt(2, maxSum);
   const result = randomInt(0, a - 1);
   return missingSubQuestion(a, result, maxSum);
+}
+
+// --- The mystery number anywhere ------------------------------------------
+//
+// "17 = ? + 6" is on the first-grade unit test, and it is a different question
+// from "6 + ? = 17" to a six-year-old: an equals sign at the front reads as
+// "the answer goes here", so she writes 23. Every position of the unknown, and
+// both sides of the equals sign, is part of knowing what "=" means.
+//
+//   addl   ? + p = w        eqr   w = p + ?        eql   w = ? + p
+//   subs   ? − p = r        (the start is unknown — the hardest one)
+
+type MissingForm = 'addl' | 'eqr' | 'eql' | 'subs';
+
+function flippedMissingQuestion(form: MissingForm, x: number, y: number, maxSum: number): Question {
+  if (form === 'subs') {
+    // ? − x = y, so ? = x + y.
+    const correct = x + y;
+    return {
+      id: `miss2-subs-${x}-${y}`,
+      type: 'missing_number',
+      prompt: `? − ${x} = ${y}`,
+      correctAnswer: String(correct),
+      ...buildTaggedChoices(correct, [
+        [Math.abs(y - x), 'wrong-operation'], // took away again instead of adding back
+        [y, 'answered-a-given-number'],
+        [x, 'answered-a-given-number'],
+        [correct - 1, 'off-by-one'],
+        [correct + 1, 'off-by-one'],
+      ], { step: 1 }),
+      difficulty: Math.max(3, Math.ceil(maxSum / 7)),
+      hint: `What number do you start on, if taking away ${x} leaves ${y}? Start at ${y} and hop forward ${x}.`,
+      speakText: `What number, take away ${x}, equals ${y}?`,
+    };
+  }
+  // x is the whole, y the part shown; the answer is the other part.
+  const correct = x - y;
+  const prompt = form === 'addl' ? `? + ${y} = ${x}` : form === 'eqr' ? `${x} = ${y} + ?` : `${x} = ? + ${y}`;
+  return {
+    id: `miss2-${form}-${x}-${y}`,
+    type: 'missing_number',
+    prompt,
+    correctAnswer: String(correct),
+    ...buildTaggedChoices(correct, [
+      [x + y, 'wrong-operation'], // added the two numbers she can see
+      [x, 'answered-the-whole'],
+      [y, 'answered-a-given-number'],
+      [correct - 1, 'off-by-one'],
+      [correct + 1, 'off-by-one'],
+    ], { step: 1 }),
+    difficulty: Math.max(2, Math.ceil(maxSum / 7)),
+    hint: form === 'addl'
+      ? `What number and ${y} make ${x}? Start at ${y} and count up to ${x}.`
+      : `The equals sign means both sides are the same. ${x} is the same as ${y} and how many more?`,
+    speakText: form === 'addl'
+      ? `What number plus ${y} equals ${x}?`
+      : `${x} equals ${form === 'eqr' ? `${y} plus what` : `what plus ${y}`}?`,
+  };
+}
+
+/** Every position of the unknown, old forms included, evenly. */
+export function generateAnyPositionMissing(maxSum: number): Question {
+  const form = randomInt(0, 5);
+  if (form === 0) {
+    const sum = randomInt(2, maxSum);
+    return missingAddQuestion(randomInt(0, sum), sum, maxSum);
+  }
+  if (form === 1) {
+    const a = randomInt(2, maxSum);
+    return missingSubQuestion(a, randomInt(0, a - 1), maxSum);
+  }
+  if (form === 5) {
+    // ? − x = y, with the start (x + y) inside the cap.
+    const start = randomInt(3, maxSum);
+    const x = randomInt(1, start - 1);
+    return flippedMissingQuestion('subs', x, start - x, maxSum);
+  }
+  const whole = randomInt(3, maxSum);
+  const forms: MissingForm[] = ['addl', 'eqr', 'eql'];
+  return flippedMissingQuestion(forms[form - 2], whole, randomInt(1, whole - 1), maxSum);
+}
+
+// --- Adding and subtracting are the same facts ----------------------------
+//
+// Three ways the unit asks it, all built on one whole w and one part p, so the
+// other part is m = w − p:
+//
+//   helper   Which adding fact helps you find 13 − 6?     7 + 6 = 13
+//   restate  Which adding problem is the same as 13 − 6?  6 + ? = 13
+//   both     17 = ? + 6  and  17 − ? = 6                  11
+//
+// "helper" options are all *true* sums on purpose (4 + 19 = 23 is a fine fact,
+// just not one about 19 − 4). Finding the one with the same whole is the
+// skill; an option that was simply wrong arithmetic would let her skip it.
+
+export type RelatedMode = 'helper' | 'restate' | 'both';
+
+function relatedQuestion(mode: RelatedMode, w: number, p: number): Question {
+  const m = w - p;
+  if (mode === 'both') {
+    return {
+      id: `rel-both-${w}-${p}`,
+      type: 'fact_family',
+      prompt: `${w} = ? + ${p}\n${w} − ? = ${p}`,
+      correctAnswer: String(m),
+      ...buildTaggedChoices(m, [
+        [w + p, 'wrong-operation'],
+        [w, 'answered-the-whole'],
+        [p, 'answered-a-given-number'],
+        [m - 1, 'off-by-one'],
+        [m + 1, 'off-by-one'],
+      ], { step: 1 }),
+      difficulty: 3,
+      hint: `It's the same mystery number in both! What goes with ${p} to make ${w}?`,
+      speakText: `What number is missing? ${w} equals what plus ${p}. And ${w} minus what equals ${p}.`,
+    };
+  }
+
+  if (mode === 'restate') {
+    const correct = `${p} + ? = ${w}`;
+    const wrong: [string, ErrorTag][] = [
+      [`${w} + ${p} = ?`, 'wrong-operation'],
+      [`${p} + ${w} = ?`, 'wrong-operation'],
+      [`${w} + ? = ${p}`, 'reversed'],
+    ];
+    return {
+      id: `rel-restate-${w}-${p}`,
+      type: 'fact_family',
+      prompt: `Which adding problem is the same as\n${w} − ${p} = ?`,
+      correctAnswer: correct,
+      choices: shuffle([correct, ...wrong.map(([f]) => f)]),
+      distractorMeaning: Object.fromEntries(wrong),
+      difficulty: 3,
+      hint: `${w} − ${p} asks: ${p} and how many more make ${w}?`,
+      speakText: `Which adding problem is the same as ${w} minus ${p}?`,
+    };
+  }
+
+  // helper: written "m + p = w", the way the unit writes it, with every option
+  // in the same shape so the shape gives nothing away.
+  const fact = (a: number, b: number) => `${a} + ${b} = ${a + b}`;
+  const correct = fact(m, p);
+  const pool: [string, ErrorTag][] = [
+    [fact(w, p), 'wrong-operation'], // added the two numbers in the subtraction
+    [fact(m - 1, p), 'off-by-one'],
+    [fact(m + 1, p), 'off-by-one'],
+    [fact(p, p), 'answered-a-given-number'],
+  ];
+  const seen = new Set([correct]);
+  const wrong = shuffle(pool.filter(([f]) => {
+    if (seen.has(f) || f.startsWith('0 ')) return false;
+    seen.add(f);
+    return true;
+  }))
+    // The add-both one is the mistake worth catching; always keep it.
+    .sort(([, a], [, b]) => (a === 'wrong-operation' ? -1 : b === 'wrong-operation' ? 1 : 0))
+    .slice(0, 3);
+  return {
+    id: `rel-helper-${w}-${p}`,
+    type: 'fact_family',
+    prompt: `Which adding fact helps you find\n${w} − ${p}?`,
+    correctAnswer: correct,
+    choices: shuffle([correct, ...wrong.map(([f]) => f)]),
+    distractorMeaning: Object.fromEntries(wrong),
+    difficulty: 3,
+    hint: `Look for the adding fact that makes ${w} and has ${p} in it.`,
+    speakText: `Which adding fact helps you find ${w} minus ${p}?`,
+  };
+}
+
+export function generateRelatedQuestion(mode: RelatedMode, maxWhole: number): Question {
+  // m ≥ 2 keeps "0 + 6 = 6" and "1 + 6" off the helper list, and p ≥ 2 keeps
+  // "13 − 1" (which needs no helper) out of it.
+  const w = randomInt(5, maxWhole);
+  const p = randomInt(2, w - 2);
+  return relatedQuestion(mode, w, p);
 }
 
 function skipCountQuestion(by: number, start: number, steps: number, maxStart: number): Question {
@@ -320,6 +498,13 @@ export function questionFromId(id: string, characterName = 'You'): Question | nu
   if (m) return missingAddQuestion(+m[1], +m[2], +m[2]);
   m = id.match(/^miss-sub-(\d+)-x=(\d+)$/);
   if (m) return missingSubQuestion(+m[1], +m[2], +m[1]);
+  m = id.match(/^miss2-(addl|eqr|eql)-(\d+)-(\d+)$/);
+  if (m && +m[3] < +m[2]) return flippedMissingQuestion(m[1] as MissingForm, +m[2], +m[3], +m[2]);
+  m = id.match(/^miss2-subs-(\d+)-(\d+)$/);
+  if (m) return flippedMissingQuestion('subs', +m[1], +m[2], +m[1] + +m[2]);
+  m = id.match(/^rel-(helper|restate|both)-(\d+)-(\d+)$/);
+  if (m && +m[3] >= 2 && +m[2] - +m[3] >= 2) return relatedQuestion(m[1] as RelatedMode, +m[2], +m[3]);
+  if (id.startsWith('st-')) return storyProblemFromId(id);
   m = id.match(/^mul-(\d+)x(\d+)$/);
   if (m) return multiplicationQuestion(+m[1], +m[2]);
   if (id.startsWith('wp-')) return wordProblemFromId(id, characterName);
@@ -365,8 +550,10 @@ export function generateFromParams(params: Record<string, number | string>, char
     const type = (params.wordType as string) ?? 'mixed';
     return generateWordProblem(characterName, type as 'addition' | 'subtraction' | 'mixed');
   }
+  if (op === 'story') return generateStoryProblem(String(params.storyType) as StoryType);
+  if (op === 'related') return generateRelatedQuestion(String(params.mode) as RelatedMode, Number(params.maxWhole ?? 20));
   if (op === 'missing') {
-    const kind = (params.kind as 'addition' | 'subtraction' | 'both') ?? 'both';
+    const kind = (params.kind as 'addition' | 'subtraction' | 'both' | 'any') ?? 'both';
     return generateMissingNumberQuestion(Number(params.maxSum), kind);
   }
   if (op === 'doubles') return generateDoublesQuestion(Number(params.maxAddend));
@@ -395,6 +582,9 @@ export function canRebuildFromId(id: string): boolean {
     /^sub-\d+-\d+$/.test(id) ||
     /^miss-add-\d+\+x=\d+$/.test(id) ||
     /^miss-sub-\d+-x=\d+$/.test(id) ||
+    /^miss2-(addl|eqr|eql|subs)-\d+-\d+$/.test(id) ||
+    /^rel-(helper|restate|both)-\d+-\d+$/.test(id) ||
+    STORY_ID_PATTERN.test(id) ||
     /^mul-\d+x\d+$/.test(id) ||
     /^dbl-\d+$/.test(id) ||
     /^mk\d+-\d+$/.test(id) ||

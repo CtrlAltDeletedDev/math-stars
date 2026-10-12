@@ -32,7 +32,7 @@ Two tables are the spine:
 
 - `src/data/categories.ts` — every level, each naming either a `questionBankIds` list
   (hand-written) or `generatorParams` (procedurally generated).
-- `src/data/topics.ts` — maps all 51 levels onto the 17 skill ladders, one topic per skill.
+- `src/data/topics.ts` — maps all 62 levels onto the 17 skill ladders, one topic per skill.
   `src/data/grades.ts` then says which topics a grade covers and how far up each goes.
 
 The child-facing screens are Home (one Play button + a grid of topics) and
@@ -93,6 +93,13 @@ and promoted her into work she couldn't do. Keep "did she find it?" (what she se
 week" is the most common thing a parent knows. `fixedAddend` / `fixedSubtrahend` on the
 generator params vary the starting number instead of both numbers — see the
 `steps` category. A normal capped level ("sums to 10") is only ~28% +2 questions.
+
+**Story problems must not be solvable without reading.** `src/data/storyProblems.ts` covers
+every first-grade story shape within 20 (some-and-the-rest, how many more, fewer than, still
+needs). Every level that is mostly take-away stories mixes in some putting-together stories,
+"which number sentence" questions offer exactly one sentence that solves to the answer, and no
+story uses a pronoun for its characters (names are repeated). `storyProblems.test.ts` solves
+every question independently.
 
 **This is used by a six-year-old.** Tap targets stay large, text stays readable without
 fluent reading, and nothing should ever be able to leave her on a blank screen — the app
