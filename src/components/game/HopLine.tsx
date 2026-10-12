@@ -13,6 +13,8 @@ import { PointerEvent, useRef, useState } from 'react';
 
 interface Props {
   max: number;
+  /** Where she starts, already placed. Lessons set it; questions leave it blank. */
+  initialStart?: number;
 }
 
 const PAD = 16;
@@ -22,8 +24,8 @@ const FORWARD = '#2E9E5B';
 const BACK = '#F07C2A';
 const INK = '#4A5766';
 
-export default function HopLine({ max }: Props) {
-  const [start, setStart] = useState<number | null>(null);
+export default function HopLine({ max, initialStart }: Props) {
+  const [start, setStart] = useState<number | null>(initialStart ?? null);
   const [path, setPath] = useState<number[]>([]); // every number landed on, one hop at a time
   const svgRef = useRef<SVGSVGElement>(null);
 

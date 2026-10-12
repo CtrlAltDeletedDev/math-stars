@@ -190,6 +190,15 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
     parsed.errorPatterns = {};
   }
 
+  // Lessons she has finished. Additive, like errorPatterns: an older save just
+  // hasn't finished any yet.
+  if (!parsed.lessonsDone || typeof parsed.lessonsDone !== 'object' || Array.isArray(parsed.lessonsDone)) {
+    parsed.lessonsDone = {};
+  }
+  parsed.lessonsDone = Object.fromEntries(
+    Object.entries(parsed.lessonsDone).filter(([, d]) => typeof d === 'string'),
+  );
+
   // Last, so it also cleans up anything the migrations above produced.
   parsed.skills = sanitizeSkills(parsed.skills);
   parsed.srsCards = sanitizeSRSCards(parsed.srsCards);
@@ -382,5 +391,6 @@ export function buildInitialProgress(): UserProgress {
     practiceFocus: [],
     gradeLevel: null,
     errorPatterns: {},
+    lessonsDone: {},
   };
 }

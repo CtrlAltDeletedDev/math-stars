@@ -542,107 +542,12 @@ export const LESSONS: Record<string, LessonSlide[]> = {
     },
   ],
 
-  // ── Story problems and the number line (first-grade unit 1.2) ─────────────
+  // ── Story problems (the rest of unit 1.2 is taught by src/data/learn.ts) ──
 
-  'subtraction-3': [
-    {
-      title: 'Hop Back!',
-      body: 'Taking away means going BACK on the number line. Put your finger on the first number, then hop back one at a time.',
-      emoji: '🐸',
-      example: '14 − 6\nStart on 14 → hop back 6 → land on 8',
-    },
-    {
-      title: 'Count the Hops, Not the Start',
-      body: 'Your first hop goes from 14 to 13. Don\'t count 14 itself — you\'re already standing there!',
-      emoji: '👣',
-      example: '14 → 13 → 12 → 11 → 10 → 9 → 8\n1    2    3    4    5    6',
-      tip: 'Tip: Tap the number line under the question to draw your hops.',
-    },
-    {
-      title: 'Show Your Work!',
-      body: 'Draw every hop. If your hops go the wrong way, you\'ll see it straight away. 🌟',
-      emoji: '✏️',
-    },
-  ],
 
-  'story-part': [
-    {
-      title: 'Some and the Rest',
-      body: 'Some stories tell you how many there are ALTOGETHER, and how many of ONE kind. You find the other kind!',
-      emoji: '⚽',
-      example: '14 balls. 6 are soccer balls.\nThe rest are basketballs.',
-    },
-    {
-      title: 'Is the Big Number the Whole?',
-      body: 'The 14 is ALL the balls. The soccer balls are inside it. So the answer must be LESS than 14!',
-      emoji: '🧺',
-      example: '6 + ? = 14\n14 − 6 = 8 basketballs',
-      tip: 'Tip: If you got a number bigger than the whole, you added by mistake!',
-    },
-    {
-      title: 'Read It Twice',
-      body: 'Some stories ask how many IN ALL — then you put the parts together. Read the question before you hop! 🌟',
-      emoji: '📖',
-    },
-  ],
 
-  'story-compare': [
-    {
-      title: 'How Many More?',
-      body: '"How many more" means: how far apart are the two numbers?',
-      emoji: '🪙',
-      example: '11 gold coins, 7 silver coins.\nHow many more gold?',
-    },
-    {
-      title: 'Line Them Up',
-      body: 'Match each silver coin with a gold coin. The gold coins with no partner are the answer!',
-      emoji: '↔️',
-      example: '🟡🟡🟡🟡🟡🟡🟡🟡🟡🟡🟡\n⚪⚪⚪⚪⚪⚪⚪\n7 + ? = 11 → 4 more',
-      tip: 'Tip: Start at the small number and count UP to the big one.',
-    },
-    {
-      title: 'Not Altogether!',
-      body: 'We are NOT putting them together, so the answer is NOT 18. It\'s the difference! 🌟',
-      emoji: '⭐',
-    },
-  ],
 
-  'story-fewer': [
-    {
-      title: 'Fewer Means Less',
-      body: '"Talan has 7 FEWER gems than Gordan." Talan has less! Gordan has 19.',
-      emoji: '💎',
-      example: '19 − 7 = 12',
-    },
-    {
-      title: 'More Means Extra',
-      body: '"Ava has 4 MORE than Leo." Ava has extra! Leo has 9.',
-      emoji: '➕',
-      example: '9 + 4 = 13',
-      tip: 'Tip: Ask yourself — who has MORE? Their number is the bigger one.',
-    },
-    {
-      title: 'Check Your Hops',
-      body: 'Hop back from 19 and count carefully: 18, 17, 16, 15, 14, 13, 12. That\'s 7 hops! 🌟',
-      emoji: '🐸',
-    },
-  ],
 
-  'story-needs': [
-    {
-      title: 'How Many More Are Needed?',
-      body: 'Nick needs 10 eggs. Nick has 6. How many more eggs does Nick need?',
-      emoji: '🥚',
-      example: '6 + ? = 10',
-    },
-    {
-      title: 'Count Up to the Goal',
-      body: 'Start at what you HAVE and count up to what you NEED.',
-      emoji: '🎯',
-      example: '6 → 7, 8, 9, 10\nThat\'s 4 more eggs!',
-      tip: 'Tip: 10 + 6 is NOT the answer — Nick doesn\'t need 16 eggs!',
-    },
-  ],
 
   'story-sentence': [
     {
@@ -660,35 +565,5 @@ export const LESSONS: Record<string, LessonSlide[]> = {
     },
   ],
 
-  'ff-helper': [
-    {
-      title: 'Adding Helps Subtracting!',
-      body: 'Stuck on 13 − 6? Think: 6 plus WHAT makes 13?',
-      emoji: '💡',
-      example: '13 − 6 = ?\n6 + 7 = 13\nso 13 − 6 = 7',
-    },
-    {
-      title: 'Find the Same Whole',
-      body: 'The helper fact uses the SAME numbers. It must make 13, and it must have the 6 in it.',
-      emoji: '🔍',
-      example: '7 + 6 = 13 ✅\n13 + 6 = 19 ❌',
-      tip: 'Tip: The biggest number in the take-away is the answer in the adding fact.',
-    },
-  ],
 
-  'ff-both': [
-    {
-      title: 'The Equals Sign Means "The Same As"',
-      body: 'The = sign doesn\'t mean "the answer is next". It means both sides are worth the same!',
-      emoji: '⚖️',
-      example: '17 = 11 + 6\n11 + 6 = 17',
-    },
-    {
-      title: 'One Number, Two Places',
-      body: 'In 17 = ? + 6 and 17 − ? = 6, the mystery number is the SAME. Solve one, and you solved both!',
-      emoji: '🧩',
-      example: '17 = 11 + 6\n17 − 11 = 6',
-      tip: 'Tip: What goes with 6 to make 17?',
-    },
-  ],
 };

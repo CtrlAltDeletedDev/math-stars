@@ -35,8 +35,9 @@ Two tables are the spine:
 - `src/data/topics.ts` — maps all 62 levels onto the 17 skill ladders, one topic per skill.
   `src/data/grades.ts` then says which topics a grade covers and how far up each goes.
 
-The child-facing screens are Home (one Play button + a grid of topics) and
-`Topic.tsx` (one Play button + a replay strip). There is no category screen.
+The child-facing screens are Home (one Play button + a grid of topics),
+`Topic.tsx` (one Play button, a suggested lesson, a lessons strip, a replay strip) and
+`Learn.tsx` (the lesson player). There is no category screen.
 
 ## Rules that are easy to get wrong
 
@@ -100,6 +101,14 @@ needs). Every level that is mostly take-away stories mixes in some putting-toget
 "which number sentence" questions offer exactly one sentence that solves to the answer, and no
 story uses a pronoun for its characters (names are repeated). `storyProblems.test.ts` solves
 every question independently.
+
+**Lessons are spoken, pictured and unscored.** `src/data/learn.ts` holds lessons as data:
+"watch" steps (narration + an animated picture from `components/learn/LessonScene.tsx`) and
+"try" steps (choices shuffled at render, a hint written for every wrong choice, then the picture
+plays through to the answer). Nothing in a lesson touches stars, the ladder or the SRS — it is
+where she is allowed to be wrong. Speech starts from tap handlers only (iPad Safari blocks it
+otherwise). The old text slides in `lessons.ts` play through the same player as `read-<levelId>`.
+`learn.test.ts` checks every marked answer against the arithmetic and the picture.
 
 **This is used by a six-year-old.** Tap targets stay large, text stays readable without
 fluent reading, and nothing should ever be able to leave her on a blank screen — the app
