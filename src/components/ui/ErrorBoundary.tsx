@@ -1,4 +1,6 @@
 import React from 'react';
+import { House } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 // A six-year-old cannot recover from a blank screen. Anything that throws during
 // render lands here instead, with one big button back to safety.
@@ -49,9 +51,10 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             background: '#fff', color: '#4A90E2', border: 'none', borderRadius: 20,
             padding: '18px 40px', fontFamily: 'Nunito', fontWeight: 800, fontSize: 22,
             cursor: 'pointer', boxShadow: '0 4px 0 rgba(0,0,0,0.2)', minHeight: 64,
+            display: 'flex', alignItems: 'center', gap: 10,
           }}
         >
-          🏠 Go Home
+          <House size={26} strokeWidth={ICON_STROKE} aria-hidden /> Go Home
         </button>
       </div>
     );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Scene, CompareRow } from '@/data/learn';
 import HopLine from '@/components/game/HopLine';
+import { Scale } from 'lucide-react';
 
 // The pictures lessons are made of. Each one is drawn from a few numbers in
 // src/data/learn.ts, so a lesson is data and a new one needs no new drawing.
@@ -240,11 +241,8 @@ function BalanceScene({ left, right }: { left: string; right: string }) {
         <div style={{ alignSelf: 'center', fontFamily: FONT, fontWeight: 800, fontSize: 34, color: INK }}>=</div>
         {pan(right)}
       </div>
-      {/* Level beam on a fulcrum: the picture of "the same". */}
-      <svg viewBox="0 0 300 60" style={{ width: '100%' }} aria-hidden="true">
-        <rect x="10" y="6" width="280" height="8" rx="4" fill={INK} />
-        <polygon points="150,14 128,56 172,56" fill={GOLD} stroke={INK} strokeWidth="3" strokeLinejoin="round" />
-      </svg>
+      {/* A level balance: the picture of "the same". */}
+      <Scale size={72} strokeWidth={2} color={INK} style={{ marginTop: 10 }} aria-hidden />
     </div>
   );
 }

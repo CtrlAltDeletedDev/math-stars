@@ -3,6 +3,8 @@ import { useProgress } from '@/store/useProgress';
 import { SHOP_ITEMS, getTheme } from '@/data/shop';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import StarBadge from '@/components/ui/StarBadge';
+import { ArrowLeft, Check, ShoppingBag } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Shop() {
   const navigate = useNavigate();
@@ -15,12 +17,13 @@ export default function Shop() {
         <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
           <button
             onClick={() => navigate('/')}
-            style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 22, cursor: 'pointer' }}
+            style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, cursor: 'pointer' }}
+            aria-label="Back"
           >
-            ←
+            <ArrowLeft size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />
           </button>
           <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>
-            🛍️ Theme Shop
+            <ShoppingBag size={24} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-4px' }} aria-hidden /> Theme Shop
           </div>
           <StarBadge count={progress.spendableStars} />
         </div>
@@ -49,7 +52,7 @@ export default function Shop() {
                 </div>
                 {active ? (
                   <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '4px 10px' }}>
-                    ✓ Active
+                    <Check size={14} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> Active
                   </div>
                 ) : owned ? (
                   <button

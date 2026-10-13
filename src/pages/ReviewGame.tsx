@@ -16,6 +16,8 @@ import FeedbackOverlay from '@/components/game/FeedbackOverlay';
 import HintBubble from '@/components/game/HintBubble';
 import StreakBar from '@/components/game/StreakBar';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { House, Volume2, VolumeX, X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const REVIEW_COLORS: [string, string] = ['#43A047', '#1B5E20'];
 
@@ -154,7 +156,7 @@ export default function ReviewGame() {
           <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 17, color: 'rgba(255,255,255,0.85)', textAlign: 'center' }}>
             You don't have any tricky questions right now. Amazing work! 🌟
           </div>
-          <BigButton onPress={() => navigate('/')} label="Home 🏠" color="#fff" textColor={REVIEW_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
+          <BigButton onPress={() => navigate('/')} label="Home" icon={<House size={24} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={REVIEW_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
         </div>
       </BackgroundGradient>
     );
@@ -199,7 +201,8 @@ export default function ReviewGame() {
           <button
             onClick={() => setShowQuitConfirm(true)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
-          >✕</button>
+            aria-label="Stop"
+          ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1 }}>
             <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
@@ -210,7 +213,9 @@ export default function ReviewGame() {
               background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
               border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
             }}
-          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
+          >{progress.autoReadEnabled
+            ? <Volume2 size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />
+            : <VolumeX size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />}</button>
           <div
             className={showFeedback ? (lastCorrect ? 'anim-bounce' : 'anim-shake') : ''}
             style={{ fontSize: 32 }}

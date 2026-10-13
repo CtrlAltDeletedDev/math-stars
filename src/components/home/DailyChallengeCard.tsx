@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { UserProgress } from '@/types';
 import { todayString } from '@/engine/dates';
+import { CircleCheck, Flame, Play, Target } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 interface Props {
   progress: UserProgress;
@@ -24,11 +26,13 @@ export default function DailyChallengeCard({ progress, onPress }: Props) {
         gap: 12,
         fontFamily: 'Nunito',
       }}>
-        <div style={{ fontSize: 28 }}>✅</div>
+        <CircleCheck size={32} strokeWidth={ICON_STROKE} color="#fff" fill="#2E9E5B" aria-hidden />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: 15, color: '#fff' }}>Done for today!</div>
           <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
-            Come back tomorrow 📅{dcStreak > 0 ? ` · 🔥 ${dcStreak} day streak` : ''}
+            Come back tomorrow{dcStreak > 0 && (
+              <> · <Flame size={12} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-1px' }} aria-hidden /> {dcStreak} day streak</>
+            )}
           </div>
         </div>
       </div>
@@ -57,16 +61,16 @@ export default function DailyChallengeCard({ progress, onPress }: Props) {
         textAlign: 'left',
       }}
     >
-      <div style={{ fontSize: 28 }}>🎯</div>
+      <Target size={30} strokeWidth={ICON_STROKE} color="#fff" style={{ flexShrink: 0 }} aria-hidden />
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#fff' }}>
-          ⭐ Daily Challenge
+          Daily Challenge
         </div>
         <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
           10 mixed questions · +5 bonus stars{dcStreak > 0 ? ` · 🔥 ${dcStreak} day streak` : ''}
         </div>
       </div>
-      <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 20, color: '#fff' }}>▶</div>
+      <Play size={22} strokeWidth={ICON_STROKE} color="#fff" fill="#fff" aria-hidden />
     </button>
   );
 }

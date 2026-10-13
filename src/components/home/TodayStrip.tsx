@@ -1,3 +1,5 @@
+import { BookOpen, Flame, Music, Star, VolumeX } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 interface Props {
   streak: number;
   questionsToday: number;
@@ -14,7 +16,7 @@ export default function TodayStrip({ streak, questionsToday, goal, musicEnabled,
     <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
       {streak > 1 && (
         <div style={chip}>
-          🔥 <span style={{ fontSize: 15 }}>{streak}</span>
+          <Flame size={18} strokeWidth={ICON_STROKE} color="#FFB74D" fill="#FF7043" aria-hidden /> <span style={{ fontSize: 15 }}>{streak}</span>
         </div>
       )}
       <div style={{
@@ -22,7 +24,9 @@ export default function TodayStrip({ streak, questionsToday, goal, musicEnabled,
         background: goalReached ? 'rgba(255,215,0,0.35)' : 'rgba(255,255,255,0.18)',
         border: goalReached ? '2px solid #FFE066' : '2px solid transparent',
       }}>
-        {goalReached ? '⭐ Goal reached!' : `📚 Today: ${questionsToday}/${goal}`}
+        {goalReached
+          ? <><Star size={18} strokeWidth={ICON_STROKE} color="#FFE066" fill="#FFE066" aria-hidden /> Goal reached!</>
+          : <><BookOpen size={18} strokeWidth={ICON_STROKE} aria-hidden /> Today: {questionsToday}/{goal}</>}
       </div>
       <button
         onClick={onToggleMusic}
@@ -30,7 +34,10 @@ export default function TodayStrip({ streak, questionsToday, goal, musicEnabled,
           ...chip, border: 'none', cursor: 'pointer', minWidth: 48, justifyContent: 'center',
           background: musicEnabled ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.18)',
         }}
-      >{musicEnabled ? '🎵' : '🔇'}</button>
+        aria-label={musicEnabled ? 'Turn music off' : 'Turn music on'}
+      >{musicEnabled
+        ? <Music size={20} strokeWidth={ICON_STROKE} aria-hidden />
+        : <VolumeX size={20} strokeWidth={ICON_STROKE} aria-hidden />}</button>
     </div>
   );
 }

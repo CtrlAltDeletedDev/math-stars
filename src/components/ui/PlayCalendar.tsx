@@ -1,4 +1,6 @@
 import { todayString, daysAgoString } from '@/engine/dates';
+import { CalendarDays, Flame } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 interface Props {
   playHistory: string[];
@@ -21,8 +23,10 @@ export default function PlayCalendar({ playHistory }: Props) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.18)', borderRadius: 16, padding: '10px 16px' }}>
-      <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap' }}>
-        {streak > 0 ? `${streak}d 🔥` : '📅'}
+      <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
+        {streak > 0
+          ? <>{streak}d <Flame size={15} strokeWidth={ICON_STROKE} aria-label="day streak" /></>
+          : <CalendarDays size={18} strokeWidth={ICON_STROKE} aria-hidden />}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         {days.map((date) => {

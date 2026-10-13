@@ -12,6 +12,8 @@ import BigButton from '@/components/ui/BigButton';
 import Confetti from '@/components/ui/Confetti';
 import StarBurst from '@/components/ui/StarBurst';
 import Toast from '@/components/ui/Toast';
+import { ArrowRight, Check, House, RotateCcw } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 type WrongAnswer = { prompt: string; correct: string };
 
@@ -172,7 +174,8 @@ export default function Celebration() {
                     { replace: true },
                   )
                 }
-                label="Again 🔄"
+                label="Again"
+                icon={<RotateCcw size={22} strokeWidth={ICON_STROKE} aria-hidden />}
                 color="rgba(255,255,255,0.3)"
                 style={{ flex: 1 }}
               />
@@ -180,7 +183,8 @@ export default function Celebration() {
             {nextLevel && (
               <BigButton
                 onPress={() => navigate(`/game/${categoryId}/${nextLevel.id}`, { replace: true })}
-                label="Next →"
+                label="Next"
+                icon={<ArrowRight size={22} strokeWidth={ICON_STROKE} aria-hidden />}
                 color="#fff"
                 textColor={category?.bgColor ?? '#FF9F43'}
                 style={{ flex: 1 }}
@@ -189,7 +193,8 @@ export default function Celebration() {
           </div>
           <BigButton
             onPress={() => navigate('/', { replace: true })}
-            label="Home 🏠"
+            label="Home"
+            icon={<House size={22} strokeWidth={ICON_STROKE} aria-hidden />}
             color={nextLevel ? 'rgba(255,255,255,0.3)' : '#fff'}
             textColor={nextLevel ? '#fff' : (category?.bgColor ?? '#FF9F43')}
             style={{ width: '100%' }}
@@ -225,7 +230,7 @@ export default function Celebration() {
                       {wa.prompt}
                     </div>
                     <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 13, color: '#FFE066', flexShrink: 0 }}>
-                      ✓ {wa.correct}
+                      <Check size={14} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> {wa.correct}
                     </div>
                   </div>
                 ))}

@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from 'react';
+import { CSSProperties, ReactNode, useState } from 'react';
 
 interface Props {
   onPress: () => void;
@@ -8,9 +8,11 @@ interface Props {
   disabled?: boolean;
   style?: CSSProperties;
   fontSize?: number;
+  /** A Lucide icon, drawn before the label at the label's size. */
+  icon?: ReactNode;
 }
 
-export default function BigButton({ onPress, label, color = '#4A90E2', textColor = '#fff', disabled = false, style, fontSize = 22 }: Props) {
+export default function BigButton({ onPress, label, color = '#4A90E2', textColor = '#fff', disabled = false, style, fontSize = 22, icon }: Props) {
   const [pressed, setPressed] = useState(false);
   return (
     <button
@@ -35,10 +37,12 @@ export default function BigButton({ onPress, label, color = '#4A90E2', textColor
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 10,
         border: 'none',
         ...style,
       }}
     >
+      {icon}
       {label}
     </button>
   );

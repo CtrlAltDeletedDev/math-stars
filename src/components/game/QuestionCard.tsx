@@ -3,6 +3,8 @@ import DotAid from './DotAid';
 import QuestionVisual from './QuestionVisual';
 import NumberLine from './NumberLine';
 import HopLine from './HopLine';
+import { Volume2 } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 interface Props {
   question: Question;
@@ -70,7 +72,7 @@ export default function QuestionCard({ question }: Props) {
         }}
         title="Read aloud"
       >
-        🔊
+        <Volume2 size={24} strokeWidth={ICON_STROKE} color="#3D6FD9" aria-hidden />
       </button>
 
       {question.promptEmoji && (

@@ -15,6 +15,8 @@ import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import InstallBanner from '@/components/ui/InstallBanner';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { Medal, Palette, Play, ShoppingBag } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 export default function Home() {
   const { progress, isLoaded, toggleMusic } = useProgress();
@@ -97,7 +99,7 @@ export default function Home() {
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <span style={{ fontSize: 40, lineHeight: 1 }}>▶</span>
+            <Play size={40} strokeWidth={ICON_STROKE} color="#fff" fill="#fff" aria-hidden />
             <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 32, color: '#fff' }}>Play</span>
           </button>
 
@@ -139,13 +141,13 @@ export default function Home() {
         {/* Footer */}
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => navigate('/badges')} style={footerBtn}>
-            🏅 Badges ({progress.earnedBadges.length})
+            <Medal size={18} strokeWidth={ICON_STROKE} aria-hidden /> Badges ({progress.earnedBadges.length})
           </button>
           <button onClick={() => navigate('/stickers')} style={footerBtn}>
-            🎨 Stickers ({earnedStickers}/{STICKERS.length})
+            <Palette size={18} strokeWidth={ICON_STROKE} aria-hidden /> Stickers ({earnedStickers}/{STICKERS.length})
           </button>
           <button onClick={() => navigate('/shop')} style={footerBtn}>
-            🛍️ ⭐{progress.spendableStars}
+            <ShoppingBag size={18} strokeWidth={ICON_STROKE} aria-label="Shop" /> ⭐{progress.spendableStars}
           </button>
         </div>
       </div>

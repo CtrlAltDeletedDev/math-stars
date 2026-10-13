@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 interface Props {
   prompt: string;
   type: string;
@@ -22,10 +23,7 @@ function Dot({ color, crossed }: { color: string; crossed?: boolean }) {
         boxShadow: crossed ? 'none' : '0 2px 4px rgba(0,0,0,0.15)',
       }} />
       {crossed && (
-        <svg width="22" height="22" viewBox="0 0 22 22" style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
-          <line x1="3" y1="3" x2="19" y2="19" stroke={RED} strokeWidth="3" strokeLinecap="round" />
-          <line x1="19" y1="3" x2="3" y2="19" stroke={RED} strokeWidth="3" strokeLinecap="round" />
-        </svg>
+        <X size={22} strokeWidth={3.5} color={RED} style={{ position: 'absolute', inset: 0 }} aria-hidden />
       )}
     </div>
   );

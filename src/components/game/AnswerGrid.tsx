@@ -1,3 +1,6 @@
+import { Volume2 } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
+
 interface Props {
   choices: string[];
   onSelect: (choice: string) => void;
@@ -87,7 +90,7 @@ export default function AnswerGrid({ choices, onSelect, selectedChoice, correctA
                 title="Hear this answer"
                 aria-label={`Hear ${choice}`}
               >
-                🔊
+                <Volume2 size={18} strokeWidth={ICON_STROKE} color="#fff" aria-hidden />
               </button>
             )}
           </div>
