@@ -7,7 +7,7 @@ import { ErrorTag } from '@/types';
 /** The tags a save is allowed to contain. Anything else came from somewhere else. */
 const ERROR_TAGS = new Set<ErrorTag>([
   'off-by-one', 'wrong-operation', 'answered-a-given-number', 'answered-the-whole',
-  'place-value', 'wrong-multiple', 'counted-the-wrong-thing', 'reversed', 'unknown',
+  'place-value', 'wrong-multiple', 'counted-the-wrong-thing', 'reversed', 'added-story-numbers', 'unknown',
 ]);
 
 const STORAGE_KEY = 'mathstars_progress_v2';
@@ -189,6 +189,15 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   if (!parsed.errorPatterns || typeof parsed.errorPatterns !== 'object') {
     parsed.errorPatterns = {};
   }
+
+  // Lessons she has finished. Additive, like errorPatterns: an older save just
+  // hasn't finished any yet.
+  if (!parsed.lessonsDone || typeof parsed.lessonsDone !== 'object' || Array.isArray(parsed.lessonsDone)) {
+    parsed.lessonsDone = {};
+  }
+  parsed.lessonsDone = Object.fromEntries(
+    Object.entries(parsed.lessonsDone).filter(([, d]) => typeof d === 'string'),
+  );
 
   // Last, so it also cleans up anything the migrations above produced.
   parsed.skills = sanitizeSkills(parsed.skills);
@@ -382,5 +391,6 @@ export function buildInitialProgress(): UserProgress {
     practiceFocus: [],
     gradeLevel: null,
     errorPatterns: {},
+    lessonsDone: {},
   };
 }

@@ -541,4 +541,29 @@ export const LESSONS: Record<string, LessonSlide[]> = {
       emoji: '⭐',
     },
   ],
+
+  // ── Story problems (the rest of unit 1.2 is taught by src/data/learn.ts) ──
+
+
+
+
+
+
+  'story-sentence': [
+    {
+      title: 'Which Number Sentence?',
+      body: 'Sometimes you don\'t solve the story — you pick the number sentence that tells it.',
+      emoji: '📝',
+      example: 'Needs 10 eggs, has 6.\n6 + ? = 10 ✅\n10 + 6 = ? ❌',
+    },
+    {
+      title: 'Where Does the Whole Go?',
+      body: 'Find the WHOLE (the biggest amount in the story). In an adding sentence, the whole goes after the = sign.',
+      emoji: '🧩',
+      example: 'part + part = WHOLE\n6 + ? = 10',
+      tip: 'Tip: Put the ? where the number you don\'t know goes.',
+    },
+  ],
+
+
 };

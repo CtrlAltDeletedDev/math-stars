@@ -56,12 +56,14 @@ const GRADE_1_CEILINGS: Record<string, number> = {
   shapes: 2,
   measuring: 1,
   // New in first grade
-  'mystery-number': 2, // missing number both ways to 20
-  'fact-families': 0, // families to 10
+  'mystery-number': 2, // missing number in any position to 20, "17 = ? + 6" included
+  // Adding and subtracting as the same facts, to 20 — the first-grade unit asks
+  // "which adding fact helps with 13 − 6?" and "17 − ? = 6".
+  'fact-families': 4,
   'place-value': 1, // building numbers from tens and ones
   clocks: 1, // o'clock and half past
   'counting-up': 2, // skip counting by 2s, 5s, 10s — no tables yet
-  stories: 2,
+  stories: 9, // every kind of story within 20: some-and-the-rest, how many more, fewer than, still needs
   fractions: 1, // halves and fourths
   money: 0, // naming coins
 };
@@ -71,7 +73,6 @@ const GRADE_2_CEILINGS: Record<string, number> = {
   adding: 7, // within 200
   'taking-away': 6, // within 100
   'mystery-number': 3,
-  'fact-families': 1,
   'place-value': 2,
   clocks: 2, // quarter past and quarter to
   'counting-up': 4, // ×2, ×5, ×10 tables

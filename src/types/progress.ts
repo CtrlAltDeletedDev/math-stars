@@ -104,4 +104,10 @@ export interface UserProgress {
    * card map.
    */
   errorPatterns: Record<string, Partial<Record<ErrorTag, number>>>;
+  /**
+   * Lessons she has played to the end: lesson id -> local date (todayString).
+   * Only ever used to suggest a lesson she hasn't seen and to show a tick; a
+   * lesson is never locked behind another, and nothing is scored in one.
+   */
+  lessonsDone: Record<string, string>;
 }

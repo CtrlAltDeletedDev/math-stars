@@ -62,6 +62,7 @@ interface ProgressContextValue {
   toggleSlowMode: () => void;
   toggleAutoRead: () => void;
   setPracticeFocus: (skillIds: string[]) => void;
+  markLessonDone: (lessonId: string) => void;
   setGradeLevel: (grade: GradeLevel) => void;
   /** Non-null when saving is broken or a previous save could not be read. */
   storageIssue: StorageIssue;
@@ -726,6 +727,15 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  /** A lesson played to the end. Teaching only: no stars, no ladder, no SRS. */
+  function markLessonDone(lessonId: string) {
+    setProgress((prev) => {
+      const next = { ...prev, lessonsDone: { ...(prev.lessonsDone ?? {}), [lessonId]: todayString() } };
+      debouncedSave(next);
+      return next;
+    });
+  }
+
   function importProgress(data: UserProgress): boolean {
     const normalized = normalizeProgress(data);
     if (!normalized) return false;
@@ -750,7 +760,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, setPracticeFocus, setGradeLevel, storageIssue, importProgress }}>
+    <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, setPracticeFocus, markLessonDone, setGradeLevel, storageIssue, importProgress }}>
       {children}
     </ProgressContext.Provider>
   );

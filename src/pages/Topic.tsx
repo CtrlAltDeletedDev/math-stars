@@ -1,7 +1,10 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { TOPICS_BY_ID, topicLevelsInScope } from '@/data/topics';
-import { LESSONS } from '@/data/lessons';
+import { lessonsFor, recommendedLesson } from '@/data/learn';
+import { ceilingFor } from '@/data/grades';
+import { PATTERN_MIN_COUNT } from '@/engine/report';
+import { ErrorTag } from '@/types';
 import { STORIES } from '@/data/stories';
 import { getLevelById } from '@/data/categories';
 import { rankFor } from '@/data/skills';
@@ -46,12 +49,17 @@ export default function Topic() {
     return progress.categories[level.categoryId]?.levels[levelId];
   }
 
-  // The lesson nearest the rung she is actually standing on, rather than always
-  // the first one in the topic.
-  const lessonRef = topic.levels
-    .filter((ref) => LESSONS[ref.levelId])
-    .sort((a, b) => Math.abs(a.rung - mastery.rung) - Math.abs(b.rung - mastery.rung))[0];
-  const lessonLevel = lessonRef ? getLevelById(lessonRef.levelId) : null;
+  // Lessons in this topic up to her grade, and the one worth her time today:
+  // one that teaches against the mistake she keeps making here, else the
+  // nearest to her rung she hasn't done.
+  const ceiling = ceilingFor(topic.id, progress.gradeLevel);
+  const lessons = lessonsFor(topic.id, ceiling);
+  const done = progress.lessonsDone ?? {};
+  const topMistake = (Object.entries(progress.errorPatterns?.[topic.id] ?? {}) as [ErrorTag, number][])
+    .filter(([tag, n]) => tag !== 'unknown' && n >= PATTERN_MIN_COUNT)
+    .sort((a, b) => b[1] - a[1])[0]?.[0];
+  const suggested = recommendedLesson(topic.id, ceiling, mastery.rung, done, topMistake);
+  const openLesson = (id: string) => navigate(`/learn/${id}?topic=${topic.id}`);
 
   const story = topic.storyCategoryId
     ? STORIES.find((s) => s.categoryId === topic.storyCategoryId)
@@ -102,13 +110,40 @@ export default function Topic() {
             style={{ width: '100%', marginBottom: 12 }}
           />
 
-          {lessonLevel && (
-            <button
-              onClick={() => navigate(`/lesson/${lessonLevel.categoryId}/${lessonLevel.id}`)}
-              style={secondaryStyle}
-            >
-              📖 Show me how
+          {suggested && (
+            <button onClick={() => openLesson(suggested.id)} style={secondaryStyle}>
+              📖 Learn: {suggested.title}
             </button>
+          )}
+
+          {lessons.length > 1 && (
+            <>
+              <div style={sectionLabel}>Lessons</div>
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, marginBottom: 6 }}>
+                {lessons.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => openLesson(l.id)}
+                    aria-label={`Lesson: ${l.title}`}
+                    style={{
+                      flexShrink: 0, width: 116, minHeight: 104, borderRadius: 18, cursor: 'pointer',
+                      background: l.id === suggested?.id ? '#fff' : 'rgba(255,255,255,0.22)',
+                      border: '2px solid rgba(255,255,255,0.4)', padding: '10px 8px',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, position: 'relative',
+                    }}
+                  >
+                    <span style={{ fontSize: 34, lineHeight: 1 }}>{l.emoji}</span>
+                    <span style={{
+                      fontFamily: 'Nunito', fontWeight: 800, fontSize: 13, lineHeight: 1.2, textAlign: 'center',
+                      color: l.id === suggested?.id ? topic.darkColor : '#fff',
+                    }}>{l.title}</span>
+                    {done[l.id] && (
+                      <span aria-label="done" style={{ position: 'absolute', top: 6, right: 8, fontSize: 16 }}>✅</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
 
           {levels.length > 0 && (

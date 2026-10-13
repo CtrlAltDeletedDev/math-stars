@@ -17,6 +17,7 @@ import DailyGame from './pages/DailyGame';
 import MasterGame from './pages/MasterGame';
 import ReviewGame from './pages/ReviewGame';
 import Lesson from './pages/Lesson';
+import Learn from './pages/Learn';
 import Practice from './pages/Practice';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
       <Route path="/game/:categoryId/:levelId" element={<Game />} />
       <Route path="/celebration/:categoryId/:levelId" element={<Celebration />} />
       <Route path="/lesson/:categoryId/:levelId" element={<Lesson />} />
+      <Route path="/learn/:lessonId" element={<Learn />} />
       <Route path="/badges" element={<Badges />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/parent" element={<Parent />} />

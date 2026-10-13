@@ -6,6 +6,22 @@ import { generateSheet, WORKSHEET_QUESTION_COUNT } from '@/engine/worksheet';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 
+/** The school sheet's 0–20 line, printed blank for her to draw hops on. */
+function PrintedNumberLine({ max }: { max: number }) {
+  const pad = 14, unit = 22, w = pad * 2 + unit * max;
+  return (
+    <svg viewBox={`0 0 ${w} 40`} style={{ width: '100%', maxWidth: 480, margin: '6px 0' }} aria-hidden="true">
+      <line x1={pad - 8} y1={14} x2={w - pad + 8} y2={14} stroke="#555" strokeWidth="1.5" />
+      {Array.from({ length: max + 1 }, (_, n) => (
+        <g key={n}>
+          <line x1={pad + n * unit} y1={9} x2={pad + n * unit} y2={19} stroke="#555" strokeWidth={n % 5 === 0 ? 1.8 : 1} />
+          <text x={pad + n * unit} y={34} textAnchor="middle" style={{ fontFamily: 'Nunito, sans-serif', fontSize: 11, fill: '#444' }}>{n}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function Worksheet() {
   const navigate = useNavigate();
   const [selectedLevel, setSelectedLevel] = useState('');
@@ -67,10 +83,19 @@ export default function Worksheet() {
               }}
             >
               {questions.map((q, i) => (
-                <div key={q.id} style={{ borderBottom: '1px solid #eee', paddingBottom: 12 }}>
-                  <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: '#333', marginBottom: 4 }}>
+                <div
+                  key={q.id}
+                  style={{
+                    borderBottom: '1px solid #eee', paddingBottom: 12,
+                    // A story with a number line needs the full width to be usable on paper.
+                    gridColumn: q.visual?.kind === 'numberLine' ? '1 / -1' : undefined,
+                    breakInside: 'avoid',
+                  }}
+                >
+                  <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: '#333', marginBottom: 4, whiteSpace: 'pre-line' }}>
                     {i + 1}. {q.prompt}
                   </div>
+                  {q.visual?.kind === 'numberLine' && <PrintedNumberLine max={q.visual.max} />}
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     {q.choices.map((c) => (
                       <div key={c} style={{

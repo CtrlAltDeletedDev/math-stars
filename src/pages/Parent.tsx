@@ -5,7 +5,8 @@ import { CATEGORIES } from '@/data/categories';
 import { SKILLS, rankFor, unlockedSkillIds } from '@/data/skills';
 import { rungAccuracy, isMaxed } from '@/engine/skillLadder';
 import { hasOutgrown } from '@/engine/mastery';
-import { GRADES, GradeLevel } from '@/data/grades';
+import { GRADES, GradeLevel, ceilingFor } from '@/data/grades';
+import { lessonForMistake } from '@/data/learn';
 import { topicsForGrade } from '@/data/topics';
 import { passedLevel } from '@/engine/scoring';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
@@ -194,6 +195,22 @@ export default function Parent() {
                     <div style={{ fontFamily: 'Nunito', fontSize: 13.5, color: 'rgba(255,255,255,0.88)', marginTop: 4, lineHeight: 1.4 }}>
                       💡 {m.suggestion}
                     </div>
+                    {(() => {
+                      // A lesson that teaches against exactly this mistake, if one exists.
+                      const lesson = lessonForMistake(
+                        m.skillId, m.tag,
+                        ceilingFor(m.skillId, progress.gradeLevel),
+                        progress.skills?.[m.skillId]?.rung ?? 0,
+                      );
+                      return lesson && (
+                        <button
+                          onClick={() => navigate(`/learn/${lesson.id}?topic=${m.skillId}`)}
+                          style={{ ...actionBtn(false), marginTop: 8 }}
+                        >
+                          {lesson.emoji} Do the “{lesson.title}” lesson together
+                        </button>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>

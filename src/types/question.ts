@@ -48,6 +48,13 @@ export type ErrorTag =
   | 'counted-the-wrong-thing'
   /** Gave the leftover instead of the part asked for. */
   | 'reversed'
+  /**
+   * Added the two numbers in a story that was really asking for a missing part
+   * or a difference ("14 balls, 6 are soccer balls, how many basketballs?" → 20).
+   * Kept apart from 'wrong-operation' because there is no sign to misread: the
+   * fix is modelling the story, not reading the symbol.
+   */
+  | 'added-story-numbers'
   /** A near miss with no story behind it. Never inferred -- only ever assigned. */
   | 'unknown';
 
@@ -59,7 +66,13 @@ export type QuestionVisual =
   | { kind: 'fraction'; numerator: number; denominator: number; shape: 'circle' | 'bar' }
   | { kind: 'fractionSet'; fractions: [number, number][] } // several, drawn to compare
   | { kind: 'coins'; coins: number[] } // cent values, e.g. [25, 10, 1]
-  | { kind: 'clock'; hour: number; minute: number };
+  | { kind: 'clock'; hour: number; minute: number }
+  /**
+   * A blank 0..max number line she can hop along, the way the class worksheet
+   * says "show your work". Deliberately blank: marking the start would be fine,
+   * but marking the hops would be the answer.
+   */
+  | { kind: 'numberLine'; max: number };
 
 export interface Question {
   id: string;

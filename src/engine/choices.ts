@@ -65,6 +65,13 @@ export interface ChoiceOptions {
    * options that no longer exist.
    */
   format?: (n: number) => string;
+  /**
+   * Mistakes worth offering ahead of the rest on their side of the answer —
+   * "added the two numbers in the story" is the one a story problem exists to
+   * catch. It never changes how many options sit above and below the answer,
+   * so it cannot reintroduce a rank pattern; it only decides which ones.
+   */
+  prefer?: readonly number[];
 }
 
 /**
@@ -94,7 +101,7 @@ export function buildTaggedChoices(
   candidates: readonly Candidate[],
   opts: ChoiceOptions = {},
 ): TaggedChoices {
-  const { step = 1, isValid = (n: number) => n >= 0, format = String } = opts;
+  const { step = 1, isValid = (n: number) => n >= 0, format = String, prefer = [] } = opts;
   const wrong: number[] = [];
   const taken = new Set<number>([correct]);
 
@@ -122,7 +129,8 @@ export function buildTaggedChoices(
   // the same rank once the options are sorted — the exact tell we removed from
   // the old c-2/c-1/c/c+1 scheme. Choosing the split at random per question means
   // sorted position carries no information, whatever the candidate pool looks like.
-  const pool = shuffle(candidates.map(valueOf));
+  const shuffled = shuffle(candidates.map(valueOf));
+  const pool = [...shuffled.filter((n) => prefer.includes(n)), ...shuffled.filter((n) => !prefer.includes(n))];
   const stepped = [1, 2, 3].map((k) => k * step);
 
   // A synthesised top-up still means something: one step off the answer in a
