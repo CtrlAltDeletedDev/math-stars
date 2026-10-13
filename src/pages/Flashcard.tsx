@@ -8,6 +8,8 @@ import { Question } from '@/types';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import QuestionCard from '@/components/game/QuestionCard';
+import { ArrowLeft, Check, House, RotateCcw, X, Zap } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Flashcard() {
   const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
@@ -46,7 +48,7 @@ export default function Flashcard() {
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff', textAlign: 'center' }}>
             No questions available yet — play a level first!
           </div>
-          <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="← Back" color="rgba(255,255,255,0.3)" />
+          <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="Back" icon={<ArrowLeft size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.3)" />
         </div>
       </BackgroundGradient>
     );
@@ -75,14 +77,14 @@ export default function Flashcard() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 20 }}>
           <div style={{ fontSize: 72 }}>{characterEmoji}</div>
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 32, color: '#fff', textAlign: 'center' }}>
-            Review Done! ⚡
+            Review Done!
           </div>
           <div style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 20, padding: '16px 32px', fontFamily: 'Nunito', fontWeight: 800, fontSize: 24, color: '#fff' }}>
             {score.correct}/{score.total} — {pct}%
           </div>
           <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 360 }}>
-            <BigButton onPress={() => { setIndex(0); setScore({ correct: 0, total: 0 }); setDone(false); }} label="Again ⚡" color="rgba(255,255,255,0.3)" style={{ flex: 1 }} />
-            <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="Done 🏠" color="#fff" textColor={category.bgColor} style={{ flex: 1 }} />
+            <BigButton onPress={() => { setIndex(0); setScore({ correct: 0, total: 0 }); setDone(false); }} label="Again" icon={<RotateCcw size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.3)" style={{ flex: 1 }} />
+            <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="Done" icon={<House size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={category.bgColor} style={{ flex: 1 }} />
           </div>
         </div>
       </BackgroundGradient>
@@ -102,12 +104,14 @@ export default function Flashcard() {
           <button
             onClick={() => navigate(`/category/${categoryId}`)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
-          >✕</button>
+
+            aria-label="Stop"
+          ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1, fontFamily: 'Nunito', fontWeight: 700, fontSize: 18, color: '#fff', textAlign: 'center' }}>
-            ⚡ Quick Review — {index + 1}/{questions.length}
+            <Zap size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Quick Review — {index + 1}/{questions.length}
           </div>
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: '#FFE066' }}>
-            {score.correct}✓
+            {score.correct} <Check size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-label="right" />
           </div>
         </div>
 

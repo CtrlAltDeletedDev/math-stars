@@ -17,6 +17,8 @@ import HintBubble from '@/components/game/HintBubble';
 import StreakBar from '@/components/game/StreakBar';
 import TimerArc from '@/components/game/TimerArc';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { Mic, Target, Volume2, VolumeX, X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const TIMER_SECONDS = 10;
 const DAILY_COLORS: [string, string] = ['#FF9F43', '#EE5A24'];
@@ -248,7 +250,8 @@ export default function DailyGame() {
           <button
             onClick={() => setShowQuitConfirm(true)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
-          >✕</button>
+            aria-label="Stop"
+          ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1 }}>
             <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
@@ -259,7 +262,9 @@ export default function DailyGame() {
               background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
               border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
             }}
-          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
+          >{progress.autoReadEnabled
+            ? <Volume2 size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />
+            : <VolumeX size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />}</button>
           {challengeMode
             ? <TimerArc timeLeft={timeLeft} totalTime={timerSeconds} />
             : (
@@ -272,7 +277,7 @@ export default function DailyGame() {
         </div>
 
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff', textAlign: 'center', letterSpacing: 0.5 }}>
-          ⭐ Daily Challenge
+          <Target size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Daily Challenge
         </div>
 
         <StreakBar streak={session.streak} />
@@ -312,7 +317,7 @@ export default function DailyGame() {
                 animation: isListening ? 'pulse 1s ease infinite' : 'none',
               }}
             >
-              🎤 {isListening ? 'Listening...' : 'Say the answer'}
+              <Mic size={20} strokeWidth={ICON_STROKE} aria-hidden />{isListening ? 'Listening...' : 'Say the answer'}
             </button>
           )}
 

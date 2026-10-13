@@ -4,6 +4,8 @@ import { STORIES } from '@/data/stories';
 import { getCategoryById } from '@/data/categories';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
+import { ArrowRight, BookOpen, House, X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Story() {
   const { categoryId = '' } = useParams<{ categoryId: string }>();
@@ -26,9 +28,11 @@ export default function Story() {
           <button
             onClick={() => navigate(`/category/${categoryId}`)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff' }}
-          >✕</button>
+
+            aria-label="Close story"
+          ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Nunito', fontWeight: 800, fontSize: 20, color: '#fff' }}>
-            📖 {story.title}
+            <BookOpen size={20} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> {story.title}
           </div>
           <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 15, color: 'rgba(255,255,255,0.8)' }}>
             {panel + 1}/{story.panels.length}
@@ -70,7 +74,8 @@ export default function Story() {
             if (isLast) navigate(`/category/${categoryId}`);
             else setPanel((p) => p + 1);
           }}
-          label={isLast ? '🏠 Back to Levels' : 'Next ▶'}
+          label={isLast ? 'Back to Levels' : 'Next'}
+          icon={isLast ? <House size={22} strokeWidth={ICON_STROKE} aria-hidden /> : <ArrowRight size={22} strokeWidth={ICON_STROKE} aria-hidden />}
           color={isLast ? '#fff' : 'rgba(255,255,255,0.3)'}
           textColor={isLast ? category.bgColor : '#fff'}
         />

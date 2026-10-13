@@ -5,6 +5,8 @@ import { Question } from '@/types';
 import { generateSheet, WORKSHEET_QUESTION_COUNT } from '@/engine/worksheet';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
+import { ArrowLeft, FileText, Printer } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 /** The school sheet's 0–20 line, printed blank for her to draw hops on. */
 function PrintedNumberLine({ max }: { max: number }) {
@@ -39,9 +41,12 @@ export default function Worksheet() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => navigate('/parent')}
-            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 22, cursor: 'pointer', color: '#fff' }}
-          >←</button>
-          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 24, color: '#fff' }}>📄 Worksheet Generator</div>
+            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, width: 44, height: 44, cursor: 'pointer', color: '#fff' }}
+            aria-label="Back"
+          ><ArrowLeft size={24} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 24, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FileText size={26} strokeWidth={ICON_STROKE} aria-hidden /> Worksheet Generator
+          </div>
         </div>
 
         {!questions ? (
@@ -66,13 +71,13 @@ export default function Worksheet() {
                 </optgroup>
               ))}
             </select>
-            <BigButton onPress={handleGenerate} label="Generate Worksheet 📄" disabled={!selectedLevel} />
+            <BigButton onPress={handleGenerate} label="Generate Worksheet" icon={<FileText size={22} strokeWidth={ICON_STROKE} aria-hidden />} disabled={!selectedLevel} />
           </>
         ) : (
           <>
             <div style={{ display: 'flex', gap: 12 }}>
-              <BigButton onPress={() => window.print()} label="🖨️ Print" color="rgba(255,255,255,0.25)" style={{ flex: 1 }} />
-              <BigButton onPress={() => setQuestions(null)} label="← Back" color="rgba(255,255,255,0.15)" style={{ flex: 1 }} />
+              <BigButton onPress={() => window.print()} label="Print" icon={<Printer size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.25)" style={{ flex: 1 }} />
+              <BigButton onPress={() => setQuestions(null)} label="Back" icon={<ArrowLeft size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.15)" style={{ flex: 1 }} />
             </div>
 
             <div

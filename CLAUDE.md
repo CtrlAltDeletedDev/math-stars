@@ -110,6 +110,12 @@ where she is allowed to be wrong. Speech starts from tap handlers only (iPad Saf
 otherwise). The old text slides in `lessons.ts` play through the same player as `read-<levelId>`.
 `learn.test.ts` checks every marked answer against the arithmetic and the picture.
 
+**UI icons are Lucide, content is emoji.** Controls and status icons (close, back, read-aloud,
+play, hint, lock, print…) come from `lucide-react` with `ICON_STROKE` from
+`src/components/ui/icons.ts`; `BigButton` takes an `icon` prop. Her character, topic pictures,
+story objects and celebration stars stay emoji. Math diagrams (number lines, ten frames, clocks,
+fractions) stay hand-drawn SVG because they carry the numbers.
+
 **This is used by a six-year-old.** Tap targets stay large, text stays readable without
 fluent reading, and nothing should ever be able to leave her on a blank screen — the app
 is wrapped in an error boundary, so keep it that way.

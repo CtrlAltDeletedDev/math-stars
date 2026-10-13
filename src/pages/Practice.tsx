@@ -14,6 +14,8 @@ import AnswerGrid from '@/components/game/AnswerGrid';
 import FeedbackOverlay from '@/components/game/FeedbackOverlay';
 import HintBubble from '@/components/game/HintBubble';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { House, InfinityIcon, Volume2, VolumeX, X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const PRACTICE_COLORS: [string, string] = ['#7E57C2', '#4527A0'];
 
@@ -140,7 +142,7 @@ export default function Practice() {
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 24, color: '#fff', textAlign: 'center' }}>
             No questions right now!
           </div>
-          <BigButton onPress={() => navigate('/')} label="Home 🏠" color="#fff" textColor={PRACTICE_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
+          <BigButton onPress={() => navigate('/')} label="Home" icon={<House size={24} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={PRACTICE_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
         </div>
       </BackgroundGradient>
     );
@@ -200,10 +202,11 @@ export default function Practice() {
           <button
             onClick={() => setShowQuit(true)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
-          >✕</button>
+            aria-label="Stop"
+          ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: '#fff' }}>
-              ♾️ Practice
+              <InfinityIcon size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Practice
             </div>
             <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
               {correctCount} right{streak >= 3 ? ` · 🔥 ${streak} in a row` : ''}
@@ -216,7 +219,9 @@ export default function Practice() {
               background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
               border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
             }}
-          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
+          >{progress.autoReadEnabled
+            ? <Volume2 size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />
+            : <VolumeX size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />}</button>
           <div className={showFeedback ? (lastCorrect ? 'anim-bounce' : 'anim-shake') : ''} style={{ fontSize: 30 }}>
             {characterEmoji}
           </div>

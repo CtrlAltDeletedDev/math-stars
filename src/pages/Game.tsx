@@ -17,6 +17,8 @@ import HintBubble from '@/components/game/HintBubble';
 import StreakBar from '@/components/game/StreakBar';
 import TimerArc from '@/components/game/TimerArc';
 import { GAME_CONFIG } from '@/constants/gameConfig';
+import { Mic, Volume2, VolumeX, X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const TIMER_SECONDS = 10;
 
@@ -284,7 +286,8 @@ export default function Game() {
           <button
             onClick={() => { stopCountdown(); setShowQuitConfirm(true); }}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
-          >✕</button>
+            aria-label="Stop"
+          ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1 }}>
             <ProgressBar current={session.currentIndex + 1} total={session.totalQuestions} />
           </div>
@@ -295,7 +298,9 @@ export default function Game() {
               background: progress.autoReadEnabled ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)',
               border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
             }}
-          >{progress.autoReadEnabled ? '🔊' : '🔇'}</button>
+          >{progress.autoReadEnabled
+            ? <Volume2 size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />
+            : <VolumeX size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />}</button>
           {challengeMode
             ? <TimerArc timeLeft={timeLeft} totalTime={timerSeconds} />
             : (
@@ -357,7 +362,7 @@ export default function Game() {
                 animation: isListening ? 'pulse 1s ease infinite' : 'none',
               }}
             >
-              🎤 {isListening ? 'Listening...' : 'Say the answer'}
+              <Mic size={20} strokeWidth={ICON_STROKE} aria-hidden />{isListening ? 'Listening...' : 'Say the answer'}
             </button>
           )}
 

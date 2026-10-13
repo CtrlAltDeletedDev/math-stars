@@ -14,6 +14,9 @@ import BigButton from '@/components/ui/BigButton';
 import PlayCalendar from '@/components/ui/PlayCalendar';
 import { todayString } from '@/engine/dates';
 import { workingOn, topMistakes, hardestFacts, daysPlayedIn } from '@/engine/report';
+import { ArrowLeft, ArrowRight, BookOpen, CalendarDays, ChartColumn, Check, Download, FileText, Flame, Lightbulb, Lock, Medal, Star, Timer, Trophy, Turtle, Upload } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Parent() {
   const navigate = useNavigate();
@@ -109,7 +112,7 @@ export default function Parent() {
               fontSize: 15, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', minHeight: 44,
             }}
           >
-            ← Back to the game
+            <ArrowLeft size={16} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> Back to the game
           </button>
         </div>
       </BackgroundGradient>
@@ -141,11 +144,13 @@ export default function Parent() {
             onClick={() => navigate('/')}
             style={{
               background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12,
-              width: 44, height: 44, fontSize: 22, cursor: 'pointer', color: '#fff',
-              fontFamily: 'Nunito', fontWeight: 700,
+              width: 44, height: 44, cursor: 'pointer', color: '#fff',
             }}
-          >←</button>
-          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff' }}>📊 Parent Dashboard</div>
+            aria-label="Back"
+          ><ArrowLeft size={24} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ChartColumn size={28} strokeWidth={ICON_STROKE} aria-hidden /> Parent Dashboard
+          </div>
         </div>
 
         {/* What to do this week.
@@ -170,7 +175,9 @@ export default function Parent() {
                     onClick={() => setPracticeFocus([focusSkill.skillId])}
                     style={actionBtn(focused.length === 1 && focused[0] === focusSkill.skillId)}
                   >
-                    {focused.length === 1 && focused[0] === focusSkill.skillId ? '✓ Practice is focused here' : 'Focus practice on this'}
+                    {focused.length === 1 && focused[0] === focusSkill.skillId
+                      ? <><Check size={15} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> Practice is focused here</>
+                      : 'Focus practice on this'}
                   </button>
                   <button onClick={() => navigate('/worksheet')} style={actionBtn(false)}>
                     Print a worksheet
@@ -193,7 +200,7 @@ export default function Parent() {
                       {m.count} times · {Math.round(m.share * 100)}% of her mistakes here
                     </div>
                     <div style={{ fontFamily: 'Nunito', fontSize: 13.5, color: 'rgba(255,255,255,0.88)', marginTop: 4, lineHeight: 1.4 }}>
-                      💡 {m.suggestion}
+                      <Lightbulb size={15} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> {m.suggestion}
                     </div>
                     {(() => {
                       // A lesson that teaches against exactly this mistake, if one exists.
@@ -207,7 +214,7 @@ export default function Parent() {
                           onClick={() => navigate(`/learn/${lesson.id}?topic=${m.skillId}`)}
                           style={{ ...actionBtn(false), marginTop: 8 }}
                         >
-                          {lesson.emoji} Do the “{lesson.title}” lesson together
+                          <BookOpen size={15} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> Do the “{lesson.title}” lesson together
                         </button>
                       );
                     })()}
@@ -239,12 +246,12 @@ export default function Parent() {
           background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '16px 20px',
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14,
         }}>
-          <Stat label="Total Stars" value={`⭐ ${progress.totalStars}`} />
-          <Stat label="Levels Completed" value={`${completedLevels} / ${totalLevels}`} />
-          <Stat label="Badges Earned" value={`🏅 ${progress.earnedBadges.length}`} />
-          <Stat label="Best Streak" value={`🔥 ${progress.longestStreak} days`} />
-          <Stat label="Days Played" value={`📅 ${daysPlayed}`} />
-          <Stat label="Stars to Spend" value={`⭐ ${progress.spendableStars}`} />
+          <Stat label="Total Stars" icon={Star} value={progress.totalStars} />
+          <Stat label="Levels Completed" icon={Trophy} value={`${completedLevels} / ${totalLevels}`} />
+          <Stat label="Badges Earned" icon={Medal} value={progress.earnedBadges.length} />
+          <Stat label="Best Streak" icon={Flame} value={`${progress.longestStreak} days`} />
+          <Stat label="Days Played" icon={CalendarDays} value={daysPlayed} />
+          <Stat label="Stars to Spend" icon={Star} value={progress.spendableStars} />
         </div>
 
         {/* Settings */}
@@ -253,7 +260,7 @@ export default function Parent() {
         </div>
         <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}>⏱️ Speed Challenge Mode</div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}><Timer size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Speed Challenge Mode</div>
             <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Each question has a 10-second countdown</div>
           </div>
           <button
@@ -267,7 +274,7 @@ export default function Parent() {
         </div>
         <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}>🐢 Slow Mode</div>
+            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff' }}><Turtle size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Slow Mode</div>
             <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Extra time to see each answer, and a longer countdown</div>
           </div>
           <button
@@ -347,7 +354,7 @@ export default function Parent() {
                   fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: '#5D4037',
                 }}
               >
-                Move up to {GRADES.find((g) => g.id === nextGrade)?.label} →
+                Move up to {GRADES.find((g) => g.id === nextGrade)?.label} <ArrowRight size={16} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden />
               </button>
             </div>
           )}
@@ -358,7 +365,7 @@ export default function Parent() {
           Focus Mode
         </div>
         <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
-          Working on something specific this week? Pick it here and ♾️ Practice will ask about
+          Working on something specific this week? Pick it here and Practice will ask about
           nothing else. Leave everything off to let her range over whatever she has unlocked.
         </div>
         <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px' }}>
@@ -379,7 +386,7 @@ export default function Parent() {
                     minHeight: 40,
                   }}
                 >
-                  {sk.emoji} {sk.title}{!available && !on ? ' 🔒' : ''}
+                  {sk.emoji} {sk.title}{!available && !on && <> <Lock size={13} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /></>}
                 </button>
               );
             })}
@@ -400,7 +407,7 @@ export default function Parent() {
           <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10 }}>
             {focused.length > 0
               ? 'Focus is on — practice is only asking about the green ones.'
-              : `🔒 means she hasn't unlocked it yet. You can still switch it on here.`}
+              : <><Lock size={12} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> means she hasn't unlocked it yet. You can still switch it on here.</>}
           </div>
         </div>
 
@@ -413,7 +420,7 @@ export default function Parent() {
         </div>
         {SKILLS.filter((sk) => progress.skills?.[sk.id]).length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>
-            Nothing yet — tap ♾️ Practice on the home screen to get started.
+            Nothing yet — tap Play on the home screen to get started.
           </div>
         ) : (
           <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '6px 18px' }}>
@@ -510,7 +517,7 @@ export default function Parent() {
               borderRadius: 16, padding: '14px 0', fontFamily: 'Nunito', fontWeight: 800,
               fontSize: 16, color: '#fff', cursor: 'pointer',
             }}
-          >📤 Export</button>
+          ><Upload size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Export</button>
           <button
             onClick={() => fileInputRef.current?.click()}
             style={{
@@ -518,7 +525,7 @@ export default function Parent() {
               borderRadius: 16, padding: '14px 0', fontFamily: 'Nunito', fontWeight: 800,
               fontSize: 16, color: '#fff', cursor: 'pointer',
             }}
-          >📥 Import</button>
+          ><Download size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Import</button>
         </div>
         <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportFile} style={{ display: 'none' }} />
         {importMsg && (
@@ -528,8 +535,8 @@ export default function Parent() {
           }}>{importMsg}</div>
         )}
 
-        <BigButton onPress={() => navigate('/worksheet')} label="📄 Generate Worksheet" color="rgba(255,255,255,0.2)" />
-        <BigButton onPress={() => navigate('/')} label="← Back to Game" color="rgba(255,255,255,0.15)" />
+        <BigButton onPress={() => navigate('/worksheet')} label="Generate Worksheet" icon={<FileText size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.2)" />
+        <BigButton onPress={() => navigate('/')} label="Back to Game" icon={<ArrowLeft size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.15)" />
       </div>
     </BackgroundGradient>
   );
@@ -546,10 +553,15 @@ const actionBtn = (on: boolean): React.CSSProperties => ({
   fontFamily: 'Nunito', fontWeight: 800, fontSize: 14, color: '#fff',
 });
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, icon: Icon }: { label: string; value: string | number; icon: LucideIcon }) {
   return (
     <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: '12px 8px', textAlign: 'center' }}>
-      <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff' }}>{value}</div>
+      <div style={{
+        fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+      }}>
+        <Icon size={18} strokeWidth={ICON_STROKE} aria-hidden />{value}
+      </div>
       <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{label}</div>
     </div>
   );

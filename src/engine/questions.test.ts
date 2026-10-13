@@ -210,7 +210,7 @@ describe('answer position carries no information', () => {
       if (seen < 2000) continue;
       expectFlat(counts, `worksheet ${level.id}`, 0.06);
     }
-  });
+  }, 30_000); // samples every level in the catalogue, so it grows with it
 
   it('does not put the answer at a fixed numeric rank', () => {
     // The old generator emitted four consecutive integers with the answer third.

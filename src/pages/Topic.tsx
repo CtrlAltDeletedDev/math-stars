@@ -13,6 +13,8 @@ import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import MasteryRing from '@/components/ui/MasteryRing';
 import ReplayStrip from '@/components/topic/ReplayStrip';
+import { ArrowLeft, BookOpen, CircleCheck, Play, Star, Zap } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 // One topic, ordered by how much a child wants it.
 //
@@ -77,10 +79,10 @@ export default function Topic() {
             aria-label="Back"
             style={{
               background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12,
-              width: 44, height: 44, fontSize: 22, cursor: 'pointer', color: '#fff',
+              width: 44, height: 44, cursor: 'pointer', color: '#fff',
             }}
           >
-            ←
+            <ArrowLeft size={24} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden />
           </button>
           <div
             style={{
@@ -104,7 +106,8 @@ export default function Topic() {
           {/* The dominant action. Adaptive, always available, never "finished". */}
           <BigButton
             onPress={() => navigate(`/practice?skill=${topic.id}`)}
-            label="▶  Play"
+            label="Play"
+            icon={<Play size={26} strokeWidth={ICON_STROKE} fill="currentColor" aria-hidden />}
             color="#fff"
             textColor={topic.darkColor}
             style={{ width: '100%', marginBottom: 12 }}
@@ -112,7 +115,7 @@ export default function Topic() {
 
           {suggested && (
             <button onClick={() => openLesson(suggested.id)} style={secondaryStyle}>
-              📖 Learn: {suggested.title}
+              <BookOpen size={22} strokeWidth={ICON_STROKE} aria-hidden /> Learn: {suggested.title}
             </button>
           )}
 
@@ -138,7 +141,10 @@ export default function Topic() {
                       color: l.id === suggested?.id ? topic.darkColor : '#fff',
                     }}>{l.title}</span>
                     {done[l.id] && (
-                      <span aria-label="done" style={{ position: 'absolute', top: 6, right: 8, fontSize: 16 }}>✅</span>
+                      <CircleCheck
+                        size={22} strokeWidth={ICON_STROKE} color="#fff" fill="#2E9E5B" aria-label="done"
+                        style={{ position: 'absolute', top: 6, right: 6 }}
+                      />
                     )}
                   </button>
                 ))}
@@ -166,7 +172,7 @@ export default function Topic() {
                 onClick={() => navigate(`/story/${story.categoryId}`)}
                 style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
               >
-                📖 Story
+                <BookOpen size={20} strokeWidth={ICON_STROKE} aria-hidden /> Story
               </button>
             )}
             {firstLevel && (
@@ -174,7 +180,7 @@ export default function Topic() {
                 onClick={() => navigate(`/flashcard/${firstLevel.categoryId}/${firstLevel.id}`)}
                 style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
               >
-                ⚡ Quick Review
+                <Zap size={20} strokeWidth={ICON_STROKE} aria-hidden /> Quick Review
               </button>
             )}
             {firstLevel && (
@@ -182,7 +188,7 @@ export default function Topic() {
                 onClick={() => navigate(`/game/master/${firstLevel.categoryId}`)}
                 style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
               >
-                ⭐ Master Mode
+                <Star size={20} strokeWidth={ICON_STROKE} aria-hidden /> Master Mode
               </button>
             )}
           </div>
@@ -194,6 +200,10 @@ export default function Topic() {
 
 const secondaryStyle: React.CSSProperties = {
   width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
   minHeight: 52,
   marginBottom: 12,
   background: 'rgba(255,255,255,0.22)',

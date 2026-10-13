@@ -1,4 +1,6 @@
 import { PointerEvent, useRef, useState } from 'react';
+import { Undo2 } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 
 // "Show your work!" — a number line she can actually hop along.
 //
@@ -93,10 +95,11 @@ export default function HopLine({ max, initialStart }: Props) {
             aria-label="Undo a hop"
             style={{
               minWidth: 44, height: 44, borderRadius: 12, border: 'none', background: '#EEF4FF',
-              fontSize: 20, cursor: 'pointer', flexShrink: 0,
+              cursor: 'pointer', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            ↶
+            <Undo2 size={22} strokeWidth={ICON_STROKE} color="#3D6FD9" aria-hidden />
           </button>
         )}
       </div>

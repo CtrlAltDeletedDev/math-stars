@@ -1,3 +1,5 @@
+import { ChevronRight } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 interface Props {
   prompt: string;
 }
@@ -26,7 +28,7 @@ export default function NumberLine({ prompt }: Props) {
               <div style={{ width: 18, height: 2, background: '#ccc' }} />
               <span style={{ fontFamily: 'Nunito', fontSize: 11, color: '#aaa' }}>+{step}</span>
               <div style={{ width: 18, height: 2, background: '#ccc' }} />
-              <span style={{ color: '#aaa', fontSize: 14 }}>›</span>
+              <ChevronRight size={14} strokeWidth={ICON_STROKE} color="#aaa" aria-hidden />
             </div>
           </div>
         ))}

@@ -3,6 +3,8 @@ import { useProgress } from '@/store/useProgress';
 import { STICKERS } from '@/data/stickers';
 import { getTheme } from '@/data/shop';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
+import { ArrowLeft, Palette } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Stickers() {
   const navigate = useNavigate();
@@ -17,10 +19,11 @@ export default function Stickers() {
         <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
           <button
             onClick={() => navigate('/')}
-            style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 22, cursor: 'pointer' }}
-          >←</button>
+            style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, cursor: 'pointer' }}
+            aria-label="Back"
+          ><ArrowLeft size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>
-            🎨 Sticker Album ({earnedSet.size}/{STICKERS.length})
+            <Palette size={24} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-4px' }} aria-hidden /> Sticker Album ({earnedSet.size}/{STICKERS.length})
           </div>
           <div style={{ width: 44 }} />
         </div>

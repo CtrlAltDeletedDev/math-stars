@@ -10,6 +10,8 @@ import { useSoundEffects } from '@/hooks/useSoundEffects';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import BigButton from '@/components/ui/BigButton';
 import LessonScene from '@/components/learn/LessonScene';
+import { ArrowLeft, ArrowRight, Lightbulb, Play, RotateCcw, Star, Volume2, X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 // One lesson, one step at a time: the guide says something, a picture shows it,
 // and every few steps she has a go herself.
@@ -121,18 +123,19 @@ export default function Learn() {
                 {practice && (
                   <BigButton
                     onPress={() => navigate(`/game/${practice.categoryId}/${practice.id}`, { replace: true })}
-                    label="▶ Practice it now"
+                    label="Practice it now"
+                    icon={<Play size={22} strokeWidth={ICON_STROKE} fill="currentColor" aria-hidden />}
                     color="#fff"
                     textColor={colors[1]}
                   />
                 )}
-                <BigButton onPress={() => goTo(0)} label="↺ Watch again" color="rgba(255,255,255,0.25)" fontSize={18} />
+                <BigButton onPress={() => goTo(0)} label="Watch again" icon={<RotateCcw size={20} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.25)" fontSize={18} />
                 <BigButton onPress={leave} label="Done" color="rgba(255,255,255,0.18)" fontSize={18} />
               </>
             ) : (
               <>
-                <BigButton onPress={() => goTo(0)} label="▶ Start" color="#fff" textColor={colors[1]} />
-                <BigButton onPress={leave} label="← Back" color="rgba(255,255,255,0.18)" fontSize={18} />
+                <BigButton onPress={() => goTo(0)} label="Start" icon={<Play size={22} strokeWidth={ICON_STROKE} fill="currentColor" aria-hidden />} color="#fff" textColor={colors[1]} />
+                <BigButton onPress={leave} label="Back" icon={<ArrowLeft size={20} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.18)" fontSize={18} />
               </>
             )}
           </div>
@@ -153,7 +156,7 @@ export default function Learn() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '14px 16px 18px', gap: 12, overflowY: 'auto' }}>
         {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={leave} aria-label="Close lesson" style={iconButton}>✕</button>
+          <button onClick={leave} aria-label="Close lesson" style={iconButton}><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1, display: 'flex', gap: 6, justifyContent: 'center' }}>
             {lesson.steps.map((_, i) => (
               <div key={i} style={{
@@ -162,7 +165,7 @@ export default function Learn() {
               }} />
             ))}
           </div>
-          <button onClick={again} aria-label="Say it again" style={iconButton}>🔊</button>
+          <button onClick={again} aria-label="Say it again" style={iconButton}><Volume2 size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
         </div>
 
         {/* The guide, saying the caption */}
@@ -197,9 +200,11 @@ export default function Learn() {
         {hint && !solved && (
           <div className="anim-pop" style={{
             background: '#FFF3B0', borderRadius: 16, padding: '10px 14px',
-            fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: '#5A4A00', textAlign: 'center',
+            fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: '#5A4A00',
+            display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            💡 {hint}
+            <Lightbulb size={24} strokeWidth={ICON_STROKE} color="#C9A400" style={{ flexShrink: 0 }} aria-hidden />
+            <span>{hint}</span>
           </div>
         )}
 
@@ -235,7 +240,10 @@ export default function Learn() {
         {canGoOn && (
           <BigButton
             onPress={() => goTo(index + 1)}
-            label={index === lesson.steps.length - 1 ? '⭐ Finish' : 'Next ▶'}
+            label={index === lesson.steps.length - 1 ? 'Finish' : 'Next'}
+            icon={index === lesson.steps.length - 1
+              ? <Star size={24} strokeWidth={ICON_STROKE} fill="currentColor" aria-hidden />
+              : <ArrowRight size={24} strokeWidth={ICON_STROKE} aria-hidden />}
             color="#FFE066"
             textColor="#5A4A00"
             style={{ width: '100%' }}
@@ -248,5 +256,5 @@ export default function Learn() {
 
 const iconButton: React.CSSProperties = {
   background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12,
-  width: 48, height: 48, fontSize: 22, cursor: 'pointer', color: '#fff', flexShrink: 0,
+  width: 48, height: 48, cursor: 'pointer', color: '#fff', flexShrink: 0,
 };

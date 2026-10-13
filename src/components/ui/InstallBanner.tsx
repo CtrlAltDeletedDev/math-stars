@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -89,7 +91,7 @@ export default function InstallBanner() {
           fontFamily: 'Nunito', fontWeight: 700, fontSize: 18, color: 'rgba(255,255,255,0.7)',
           cursor: 'pointer', flexShrink: 0,
         }}
-      >✕</button>
+      ><X size={20} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { useProgress } from '@/store/useProgress';
 import { BADGES } from '@/data/badges';
 import { getTheme } from '@/data/shop';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
+import { ArrowLeft, Lock, Medal } from 'lucide-react';
+import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Badges() {
   const navigate = useNavigate();
@@ -16,12 +18,13 @@ export default function Badges() {
         <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
           <button
             onClick={() => navigate('/')}
-            style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 22, cursor: 'pointer' }}
+            style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, cursor: 'pointer' }}
+            aria-label="Back"
           >
-            ←
+            <ArrowLeft size={24} strokeWidth={ICON_STROKE} color="#fff" style={ICON_CENTER} aria-hidden />
           </button>
           <div style={{ flex: 1, textAlign: 'center', fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>
-            🏅 Badges ({earnedIds.size}/{BADGES.length})
+            <Medal size={24} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-4px' }} aria-hidden /> Badges ({earnedIds.size}/{BADGES.length})
           </div>
           <div style={{ width: 44 }} />
         </div>
@@ -39,7 +42,9 @@ export default function Badges() {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: 44, opacity: earned ? 1 : 0.35 }}>{earned ? badge.emoji : '🔒'}</div>
+                  <div style={{ fontSize: 44, height: 52, display: 'flex', alignItems: 'center', opacity: earned ? 1 : 0.5 }}>
+                    {earned ? badge.emoji : <Lock size={38} strokeWidth={ICON_STROKE} color="#fff" aria-label="Not earned yet" />}
+                  </div>
                   <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 15, color: earned ? '#333' : 'rgba(255,255,255,0.6)' }}>
                     {earned ? badge.title : '???'}
                   </div>
