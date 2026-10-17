@@ -22,7 +22,28 @@ export type RungSource =
   | { kind: 'generated'; params: Record<string, number | string> }
   | { kind: 'fraction'; dens: number[]; mode: 'recognise' | 'ofSet' | 'compare' }
   | { kind: 'money'; mode: MoneyMode }
-  | { kind: 'bank'; types: string[]; difficulty: number[] };
+  | { kind: 'bank'; types: string[]; difficulty: number[] }
+  /**
+   * Several sources, one picked per question by weight. How the small
+   * hand-written banks gain a generator without losing what was written: the
+   * bank's questions still come up, just no longer as the only ones.
+   */
+  | { kind: 'mix'; parts: { weight: number; source: Exclude<RungSource, { kind: 'mix' }> }[] };
+
+/** A generator for most of a rung's questions, the hand-written bank for the rest. */
+function generatedWithBank(
+  params: Record<string, number | string>,
+  types: string[],
+  difficulty: number[],
+): RungSource {
+  return {
+    kind: 'mix',
+    parts: [
+      { weight: 2, source: { kind: 'generated', params } },
+      { weight: 1, source: { kind: 'bank', types, difficulty } },
+    ],
+  };
+}
 
 export interface Rung {
   /** Shown to a parent, not to the child. */
@@ -299,18 +320,30 @@ export function bankPoolFor(source: Extract<RungSource, { kind: 'bank' }>): Ques
 export function questionForRung(skill: Skill, rung: number): Question | null {
   const r = skill.rungs[Math.min(rung, skill.rungs.length - 1)];
   if (!r) return null;
+  return questionFromSource(r.source);
+}
 
-  switch (r.source.kind) {
+function questionFromSource(source: RungSource): Question | null {
+  switch (source.kind) {
     case 'generated':
-      return generateFromParams(r.source.params);
+      return generateFromParams(source.params);
     case 'fraction':
-      return generateFractionQuestion(r.source.dens, r.source.mode);
+      return generateFractionQuestion(source.dens, source.mode);
     case 'money':
-      return generateMoneyQuestion(r.source.mode);
+      return generateMoneyQuestion(source.mode);
     case 'bank': {
-      const pool = bankPoolFor(r.source);
+      const pool = bankPoolFor(source);
       if (pool.length === 0) return null;
       return pool[Math.floor(Math.random() * pool.length)];
+    }
+    case 'mix': {
+      const total = source.parts.reduce((n, p) => n + p.weight, 0);
+      let pick = Math.random() * total;
+      for (const part of source.parts) {
+        pick -= part.weight;
+        if (pick <= 0) return questionFromSource(part.source);
+      }
+      return questionFromSource(source.parts[source.parts.length - 1].source);
     }
   }
 }
