@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor } from '@/data/skills';
+import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor, unlockedSkillIds } from '@/data/skills';
 import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS, inPlacement } from './skillLadder';
-import { PracticeQueue } from './practiceSession';
+import { PracticeQueue, ROUND_SIZE, chooseRoundSkills } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
 import { masteryFor } from './mastery';
@@ -610,6 +610,94 @@ describe('practice queue', () => {
 // ---------------------------------------------------------------------------
 // The v2 -> v3 migration
 // ---------------------------------------------------------------------------
+
+describe('rounds of Play', () => {
+  // Play used to spread every question over every topic in her grade, about 1
+  // in 16 each in first grade, so no topic got the 8 answers a promotion needs
+  // within a sitting. A round concentrates on a few.
+  const grade1 = (skills: Record<string, Partial<SkillState>> = {}): UserProgress => ({
+    ...buildInitialProgress(), gradeLevel: '1',
+    skills: Object.fromEntries(Object.entries(skills).map(([id, st]) =>
+      [id, { ...newSkillState(id), attempts: 20, correct: 15, ...st }])),
+  });
+  const pool = (p: UserProgress) => unlockedSkillIds(p.skills, p.gradeLevel);
+
+  it('starts a new player on adding and taking away, plus one more', () => {
+    for (let i = 0; i < 50; i++) {
+      const round = chooseRoundSkills(grade1(), pool(grade1()));
+      expect(round.slice(0, 2)).toEqual(['adding', 'taking-away']);
+      expect(round).toHaveLength(3);
+      expect(pool(grade1())).toContain(round[2]);
+    }
+  });
+
+  it('keeps her on what she is climbing, not on what she has topped out', () => {
+    // Clocks tops out at rung 1 in first grade; adding and counting can still climb.
+    const p = grade1({ adding: { rung: 2 }, counting: { rung: 0 }, clocks: { rung: 1 } });
+    let climbing = 0, topped = 0;
+    for (let i = 0; i < 400; i++) {
+      const [a, b] = chooseRoundSkills(p, pool(p));
+      climbing += [a, b].filter((id) => id === 'adding' || id === 'counting').length;
+      topped += [a, b].filter((id) => id === 'clocks').length;
+    }
+    expect(climbing).toBe(800);
+    expect(topped).toBe(0);
+  });
+
+  it('favours the topic nearest its next step', () => {
+    const p = grade1({
+      adding: { rung: 2, recent: [true, true, true, true, true] },
+      'taking-away': { rung: 2, recent: [] },
+      counting: { rung: 0, recent: [] },
+    });
+    let near = 0;
+    for (let i = 0; i < 2000; i++) if (chooseRoundSkills(p, pool(p)).slice(0, 2).includes('adding')) near++;
+    // Six times the weight of each of the other two: it should make almost every round.
+    expect(near / 2000).toBeGreaterThan(0.85);
+  });
+
+  it('rotates rather than repeating the same three', () => {
+    const p = grade1({ adding: { rung: 2 }, 'taking-away': { rung: 2 }, counting: { rung: 0 }, comparing: { rung: 0 } });
+    let previous: string[] = [];
+    let repeats = 0;
+    const thirds = new Set<string>();
+    for (let i = 0; i < 300; i++) {
+      const round = chooseRoundSkills(p, pool(p), previous);
+      if (JSON.stringify([...round].sort()) === JSON.stringify([...previous].sort())) repeats++;
+      thirds.add(round[2]);
+      previous = round;
+    }
+    expect(repeats / 300).toBeLessThan(0.15);
+    expect(thirds.size, 'over many rounds the third slot reaches most of her grade').toBeGreaterThan(pool(p).length * 0.6);
+  });
+
+  it('asks fresh questions only from the round\'s topics', () => {
+    const q = new PracticeQueue(grade1({ adding: { rung: 2 }, counting: { rung: 0 } }));
+    const round = q.roundSkills();
+    for (let i = 0; i < ROUND_SIZE; i++) {
+      const pick = q.next()!;
+      if (pick.rung !== null) expect(round, pick.question.id).toContain(pick.skillId);
+    }
+  });
+
+  it('starts the next round on request, and by itself if nobody asks', () => {
+    const q = new PracticeQueue(grade1());
+    expect(q.roundSkills()).toHaveLength(3);
+    for (let i = 0; i < ROUND_SIZE; i++) q.next();
+    const first = q.roundSkills();
+    q.next(); // the eleventh question belongs to a new round
+    expect(q.roundSkills()).toHaveLength(3);
+    q.startRound();
+    expect(q.roundSkills()).toHaveLength(3);
+    expect(first[0]).toBe('adding');
+  });
+
+  it('stays on the topic a topic screen sent her to, and on a parent\'s Focus Mode picks', () => {
+    expect(new PracticeQueue(grade1(), 'You', 'clocks').roundSkills()).toEqual(['clocks']);
+    const focused = { ...grade1(), practiceFocus: ['adding', 'money', 'fractions', 'clocks'] };
+    expect(new PracticeQueue(focused).roundSkills().sort()).toEqual(['adding', 'clocks', 'fractions', 'money']);
+  });
+});
 
 describe('the grade ceiling', () => {
   it('stops the rung at the ceiling and counts the blocked promotion', () => {

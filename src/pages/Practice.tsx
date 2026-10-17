@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { SKILLS_BY_ID, rankFor } from '@/data/skills';
-import { PracticeQueue, PracticePick } from '@/engine/practiceSession';
+import { PracticeQueue, PracticePick, ROUND_SIZE } from '@/engine/practiceSession';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useSpeakQuestion } from '@/hooks/useSpeakQuestion';
@@ -14,9 +14,11 @@ import AnswerGrid from '@/components/game/AnswerGrid';
 import FeedbackOverlay from '@/components/game/FeedbackOverlay';
 import HintBubble from '@/components/game/HintBubble';
 import Toast from '@/components/ui/Toast';
+import ProgressBar from '@/components/ui/ProgressBar';
+import RoundCard from '@/components/game/RoundCard';
 import { BADGES } from '@/data/badges';
 import { GAME_CONFIG } from '@/constants/gameConfig';
-import { House, InfinityIcon, Volume2, VolumeX, X } from 'lucide-react';
+import { House, Volume2, VolumeX, X } from 'lucide-react';
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const PRACTICE_COLORS: [string, string] = ['#7E57C2', '#4527A0'];
@@ -49,6 +51,14 @@ export default function Practice() {
   const [showQuit, setShowQuit] = useState(false);
   // Badges and stickers have always been earnable here; nothing used to say so.
   const [toasts, setToasts] = useState<string[]>([]);
+
+  // Play runs in rounds of ROUND_SIZE on the few topics the queue chose, and
+  // ends each one on a card showing what moved. The refs are what the advance
+  // timer reads; `roundCount` is what the progress bar draws.
+  const [roundCount, setRoundCount] = useState(0);
+  const [roundOver, setRoundOver] = useState(false);
+  const [roundSkills, setRoundSkills] = useState<string[]>(() => queue.roundSkills());
+  const round = useRef({ answered: 0, correct: 0, stars: 0, levelledUp: [] as string[] });
 
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,10 +129,18 @@ export default function Practice() {
     // whose meaning is worth keeping — not whatever she landed on after the
     // retry told her it was wrong.
     const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
-    const { move, skill, newBadges, newStickers, streakBonus } = recordPracticeAnswer(
+    const { move, skill, newBadges, newStickers, streakBonus, starsAwarded } = recordPracticeAnswer(
       pick.skillId, question.id, correct, pick.rung, { question, chosen: answeredChoice, ms },
     );
     recordQuestionsAnswered(1);
+
+    round.current.answered += 1;
+    if (correct) round.current.correct += 1;
+    round.current.stars += starsAwarded + streakBonus;
+    if (move === 'promoted' && skill && !round.current.levelledUp.includes(skill.skillId)) {
+      round.current.levelledUp = [...round.current.levelledUp, skill.skillId];
+    }
+    setRoundCount(round.current.answered);
 
     const earned = [
       ...newBadges.map((b) => {
@@ -149,8 +167,23 @@ export default function Practice() {
       setSelectedChoice(null);
       setShowHint(false);
       setTriedChoices([]);
+      if (round.current.answered >= ROUND_SIZE) {
+        cancel();
+        setRoundOver(true);
+        return;
+      }
       setPick(queue.next());
     }, feedbackMs);
+  }
+
+  function keepGoing() {
+    queue.startRound();
+    round.current = { answered: 0, correct: 0, stars: 0, levelledUp: [] };
+    setRoundCount(0);
+    setRoundSkills(queue.roundSkills());
+    setLevelUp(null);
+    setRoundOver(false);
+    setPick(queue.next());
   }
 
   if (!pick) {
@@ -162,6 +195,27 @@ export default function Practice() {
             No questions right now!
           </div>
           <BigButton onPress={() => navigate('/')} label="Home" icon={<House size={24} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={PRACTICE_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
+        </div>
+      </BackgroundGradient>
+    );
+  }
+
+  if (roundOver) {
+    return (
+      <BackgroundGradient colors={PRACTICE_COLORS}>
+        <Toast messages={toasts} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', overflow: 'auto' }}>
+          <RoundCard
+            progress={progress}
+            skillIds={roundSkills}
+            levelledUp={round.current.levelledUp}
+            correct={round.current.correct}
+            total={round.current.answered}
+            stars={round.current.stars}
+            characterEmoji={characterEmoji}
+            onKeepGoing={keepGoing}
+            onHome={() => navigate('/')}
+          />
         </div>
       </BackgroundGradient>
     );
@@ -224,12 +278,11 @@ export default function Practice() {
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
             aria-label="Stop"
           ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: '#fff' }}>
-              <InfinityIcon size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Practice
-            </div>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
-              {correctCount} right{streak >= 3 ? ` · 🔥 ${streak} in a row` : ''}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* How far through this round: the round ends on a card, not never. */}
+            <ProgressBar current={roundCount} total={ROUND_SIZE} />
+            <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center', minHeight: 17 }}>
+              {streak >= 3 ? `🔥 ${streak} in a row` : ''}
             </div>
           </div>
           <button
