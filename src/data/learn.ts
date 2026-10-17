@@ -1,7 +1,7 @@
-import { ErrorTag } from '@/types';
+import { ErrorTag, Level } from '@/types';
 import { LESSONS } from './lessons';
 import { getLevelById } from './categories';
-import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL } from './topics';
+import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, TOPICS_BY_ID } from './topics';
 
 // Lessons that teach, for a child who cannot read them yet.
 //
@@ -103,7 +103,8 @@ const COUNT_ON: Lesson = {
   id: 'count-on',
   title: 'Counting On',
   emoji: '🐸',
-  places: [{ skillId: 'adding', rung: 4 }],
+  // Also Number Tricks' "Counting on within 20", which had no lesson at all.
+  places: [{ skillId: 'adding', rung: 4 }, { skillId: 'strategies', rung: 3 }],
   practiceLevelId: 'addition-3',
   helpsWith: ['off-by-one', 'answered-a-given-number'],
   steps: [
@@ -247,6 +248,9 @@ const DOUBLES: Lesson = {
   emoji: '👯',
   places: [{ skillId: 'strategies', rung: 1 }],
   practiceLevelId: 'strategy-doubles',
+  // "That's just one row" is written for giving one half of the double, and
+  // "count both rows" for landing one off.
+  helpsWith: ['answered-a-given-number', 'off-by-one'],
   steps: [
     {
       kind: 'watch',
@@ -303,6 +307,9 @@ const MAKE_TEN: Lesson = {
   emoji: '🔟',
   places: [{ skillId: 'strategies', rung: 2 }],
   practiceLevelId: 'strategy-make-ten',
+  // "The frame holds 10 altogether" is written for answering with the ten
+  // itself, and "that's all the counters outside" for giving a number she was shown.
+  helpsWith: ['answered-the-whole', 'answered-a-given-number'],
   steps: [
     {
       kind: 'watch',
@@ -861,6 +868,23 @@ export function recommendedLesson(
   }
   const fresh = pool.filter((l) => !done[l.id]);
   return nearest(fresh.length ? fresh : pool);
+}
+
+/**
+ * The level "Practice it now" opens, for the topic she opened the lesson from.
+ *
+ * A lesson can sit in two topics — Counting On is an Adding lesson and a Number
+ * Tricks one — but `practiceLevelId` names one level. Opened from the other
+ * topic it sent her there anyway: out of Number Tricks into "Adding to 20",
+ * crediting a ladder she was not working on. `practiceLevelId` still wins in
+ * its own topic; elsewhere it is that topic's level at the lesson's rung.
+ */
+export function practiceLevelFor(lesson: Lesson, fromSkillId?: string | null): Level | null {
+  const own = getLevelById(lesson.practiceLevelId);
+  if (!fromSkillId || SKILL_FOR_LEVEL.get(lesson.practiceLevelId) === fromSkillId) return own;
+  const rung = rungIn(lesson, fromSkillId);
+  const ref = rung === undefined ? undefined : TOPICS_BY_ID.get(fromSkillId)?.levels.find((r) => r.rung === rung);
+  return (ref && getLevelById(ref.levelId)) || own;
 }
 
 /** The lesson that teaches against one particular mistake in a topic, if there is one. */
