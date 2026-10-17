@@ -43,6 +43,24 @@ const ROUND_TOPICS = 3;
 
 const TEACHING_ORDER = new Map(TOPICS.map((t, i) => [t.id, i]));
 
+/**
+ * The order a round asks its topics in.
+ *
+ * A round of three asks its two main topics four times each and the extra one
+ * twice, interleaved: A B A B C A B A B C. Four is what the fast lane needs and
+ * half of what the ordinary window needs, so a topic she is climbing can move
+ * within one round; picked at random instead, three topics split ten questions
+ * about 3-3-3 and a round would often end with nothing moved. Any other size
+ * (one topic, two, a parent's Focus Mode list) simply takes turns.
+ */
+export function roundPlan(round: readonly string[]): string[] {
+  if (round.length === 3) {
+    const [a, b, c] = round;
+    return [a, b, a, b, c, a, b, a, b, c];
+  }
+  return [...round];
+}
+
 function weightedPick(ids: string[], weight: (id: string) => number): string | undefined {
   const weights = ids.map(weight);
   const total = weights.reduce((a, b) => a + b, 0);
@@ -109,7 +127,7 @@ export function chooseRoundSkills(
 export class PracticeQueue {
   private requeue: { at: number; question: Question; skillId: string | null; rung: number | null }[] = [];
   private asked = 0;
-  private recentSkills: string[] = [];
+  private freshThisRound = 0;
   private round: string[] = [];
   private picksThisRound = 0;
 
@@ -139,6 +157,7 @@ export class PracticeQueue {
     // practise; only the open "everything in her grade" pool is narrowed here.
     this.round = narrowed ? pool : chooseRoundSkills(this.progress, pool, this.round);
     this.picksThisRound = 0;
+    this.freshThisRound = 0;
   }
 
   /** What this round concentrates on, for the card at its end. */
@@ -164,20 +183,10 @@ export class PracticeQueue {
     return this.progress.skills?.[skillId] ?? newSkillState(skillId);
   }
 
+  /** The round plan's next topic. Reviews and requeues do not use up a turn. */
   private pickSkill(): string {
-    const pool = this.round.length > 0 ? this.round : this.skillPool();
-    // Weight down anything asked in the last few questions so topics rotate.
-    const weights = pool.map((id) => {
-      const recentUses = this.recentSkills.filter((s) => s === id).length;
-      return 1 / (1 + recentUses * 3);
-    });
-    const total = weights.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total;
-    for (let i = 0; i < pool.length; i++) {
-      r -= weights[i];
-      if (r <= 0) return pool[i];
-    }
-    return pool[pool.length - 1];
+    const plan = roundPlan(this.round.length > 0 ? this.round : this.skillPool());
+    return plan[this.freshThisRound++ % plan.length];
   }
 
   private dueReview(): Question | null {
@@ -229,14 +238,9 @@ export class PracticeQueue {
       }
     }
 
-    // 3. Fresh question at her current rung.
-    //
-    // The weighted pick goes FIRST and the rest are a shuffled fallback. They
-    // used to be shuffled together, so `pickSkill()` — and with it the whole
-    // `recentSkills` anti-repeat weighting — won only ~2/(n+1) of the time and
-    // the rotation was effectively uniform.
-    // Anything in her grade is a fallback, so a round whose topics cannot ask a
-    // question right now still never runs dry.
+    // 3. Fresh question at her current rung, on the round plan's topic. The
+    // rest of the round, then anything in her grade, are a fallback, so a round
+    // whose topic cannot ask a question right now still never runs dry.
     const preferred = this.pickSkill();
     const fallback = [
       ...shuffle(this.round.filter((id) => id !== preferred)),
@@ -251,7 +255,6 @@ export class PracticeQueue {
       );
       const q = questionForRung(skill, rung);
       if (!q) continue;
-      this.recentSkills = [...this.recentSkills, skillId].slice(-6);
       return { question: { ...q, choices: shuffleChoices(q.choices) }, skillId, rung };
     }
     return null;

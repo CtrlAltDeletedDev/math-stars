@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor, unlockedSkillIds } from '@/data/skills';
 import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS, inPlacement } from './skillLadder';
-import { PracticeQueue, ROUND_SIZE, chooseRoundSkills } from './practiceSession';
+import { PracticeQueue, ROUND_SIZE, chooseRoundSkills, roundPlan } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
 import { masteryFor } from './mastery';
@@ -669,6 +669,18 @@ describe('rounds of Play', () => {
     }
     expect(repeats / 300).toBeLessThan(0.15);
     expect(thirds.size, 'over many rounds the third slot reaches most of her grade').toBeGreaterThan(pool(p).length * 0.6);
+  });
+
+  it('asks the two main topics four times each, so a topic can move within one round', () => {
+    const q = new PracticeQueue(grade1({ adding: { rung: 2 }, counting: { rung: 0 } }));
+    const [a, b, c] = q.roundSkills();
+    const asked: Record<string, number> = {};
+    for (let i = 0; i < ROUND_SIZE; i++) {
+      const pick = q.next()!;
+      asked[pick.skillId!] = (asked[pick.skillId!] ?? 0) + 1;
+    }
+    expect(asked).toEqual({ [a]: 4, [b]: 4, [c]: 2 });
+    expect(roundPlan([a, b, c]).slice(0, 4)).toEqual([a, b, a, b]);
   });
 
   it('asks fresh questions only from the round\'s topics', () => {
