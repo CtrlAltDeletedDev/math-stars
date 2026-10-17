@@ -3,11 +3,10 @@ import { UserProgress, SRSCard, BadgeEarned, SkillState } from '@/types';
 import { buildInitialProgress, loadProgressResult, normalizeProgress, saveProgress, storageWorks } from './storage';
 import { getLevelById } from '@/data/categories';
 import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
-import { skillForQuestion, SKILL_FOR_LEVEL, RUNG_FOR_LEVEL } from '@/data/topics';
-import { ErrorTag } from '@/types';
 import { GradeLevel, ceilingFor } from '@/data/grades';
 import { Question } from '@/types';
 import { newBadgesFor, newStickersFor } from '@/engine/rewards';
+import { LevelUp, SessionAnswer, foldLevelAnswers, foldMixedAnswers, noteError } from '@/engine/foldAnswers';
 import { SHOP_ITEMS } from '@/data/shop';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { todayString, yesterdayString } from '@/engine/dates';
@@ -15,24 +14,6 @@ import { recordSkillAnswer, newSkillState, LadderMove } from '@/engine/skillLadd
 import { pruneSRSCards } from '@/engine/srs';
 import { isServableCard } from '@/engine/sessionBuilder';
 import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
-
-/**
- * One answer as a finished session hands it over: what she was asked, whether
- * she knew it, what she tapped first, and how long that first tap took.
- */
-export interface SessionAnswer {
-  question: Question;
-  correct: boolean;
-  chosen?: string;
-  ms?: number;
-}
-
-/** A rung she climbed during a session, for the screen to celebrate. */
-export interface LevelUp {
-  skillId: string;
-  /** The rung she is standing on now. */
-  rung: number;
-}
 
 interface ProgressContextValue {
   progress: UserProgress;
@@ -53,7 +34,8 @@ interface ProgressContextValue {
     answers?: SessionAnswer[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number };
   recordMasterComplete: (
-    topicId: string,
+    /** The topic of a Master run, or 'review' for Practice Mistakes. */
+    sourceId: string,
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
@@ -196,7 +178,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     let levelUps: LevelUp[] = [];
 
     setProgress((prev) => {
-      levelUps = [];
       let next = updateStreak(prev);
       const todayStr = todayString();
       const ph = next.playHistory ?? [];
@@ -251,34 +232,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         updatedSRS[card.questionId] = card;
       }
 
-      // Ten level answers now count exactly as ten practice answers -- but only
-      // as evidence about the rung the level actually teaches.
-      //
-      // Every level is 8 or 10 questions, which is exactly one ladder window, so
-      // a replay used to be one guaranteed promote-or-demote. The replay strip
-      // offers every level in the grade regardless of where she is standing, so
-      // four replays of "Adding 1 more" walked a child from rung 2 to rung 6,
-      // "Adding within 100", on nothing harder than n + 1.
-      const levelSkill = SKILL_FOR_LEVEL.get(levelId) ?? null;
-      const levelRung = RUNG_FOR_LEVEL.get(levelId);
-
-      const skills = { ...(next.skills ?? {}) };
-      let errorPatterns = next.errorPatterns ?? {};
-      for (const { question, correct, chosen, ms } of answers) {
-        const skillId = skillForQuestion(question, levelId);
-        if (!skillId) continue;
-        if (!correct) errorPatterns = noteError(errorPatterns, skillId, question, chosen);
-        // A level teaches one rung of one topic. A question that a mixed level
-        // routes to a *second* ladder sits at no known rung there, so it counts
-        // toward her totals and her SRS but must not move her.
-        const servedRung = skillId === levelSkill ? levelRung ?? null : null;
-        const before = skills[skillId] ?? newSkillState(skillId);
-        const result = recordSkillAnswer(
-          before, correct, ceilingFor(skillId, next.gradeLevel), servedRung, ms,
-        );
-        skills[skillId] = result.state;
-        if (result.move === 'promoted') levelUps.push({ skillId, rung: result.state.rung });
-      }
+      const folded = foldLevelAnswers(
+        next.skills ?? {}, next.errorPatterns ?? {}, answers, levelId, next.gradeLevel,
+      );
+      levelUps = folded.levelUps;
       const levelUpStars = levelUps.length * GAME_CONFIG.levelUpBonusStars;
 
       next = {
@@ -287,8 +244,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         spendableStars: next.spendableStars + newStarDelta + levelUpStars,
         categories: { ...next.categories, [level.categoryId]: catProgress },
         srsCards: updatedSRS,
-        skills,
-        errorPatterns,
+        skills: folded.skills,
+        errorPatterns: folded.errorPatterns,
       };
 
       newBadges = newBadgesFor(prev, next, correctCount, totalCount);
@@ -305,63 +262,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
 
     return { newBadges, newStickers, streakBonus, levelUps };
-  }
-
-  /**
-   * Note what a wrong answer meant.
-   *
-   * The generators build distractors that are specific mistakes and tag them;
-   * this is where that survives the tap. Counts per skill, never an event log:
-   * see the note on `errorPatterns` in types/progress.ts.
-   *
-   * A right answer records nothing, and so does a wrong answer on a question
-   * whose options carry no meaning -- the hand-written banks are not tagged yet.
-   * Silence is honest; a bucket of 'unknown' would look like a finding.
-   */
-  function noteError(
-    patterns: UserProgress['errorPatterns'],
-    skillId: string,
-    question: Question,
-    chosen: string | undefined,
-  ): UserProgress['errorPatterns'] {
-    if (!chosen) return patterns;
-    const tag: ErrorTag | undefined = question.distractorMeaning?.[chosen];
-    if (!tag) return patterns;
-    const forSkill = patterns[skillId] ?? {};
-    return {
-      ...patterns,
-      [skillId]: { ...forSkill, [tag]: (forSkill[tag] ?? 0) + 1 },
-    };
-  }
-
-  /**
-   * Fold a mixed session's answers into the ladders, as evidence about her
-   * totals but not about where she is standing.
-   *
-   * The daily challenge, a category master run and a review session all draw
-   * across topics and rungs on purpose, so no answer in them can say whether
-   * her *current* rung is comfortable — that is what `servedRung: null` means.
-   * Before this, these three modes wrote nothing the ladder could read at all,
-   * which is the same "two worlds" split CLAUDE.md says the design exists to
-   * prevent, just moved to different screens.
-   */
-  function foldMixedAnswers(
-    skills: Record<string, SkillState>,
-    patterns: UserProgress['errorPatterns'],
-    answers: SessionAnswer[],
-    levelId: string,
-    grade: UserProgress['gradeLevel'],
-  ): { skills: Record<string, SkillState>; errorPatterns: UserProgress['errorPatterns'] } {
-    const next = { ...skills };
-    let errorPatterns = patterns;
-    for (const { question, correct, chosen } of answers) {
-      const skillId = skillForQuestion(question, levelId);
-      if (!skillId) continue;
-      const before = next[skillId] ?? newSkillState(skillId);
-      next[skillId] = recordSkillAnswer(before, correct, ceilingFor(skillId, grade), null).state;
-      if (!correct) errorPatterns = noteError(errorPatterns, skillId, question, chosen);
-    }
-    return { skills: next, errorPatterns };
   }
 
   function recordDailyChallengeComplete(
@@ -437,7 +337,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   function recordMasterComplete(
-    topicId: string,
+    sourceId: string,
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
@@ -478,7 +378,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       next = {
         ...next,
         srsCards: updatedSRS,
-        ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, topicId, next.gradeLevel),
+        ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, sourceId, next.gradeLevel),
       };
 
       newBadges = newBadgesFor(prev, next, correctCount, totalCount);

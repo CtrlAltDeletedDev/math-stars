@@ -274,12 +274,16 @@ export const RUNG_FOR_LEVEL = new Map<string, number>(
 /**
  * Which ladder one answer belongs to.
  *
- * Routed on question type first, so a level that deliberately mixes two
+ * A question that names its own ladder goes there: Number Tricks asks sums that
+ * are typed as addition, and they are evidence about Number Tricks, not Adding.
+ *
+ * Otherwise routed on question type, so a level that deliberately mixes two
  * operations — the two `steps-mix-*` levels and `mixed-1` — credits adding and
  * taking away separately instead of dumping ten subtraction answers into the
  * adding ladder. Falls back to the level's own topic for everything else.
  */
 export function skillForQuestion(q: Question, levelId: string): string | null {
+  if (q.skill && SKILLS_BY_ID.has(q.skill)) return q.skill;
   switch (q.type) {
     case 'addition':
       return 'adding';

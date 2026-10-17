@@ -4,7 +4,7 @@ import { getCategoryById } from '@/data/categories';
 import { TOPICS_BY_ID, nextLevelInTopic, topicIdFor } from '@/data/topics';
 import { SKILLS_BY_ID } from '@/data/skills';
 import { GAME_CONFIG } from '@/constants/gameConfig';
-import type { LevelUp } from '@/store/useProgress';
+import type { LevelUp } from '@/engine/foldAnswers';
 import { Level } from '@/types';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { useProgress } from '@/store/useProgress';

@@ -413,12 +413,18 @@ export function generateMultiplicationQuestion(tables: number[]): Question {
 // doubles are memorised as anchors, making ten is how you break a hard sum
 // into an easy one, and counting on is the first real strategy that replaces
 // counting everything from one.
+//
+// Each says it belongs to Number Tricks (`skill`), because its type alone
+// would credit it to Adding or Mystery Number.
+
+const STRATEGIES = 'strategies';
 
 function doublesQuestion(a: number): Question {
   const correct = a * 2;
   return {
     id: `dbl-${a}`,
     type: 'addition',
+    skill: STRATEGIES,
     prompt: `${a} + ${a} = ?`,
     correctAnswer: String(correct),
     ...buildTaggedChoices(correct, [
@@ -437,6 +443,7 @@ function makeTenQuestion(target: number, a: number): Question {
   return {
     id: `mk${target}-${a}`,
     type: 'missing_number',
+    skill: STRATEGIES,
     prompt: `${a} + ? = ${target}`,
     correctAnswer: String(correct),
     ...buildTaggedChoices(correct, [
@@ -455,6 +462,7 @@ function countOnQuestion(a: number, b: number): Question {
   return {
     id: `cnt-${a}+${b}`,
     type: 'addition',
+    skill: STRATEGIES,
     prompt: `${a} + ${b} = ?`,
     correctAnswer: String(correct),
     ...buildTaggedChoices(correct, [
