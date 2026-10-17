@@ -16,6 +16,10 @@ import HintBubble from '@/components/game/HintBubble';
 import Toast from '@/components/ui/Toast';
 import ProgressBar from '@/components/ui/ProgressBar';
 import RoundCard from '@/components/game/RoundCard';
+import LessonOffer from '@/components/game/LessonOffer';
+import { Lesson } from '@/data/learn';
+import { lessonToOffer } from '@/engine/lessonOffer';
+import { ErrorTag } from '@/types';
 import { BADGES } from '@/data/badges';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { House, Volume2, VolumeX, X } from 'lucide-react';
@@ -58,7 +62,17 @@ export default function Practice() {
   const [roundCount, setRoundCount] = useState(0);
   const [roundOver, setRoundOver] = useState(false);
   const [roundSkills, setRoundSkills] = useState<string[]>(() => queue.roundSkills());
-  const round = useRef({ answered: 0, correct: 0, stars: 0, levelledUp: [] as string[] });
+  const round = useRef({
+    answered: 0, correct: 0, stars: 0, levelledUp: [] as string[],
+    /** Tagged mistakes per topic this round, to spot the same one twice. */
+    mistakes: {} as Record<string, Partial<Record<ErrorTag, number>>>,
+  });
+
+  // A lesson offered between questions when she is struggling (see
+  // engine/lessonOffer.ts): at most once per topic per sitting.
+  const [offer, setOffer] = useState<{ lesson: Lesson; skillId: string } | null>(null);
+  const pendingOffer = useRef<{ lesson: Lesson; skillId: string } | null>(null);
+  const offeredFor = useRef(new Set<string>());
 
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -142,6 +156,22 @@ export default function Practice() {
     }
     setRoundCount(round.current.answered);
 
+    if (pick.skillId && skill) {
+      const tag = correct ? undefined : question.distractorMeaning?.[answeredChoice];
+      const counts = round.current.mistakes[pick.skillId] ?? {};
+      round.current.mistakes[pick.skillId] = counts;
+      if (tag && tag !== 'unknown') counts[tag] = (counts[tag] ?? 0) + 1;
+      const topTag = (Object.entries(counts) as [ErrorTag, number][]).sort((a, b) => b[1] - a[1])[0]?.[0];
+      const lesson = lessonToOffer(progress, {
+        skillId: pick.skillId, move, rung: skill.rung, tag,
+        tagCountThisRound: tag ? counts[tag] ?? 0 : 0, topTagThisRound: topTag,
+      }, offeredFor.current);
+      if (lesson) {
+        offeredFor.current.add(pick.skillId);
+        pendingOffer.current = { lesson, skillId: pick.skillId };
+      }
+    }
+
     const earned = [
       ...newBadges.map((b) => {
         const def = BADGES.find((d) => d.id === b.badgeId);
@@ -167,18 +197,41 @@ export default function Practice() {
       setSelectedChoice(null);
       setShowHint(false);
       setTriedChoices([]);
-      if (round.current.answered >= ROUND_SIZE) {
+      if (pendingOffer.current) {
         cancel();
-        setRoundOver(true);
+        setOffer(pendingOffer.current);
+        pendingOffer.current = null;
         return;
       }
-      setPick(queue.next());
+      continueRound();
     }, feedbackMs);
+  }
+
+  /** The next question, or the end-of-round card once the round is used up. */
+  function continueRound() {
+    if (round.current.answered >= ROUND_SIZE) {
+      cancel();
+      setRoundOver(true);
+      return;
+    }
+    setPick(queue.next());
+  }
+
+  function showLesson() {
+    if (!offer) return;
+    // "Done" in the lesson comes back to Play, on the same topic if she was on one.
+    const back = sessionSkill ? `/practice?skill=${sessionSkill}` : '/practice';
+    navigate(`/learn/${offer.lesson.id}?topic=${offer.skillId}&return=${encodeURIComponent(back)}`);
+  }
+
+  function keepPlaying() {
+    setOffer(null);
+    continueRound();
   }
 
   function keepGoing() {
     queue.startRound();
-    round.current = { answered: 0, correct: 0, stars: 0, levelledUp: [] };
+    round.current = { answered: 0, correct: 0, stars: 0, levelledUp: [], mistakes: {} };
     setRoundCount(0);
     setRoundSkills(queue.roundSkills());
     setLevelUp(null);
@@ -195,6 +248,16 @@ export default function Practice() {
             No questions right now!
           </div>
           <BigButton onPress={() => navigate('/')} label="Home" icon={<House size={24} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={PRACTICE_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
+        </div>
+      </BackgroundGradient>
+    );
+  }
+
+  if (offer) {
+    return (
+      <BackgroundGradient colors={PRACTICE_COLORS}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', overflow: 'auto' }}>
+          <LessonOffer lesson={offer.lesson} characterEmoji={characterEmoji} onShowMe={showLesson} onKeepPlaying={keepPlaying} />
         </div>
       </BackgroundGradient>
     );
