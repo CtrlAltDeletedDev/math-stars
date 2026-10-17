@@ -2,6 +2,7 @@ import { UserProgress, CategoryProgress, LevelState, SkillState, SRSCard } from 
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { TOPICS } from '@/data/topics';
 import { SKILLS_BY_ID } from '@/data/skills';
+import { LADDER } from '@/engine/skillLadder';
 import { ErrorTag } from '@/types';
 
 /** The tags a save is allowed to contain. Anything else came from somewhere else. */
@@ -77,6 +78,9 @@ function sanitizeSkills(skills: Record<string, SkillState>): Record<string, Skil
     const recent = Array.isArray(state.recent)
       ? state.recent.filter((r) => typeof r === 'boolean')
       : [];
+    const times = Array.isArray(state.times)
+      ? state.times.filter((t) => typeof t === 'number' && Number.isFinite(t) && t > 0).slice(-LADDER.window)
+      : [];
     const attempts = typeof state.attempts === 'number' && state.attempts >= 0 ? state.attempts : 0;
     const correct = typeof state.correct === 'number' && state.correct >= 0 ? state.correct : 0;
 
@@ -89,6 +93,7 @@ function sanitizeSkills(skills: Record<string, SkillState>): Record<string, Skil
       ceilingHits: typeof state.ceilingHits === 'number' && state.ceilingHits >= 0
         ? state.ceilingHits
         : 0,
+      ...(times.length > 0 ? { times } : {}),
     };
   }
 

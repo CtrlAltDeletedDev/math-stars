@@ -59,6 +59,8 @@ export default function Game() {
   const remainingRef = useRef(0);
   const hasCompleted = useRef(false);
   const answeringRef = useRef(false);
+  // When the current question appeared, so a first tap can say how long it took.
+  const shownAt = useRef(performance.now());
 
   function startCountdown() {
     if (!challengeMode) return;
@@ -116,17 +118,21 @@ export default function Game() {
     const resultsBefore = session.results;
     const answeredQuestion = session.currentQuestion;
 
+    // How long the first tap took. Only a right first tap is ever kept as a
+    // time, so an answer found on the retry needs no clock of its own.
+    const ms = triedChoices.length === 0 ? performance.now() - shownAt.current : undefined;
+
     // Record what she actually did first. She still sees the encouraging
     // feedback for finding the answer, but the score, the SRS card and the
     // ladder all hear the truth: this one wasn't known.
     const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
-    const { correct, card } = session.recordAnswer(answeredChoice);
+    const { correct, card } = session.recordAnswer(answeredChoice, ms);
     const foundIt = choice === answeredQuestion?.correctAnswer;
     // Include this answer — `session.srsUpdates` has not caught up yet.
     const finalSrsUpdates = card ? [...srsUpdatesBefore, card] : srsUpdatesBefore;
     // Same reason: `session.results` is one answer behind at this point.
     const finalResults = answeredQuestion
-      ? [...resultsBefore, { question: answeredQuestion, correct }]
+      ? [...resultsBefore, { question: answeredQuestion, correct, chosen: answeredChoice, ms }]
       : resultsBefore;
     setSelectedChoice(choice);
     setLastCorrect(foundIt);
@@ -171,7 +177,7 @@ export default function Game() {
       if (isLastQuestion && !hasCompleted.current) {
         hasCompleted.current = true;
         sounds.playLevelUp();
-        const { newBadges, newStickers, streakBonus } = recordLevelComplete(
+        const { newBadges, newStickers, streakBonus, levelUps } = recordLevelComplete(
           levelId, finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
           finalResults,
         );
@@ -184,6 +190,7 @@ export default function Game() {
             newBadges,
             newStickers,
             streakBonus,
+            levelUps,
             wrongAnswers: wrongAnswersRef.current,
           },
         });
@@ -235,6 +242,7 @@ export default function Game() {
   }, []); // eslint-disable-line
 
   useEffect(() => {
+    shownAt.current = performance.now();
     const q = session.currentQuestion;
     if (q && progress.autoReadEnabled) speak(q);
   }, [session.currentIndex]); // eslint-disable-line

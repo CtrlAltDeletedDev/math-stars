@@ -1,5 +1,5 @@
 import { Level, Question } from '@/types';
-import { CATEGORIES, getLevelById } from './categories';
+import { CATEGORIES, getCategoryById, getLevelById } from './categories';
 import { SKILLS, SKILLS_BY_ID } from './skills';
 import { GradeLevel, ceilingFor, isInGrade } from './grades';
 
@@ -335,6 +335,23 @@ export function topicLevelsInScope(topic: Topic, grade: GradeLevel | null): Leve
     .filter((l): l is Level => l !== null);
 }
 
+/**
+ * The level after this one in its topic, inside her grade — what "Next" offers.
+ *
+ * It used to be the next level of the *category*, and categories and topics do
+ * not line up: after "Adding to 20" it offered "Taking Away (to 5)", and after
+ * "Count by 10s" it offered the × 2 table to a first grader whose grade stops
+ * short of times tables. Null at the end of the topic, or for a level her grade
+ * does not reach.
+ */
+export function nextLevelInTopic(levelId: string, grade: GradeLevel | null): Level | null {
+  const topic = TOPICS_BY_ID.get(SKILL_FOR_LEVEL.get(levelId) ?? '');
+  if (!topic) return null;
+  const inScope = topicLevelsInScope(topic, grade);
+  const idx = inScope.findIndex((l) => l.id === levelId);
+  return idx >= 0 ? inScope[idx + 1] ?? null : null;
+}
+
 /** Every level in the catalogue, for the invariant tests. */
 export function allCatalogueLevelIds(): string[] {
   return CATEGORIES.flatMap((c) => c.levels.map((l) => l.id));
@@ -347,6 +364,20 @@ export function allSkillIds(): string[] {
 
 export function topicFor(skillId: string): Topic | undefined {
   return TOPICS_BY_ID.get(skillId);
+}
+
+/**
+ * The topic an id from a URL means: a topic id as it is, or an old category id
+ * by way of that category's first level.
+ *
+ * Several ids are both (`counting`, `shapes`, `stories`…) and the topic wins,
+ * which is also where the category's first level points, so an old link and a
+ * new one for the same subject land in the same place.
+ */
+export function topicIdFor(id: string): string | undefined {
+  if (TOPICS_BY_ID.has(id)) return id;
+  const first = getCategoryById(id)?.levels[0];
+  return first ? SKILL_FOR_LEVEL.get(first.id) : undefined;
 }
 
 export function skillTitle(skillId: string): string {

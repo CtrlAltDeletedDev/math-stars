@@ -46,6 +46,17 @@ export interface SkillState {
   attempts: number;
   correct: number;
   /**
+   * How long her recent right answers at this rung took, in milliseconds.
+   *
+   * The ladder only ever knew right from wrong, but for facts "right after
+   * counting on her fingers for twelve seconds" and "just knows it" are
+   * different places to be. Same rules as `recent`: only answers from the rung
+   * she is standing on, cleared on every move. Misses are left out — how long a
+   * wrong answer took says nothing about fluency. Nothing moves her on this
+   * yet; it is recorded so that something can.
+   */
+  times?: number[];
+  /**
    * How many times the sliding window said "promote" and the grade ceiling said
    * no. Two or more means she has outgrown the band — the Parent screen uses it
    * to suggest moving her up a year.

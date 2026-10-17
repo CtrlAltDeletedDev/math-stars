@@ -67,8 +67,6 @@ export default function Topic() {
     ? STORIES.find((s) => s.categoryId === topic.storyCategoryId)
     : undefined;
 
-  const firstLevel = levels[0];
-
   return (
     <BackgroundGradient colors={[topic.bgColor, topic.darkColor]}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -175,22 +173,20 @@ export default function Topic() {
                 <BookOpen size={20} strokeWidth={ICON_STROKE} aria-hidden /> Story
               </button>
             )}
-            {firstLevel && (
-              <button
-                onClick={() => navigate(`/flashcard/${firstLevel.categoryId}/${firstLevel.id}`)}
-                style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
-              >
-                <Zap size={20} strokeWidth={ICON_STROKE} aria-hidden /> Quick Review
-              </button>
-            )}
-            {firstLevel && (
-              <button
-                onClick={() => navigate(`/game/master/${firstLevel.categoryId}`)}
-                style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
-              >
-                <Star size={20} strokeWidth={ICON_STROKE} aria-hidden /> Master Mode
-              </button>
-            )}
+            {/* Both are built from this topic's own ladder, so they work for a
+                topic with no hand-built levels and never reach past her grade. */}
+            <button
+              onClick={() => navigate(`/flashcard/${topic.id}`)}
+              style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
+            >
+              <Zap size={20} strokeWidth={ICON_STROKE} aria-hidden /> Quick Review
+            </button>
+            <button
+              onClick={() => navigate(`/game/master/${topic.id}`)}
+              style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}
+            >
+              <Star size={20} strokeWidth={ICON_STROKE} aria-hidden /> Master Mode
+            </button>
           </div>
         </div>
       </div>

@@ -15,6 +15,9 @@ export const GAME_CONFIG = {
   dailyGoalQuestions: 20,
   dailyGoalBonus: 3,
   dailyChallengeBonus: 5,
+  // Paid for every rung she climbs, in any mode. A promotion takes at least six
+  // right out of eight at that rung, so it pays what a fresh level does.
+  levelUpBonusStars: 3,
   // localStorage has a hard quota; generated questions would otherwise mint
   // cards forever. Well above a year of daily play.
   maxSRSCards: 3000,

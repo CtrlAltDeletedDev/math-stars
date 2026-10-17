@@ -1,14 +1,13 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { UserProgress, SRSCard, BadgeEarned, SkillState } from '@/types';
 import { buildInitialProgress, loadProgressResult, normalizeProgress, saveProgress, storageWorks } from './storage';
-import { CATEGORIES, getLevelById } from '@/data/categories';
-import { calculateStars, didPassLevel, updateStreak, passedLevel } from '@/engine/scoring';
+import { getLevelById } from '@/data/categories';
+import { calculateStars, didPassLevel, updateStreak } from '@/engine/scoring';
 import { skillForQuestion, SKILL_FOR_LEVEL, RUNG_FOR_LEVEL } from '@/data/topics';
 import { ErrorTag } from '@/types';
 import { GradeLevel, ceilingFor } from '@/data/grades';
 import { Question } from '@/types';
-import { BADGES, BadgeCheckContext } from '@/data/badges';
-import { STICKERS } from '@/data/stickers';
+import { newBadgesFor, newStickersFor } from '@/engine/rewards';
 import { SHOP_ITEMS } from '@/data/shop';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { todayString, yesterdayString } from '@/engine/dates';
@@ -16,6 +15,24 @@ import { recordSkillAnswer, newSkillState, LadderMove } from '@/engine/skillLadd
 import { pruneSRSCards } from '@/engine/srs';
 import { isServableCard } from '@/engine/sessionBuilder';
 import { updateSRSCard, createNewSRSCard } from '@/engine/srs';
+
+/**
+ * One answer as a finished session hands it over: what she was asked, whether
+ * she knew it, what she tapped first, and how long that first tap took.
+ */
+export interface SessionAnswer {
+  question: Question;
+  correct: boolean;
+  chosen?: string;
+  ms?: number;
+}
+
+/** A rung she climbed during a session, for the screen to celebrate. */
+export interface LevelUp {
+  skillId: string;
+  /** The rung she is standing on now. */
+  rung: number;
+}
 
 interface ProgressContextValue {
   progress: UserProgress;
@@ -26,22 +43,22 @@ interface ProgressContextValue {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers?: { question: Question; correct: boolean; chosen?: string }[],
-  ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
+    answers?: SessionAnswer[],
+  ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; levelUps: LevelUp[] };
   recordDailyChallengeComplete: (
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers?: { question: Question; correct: boolean; chosen?: string }[],
+    answers?: SessionAnswer[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number };
   recordMasterComplete: (
-    categoryId: string,
+    topicId: string,
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers?: { question: Question; correct: boolean; chosen?: string }[],
+    answers?: SessionAnswer[],
   ) => { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number };
   recordQuestionsAnswered: (count: number) => void;
   recordPracticeAnswer: (
@@ -49,7 +66,7 @@ interface ProgressContextValue {
     questionId: string,
     wasCorrect: boolean,
     servedRung?: number | null,
-    picked?: { question: Question; chosen: string },
+    picked?: { question: Question; chosen: string; ms?: number },
   ) => {
     move: LadderMove; skill: SkillState | null; starsAwarded: number;
     newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
@@ -154,72 +171,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  /**
-   * How much of the app she has finished, counted against the CATALOGUE.
-   *
-   * This used to count `every(l => l.status === 'completed')` over the *saved*
-   * levels, so a category whose saved record was missing a level counted as
-   * complete — awarding "Category Champ!" for a category she could not finish.
-   * Counting against CATEGORIES means a level added later correctly makes the
-   * category incomplete again.
-   */
-  function countCompletion(p: UserProgress): { categoriesCompleted: number; totalLevelsCompleted: number } {
-    let categoriesCompleted = 0;
-    let totalLevelsCompleted = 0;
-    for (const cat of CATEGORIES) {
-      const saved = p.categories[cat.id];
-      let done = 0;
-      for (const level of cat.levels) {
-        if (passedLevel(saved?.levels[level.id])) done++;
-      }
-      totalLevelsCompleted += done;
-      if (cat.levels.length > 0 && done === cat.levels.length) categoriesCompleted++;
-    }
-    return { categoriesCompleted, totalLevelsCompleted };
-  }
-
-  function checkNewBadges(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): BadgeEarned[] {
-    const existingIds = new Set(prev.earnedBadges.map((b) => b.badgeId));
-
-    const { categoriesCompleted, totalLevelsCompleted } = countCompletion(next);
-
-    const ctx: BadgeCheckContext = {
-      totalStars: next.totalStars,
-      currentStreak: next.currentStreak,
-      longestStreak: next.longestStreak,
-      consecutiveCorrect: next.consecutiveCorrect,
-      categoriesCompleted,
-      totalLevelsCompleted,
-      sessionCorrect,
-      sessionTotal,
-      dailyChallengeStreak: next.dailyChallengeStreak,
-      dailyChallengesCompleted: next.dailyChallengeHistory?.length,
-    };
-
-    return BADGES.filter((b) => !existingIds.has(b.id) && b.check(ctx)).map((b) => ({
-      badgeId: b.id,
-      earnedAt: Date.now(),
-    }));
-  }
-
-  function checkNewStickers(prev: UserProgress, next: UserProgress, sessionCorrect: number, sessionTotal: number): string[] {
-    const existing = new Set(prev.earnedStickers ?? []);
-    const playDays = new Set(next.playHistory ?? []).size;
-    const { categoriesCompleted, totalLevelsCompleted } = countCompletion(next);
-    const ctx = {
-      totalStars: next.totalStars,
-      currentStreak: next.currentStreak,
-      longestStreak: next.longestStreak,
-      consecutiveCorrect: next.consecutiveCorrect,
-      categoriesCompleted,
-      totalLevelsCompleted,
-      sessionCorrect,
-      sessionTotal,
-      playDays,
-    };
-    return STICKERS.filter((s) => !existing.has(s.id) && s.check(ctx)).map((s) => s.id);
-  }
-
   function recordLevelComplete(
     levelId: string,
     correctCount: number,
@@ -231,10 +182,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
      * Without this, passing levels moved nothing the ladder could read and a
      * child could three-star a whole category yet still open Practice at rung 0.
      */
-    answers: { question: Question; correct: boolean; chosen?: string }[] = [],
-  ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
+    answers: SessionAnswer[] = [],
+  ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; levelUps: LevelUp[] } {
     const level = getLevelById(levelId);
-    if (!level) return { newBadges: [], newStickers: [], streakBonus: 0 };
+    if (!level) return { newBadges: [], newStickers: [], streakBonus: 0, levelUps: [] };
 
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -242,8 +193,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     let newBadges: BadgeEarned[] = [];
     let newStickers: string[] = [];
     let streakBonus = 0;
+    let levelUps: LevelUp[] = [];
 
     setProgress((prev) => {
+      levelUps = [];
       let next = updateStreak(prev);
       const todayStr = todayString();
       const ph = next.playHistory ?? [];
@@ -311,7 +264,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
       const skills = { ...(next.skills ?? {}) };
       let errorPatterns = next.errorPatterns ?? {};
-      for (const { question, correct, chosen } of answers) {
+      for (const { question, correct, chosen, ms } of answers) {
         const skillId = skillForQuestion(question, levelId);
         if (!skillId) continue;
         if (!correct) errorPatterns = noteError(errorPatterns, skillId, question, chosen);
@@ -321,26 +274,28 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         const servedRung = skillId === levelSkill ? levelRung ?? null : null;
         const before = skills[skillId] ?? newSkillState(skillId);
         const result = recordSkillAnswer(
-          before, correct, ceilingFor(skillId, next.gradeLevel), servedRung,
+          before, correct, ceilingFor(skillId, next.gradeLevel), servedRung, ms,
         );
         skills[skillId] = result.state;
+        if (result.move === 'promoted') levelUps.push({ skillId, rung: result.state.rung });
       }
+      const levelUpStars = levelUps.length * GAME_CONFIG.levelUpBonusStars;
 
       next = {
         ...next,
-        totalStars: next.totalStars + newStarDelta,
-        spendableStars: next.spendableStars + newStarDelta,
+        totalStars: next.totalStars + newStarDelta + levelUpStars,
+        spendableStars: next.spendableStars + newStarDelta + levelUpStars,
         categories: { ...next.categories, [level.categoryId]: catProgress },
         srsCards: updatedSRS,
         skills,
         errorPatterns,
       };
 
-      newBadges = checkNewBadges(prev, next, correctCount, totalCount);
+      newBadges = newBadgesFor(prev, next, correctCount, totalCount);
       if (newBadges.length > 0) {
         next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
       }
-      newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      newStickers = newStickersFor(prev, next, correctCount, totalCount);
       if (newStickers.length > 0) {
         next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
       }
@@ -349,7 +304,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
-    return { newBadges, newStickers, streakBonus };
+    return { newBadges, newStickers, streakBonus, levelUps };
   }
 
   /**
@@ -393,7 +348,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   function foldMixedAnswers(
     skills: Record<string, SkillState>,
     patterns: UserProgress['errorPatterns'],
-    answers: { question: Question; correct: boolean; chosen?: string }[],
+    answers: SessionAnswer[],
     levelId: string,
     grade: UserProgress['gradeLevel'],
   ): { skills: Record<string, SkillState>; errorPatterns: UserProgress['errorPatterns'] } {
@@ -414,7 +369,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers: { question: Question; correct: boolean; chosen?: string }[] = [],
+    answers: SessionAnswer[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number; dcStreakBonus: number } {
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -469,9 +424,9 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, 'daily', next.gradeLevel),
       };
 
-      newBadges = checkNewBadges(prev, next, correctCount, totalCount);
+      newBadges = newBadgesFor(prev, next, correctCount, totalCount);
       if (newBadges.length > 0) next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
-      newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      newStickers = newStickersFor(prev, next, correctCount, totalCount);
       if (newStickers.length > 0) next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
 
       debouncedSave(next);
@@ -482,12 +437,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   }
 
   function recordMasterComplete(
-    categoryId: string,
+    topicId: string,
     correctCount: number,
     totalCount: number,
     srsUpdates: SRSCard[],
     consecutiveCorrect: number,
-    answers: { question: Question; correct: boolean; chosen?: string }[] = [],
+    answers: SessionAnswer[] = [],
   ): { newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number } {
     const score = totalCount > 0 ? correctCount / totalCount : 0;
     const stars = calculateStars(score);
@@ -523,12 +478,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       next = {
         ...next,
         srsCards: updatedSRS,
-        ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, categoryId, next.gradeLevel),
+        ...foldMixedAnswers(next.skills ?? {}, next.errorPatterns ?? {}, answers, topicId, next.gradeLevel),
       };
 
-      newBadges = checkNewBadges(prev, next, correctCount, totalCount);
+      newBadges = newBadgesFor(prev, next, correctCount, totalCount);
       if (newBadges.length > 0) next = { ...next, earnedBadges: [...next.earnedBadges, ...newBadges] };
-      newStickers = checkNewStickers(prev, next, correctCount, totalCount);
+      newStickers = newStickersFor(prev, next, correctCount, totalCount);
       if (newStickers.length > 0) next = { ...next, earnedStickers: [...(next.earnedStickers ?? []), ...newStickers] };
 
       debouncedSave(next);
@@ -547,8 +502,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     wasCorrect: boolean,
     /** The rung the queue served this from; null for an SRS review. */
     servedRung?: number | null,
-    /** The question and the option she picked, so a mistake can say what it meant. */
-    picked?: { question: Question; chosen: string },
+    /**
+     * The question and the option she picked, so a mistake can say what it
+     * meant, and how long that first tap took.
+     */
+    picked?: { question: Question; chosen: string; ms?: number },
   ): {
     move: LadderMove; skill: SkillState | null; starsAwarded: number;
     newBadges: BadgeEarned[]; newStickers: string[]; streakBonus: number;
@@ -572,11 +530,15 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       if (skillId) {
         const before = skills[skillId] ?? newSkillState(skillId);
         const result = recordSkillAnswer(
-          before, wasCorrect, ceilingFor(skillId, prev.gradeLevel), servedRung,
+          before, wasCorrect, ceilingFor(skillId, prev.gradeLevel), servedRung, picked?.ms,
         );
         skills[skillId] = result.state;
         move = result.move;
         skill = result.state;
+        // Climbing a rung is the progress the whole app is built around, so it
+        // pays like a level does. A star every ten answers alone made Play — the
+        // button Home puts first — the worst-paid way to learn anything.
+        if (move === 'promoted') starsAwarded += GAME_CONFIG.levelUpBonusStars;
         if (!wasCorrect && picked) {
           errorPatterns = noteError(errorPatterns, skillId, picked.question, picked.chosen);
         }
@@ -615,9 +577,9 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       // thing to say about the mode the whole adaptive ladder exists to serve:
       // a child could live in it for a thousand questions and the Badges screen
       // would still read 0.
-      newBadges = checkNewBadges(prev, next, wasCorrect ? 1 : 0, 1);
+      newBadges = newBadgesFor(prev, next, wasCorrect ? 1 : 0, 1);
       if (newBadges.length > 0) next.earnedBadges = [...next.earnedBadges, ...newBadges];
-      newStickers = checkNewStickers(prev, next, wasCorrect ? 1 : 0, 1);
+      newStickers = newStickersFor(prev, next, wasCorrect ? 1 : 0, 1);
       if (newStickers.length > 0) next.earnedStickers = [...(next.earnedStickers ?? []), ...newStickers];
 
       debouncedSave(next);

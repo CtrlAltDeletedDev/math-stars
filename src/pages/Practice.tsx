@@ -13,6 +13,8 @@ import QuestionCard from '@/components/game/QuestionCard';
 import AnswerGrid from '@/components/game/AnswerGrid';
 import FeedbackOverlay from '@/components/game/FeedbackOverlay';
 import HintBubble from '@/components/game/HintBubble';
+import Toast from '@/components/ui/Toast';
+import { BADGES } from '@/data/badges';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { House, InfinityIcon, Volume2, VolumeX, X } from 'lucide-react';
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
@@ -45,11 +47,15 @@ export default function Practice() {
   const [streak, setStreak] = useState(0);
   const [levelUp, setLevelUp] = useState<{ title: string; emoji: string; rank: string } | null>(null);
   const [showQuit, setShowQuit] = useState(false);
+  // Badges and stickers have always been earnable here; nothing used to say so.
+  const [toasts, setToasts] = useState<string[]>([]);
 
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelUpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const answeringRef = useRef(false);
+  // When the current question appeared, so a first tap can say how long it took.
+  const shownAt = useRef(performance.now());
 
   useEffect(() => {
     queue.syncProgress(progress);
@@ -62,6 +68,7 @@ export default function Practice() {
   }, []);
 
   useEffect(() => {
+    shownAt.current = performance.now();
     if (pick && progress.autoReadEnabled) speak(pick.question);
   }, [pick]); // eslint-disable-line
 
@@ -86,6 +93,8 @@ export default function Practice() {
     }
 
     const correct = triedChoices.length === 0 && choice === question.correctAnswer;
+    // Only a right first tap is ever kept as a time, so the retry needs no clock.
+    const ms = triedChoices.length === 0 ? performance.now() - shownAt.current : undefined;
     const foundIt = choice === question.correctAnswer;
     setSelectedChoice(choice);
     setLastCorrect(foundIt);
@@ -110,10 +119,20 @@ export default function Practice() {
     // whose meaning is worth keeping — not whatever she landed on after the
     // retry told her it was wrong.
     const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
-    const { move, skill } = recordPracticeAnswer(
-      pick.skillId, question.id, correct, pick.rung, { question, chosen: answeredChoice },
+    const { move, skill, newBadges, newStickers, streakBonus } = recordPracticeAnswer(
+      pick.skillId, question.id, correct, pick.rung, { question, chosen: answeredChoice, ms },
     );
     recordQuestionsAnswered(1);
+
+    const earned = [
+      ...newBadges.map((b) => {
+        const def = BADGES.find((d) => d.id === b.badgeId);
+        return def ? `${def.emoji} New badge: ${def.title}` : '🏅 New badge!';
+      }),
+      ...newStickers.map(() => '🎨 New sticker unlocked!'),
+      ...(streakBonus > 0 ? [`🔥 Streak bonus: +${streakBonus} ⭐`] : []),
+    ];
+    if (earned.length > 0) setToasts(earned);
 
     if (move === 'promoted' && skill) {
       const def = SKILLS_BY_ID.get(skill.skillId);
@@ -153,6 +172,7 @@ export default function Practice() {
 
   return (
     <BackgroundGradient colors={PRACTICE_COLORS}>
+      <Toast messages={toasts} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden', position: 'relative' }}>
 
         {showQuit && (
@@ -190,7 +210,7 @@ export default function Practice() {
                 {levelUp.title} levelled up!
               </div>
               <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: '#795548' }}>
-                You're getting harder questions now
+                Harder questions now · +{GAME_CONFIG.levelUpBonusStars} ⭐
               </div>
             </div>
             <div style={{ fontSize: 34 }}>{levelUp.rank}</div>
