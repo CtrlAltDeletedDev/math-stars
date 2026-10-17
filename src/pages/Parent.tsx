@@ -416,7 +416,7 @@ export default function Parent() {
           Practice Levels
         </div>
         <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
-          These move on their own — up after 6 of the last 8 right, down after 3 or fewer. Skills she hasn't practised yet aren't shown.
+          These move on their own — up after 6 of the last 8 right, down after 3 or fewer. Until a skill first moves her down, 4 right in a row at a new step moves her up, so she reaches her level quickly. Skills she hasn't practised yet aren't shown.
         </div>
         {SKILLS.filter((sk) => progress.skills?.[sk.id]).length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>

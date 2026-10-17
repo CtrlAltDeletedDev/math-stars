@@ -1,7 +1,7 @@
 import { UserProgress } from '@/types';
 import { RANKS } from '@/data/skills';
 import { GradeLevel, ceilingFor } from '@/data/grades';
-import { LADDER } from './skillLadder';
+import { LADDER, inFastLane } from './skillLadder';
 
 // One number for "how is she doing on this topic", for the ring on a tile.
 //
@@ -31,13 +31,14 @@ export interface TopicMastery {
 /**
  * How far through the current rung her sliding window has got.
  *
- * `LADDER.promoteAt` correct answers is what a promotion costs, so that is the
- * honest denominator — the segment fills at the rate she is actually earning it.
+ * What a promotion costs is the honest denominator — `LADDER.promoteAt` right
+ * answers normally, `LADDER.fastLane` while the fast lane is open — so the
+ * segment fills at the rate she is actually earning it.
  */
-function windowFraction(recent: readonly boolean[]): number {
+function windowFraction(recent: readonly boolean[], fastLane: boolean): number {
   if (recent.length === 0) return 0;
   const hits = recent.filter(Boolean).length;
-  return Math.min(1, hits / LADDER.promoteAt);
+  return Math.min(1, hits / (fastLane ? LADDER.fastLane : LADDER.promoteAt));
 }
 
 export function masteryFor(
@@ -48,8 +49,9 @@ export function masteryFor(
   const state = progress.skills?.[skillId];
   const ceiling = ceilingFor(skillId, grade);
   const rung = Math.min(state?.rung ?? 0, ceiling);
-  const partial = windowFraction(state?.recent ?? []);
   const atCeiling = rung >= ceiling;
+  // At the ceiling there is no promotion to earn, fast or otherwise.
+  const partial = windowFraction(state?.recent ?? [], !!state && !atCeiling && inFastLane(state));
 
   // `ceiling + 1` segments: one per rung, plus the one she is working through.
   // At the ceiling the arc shows only the current window, so it climbs, resets

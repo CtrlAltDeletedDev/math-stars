@@ -13,11 +13,20 @@ import { SKILLS_BY_ID } from '@/data/skills';
 // The window is cleared on every move, so she gets a fresh 8 answers to settle
 // in before the next decision. That hysteresis is what stops it oscillating
 // between two rungs on a run of luck.
+//
+// The fast lane is placement without a placement test. Every topic starts her
+// on its first rung, so a first grader who can already add to 20 began on "+1"
+// and needed 32 answers to climb to where she was. Until a topic has moved her
+// *down* once, 4 right out of the first 4 at a rung moves her up. The first
+// demotion means she has found her level, and the 6-of-8 rule takes over for
+// good. Four in a row is not luck: guessing among four options gets there one
+// time in 256.
 
 export const LADDER = {
   window: 8,
   promoteAt: 6,
   demoteAt: 3,
+  fastLane: 4,
 } as const;
 
 /** Longer than this is a child who wandered off, not a slow answer. */
@@ -28,7 +37,24 @@ function usableAnswerMs(ms: number | undefined): ms is number {
 }
 
 export function newSkillState(skillId: string): SkillState {
-  return { skillId, rung: 0, recent: [], attempts: 0, correct: 0, ceilingHits: 0 };
+  return { skillId, rung: 0, recent: [], attempts: 0, correct: 0, ceilingHits: 0, demotions: 0 };
+}
+
+/**
+ * Is this topic still placing her? Only a state that has *counted* demotions
+ * from the start can say none have happened: a save from before the count
+ * existed says nothing either way, so it keeps the 6-of-8 rule it always had.
+ */
+export function inPlacement(state: SkillState): boolean {
+  return state.demotions === 0;
+}
+
+/**
+ * Could the next answers still move her up by the fast lane? For the ring,
+ * which should fill at the rate a promotion is actually being earned.
+ */
+export function inFastLane(state: SkillState): boolean {
+  return inPlacement(state) && state.recent.length < LADDER.fastLane && state.recent.every(Boolean);
 }
 
 export type LadderMove = 'promoted' | 'demoted' | null;
@@ -100,6 +126,16 @@ export function recordSkillAnswer(
     state.times = [...(prev.times ?? []), Math.round(ms)].slice(-LADDER.window);
   }
 
+  // The fast lane: her first four at this rung, all right, while the topic is
+  // still placing her. `recent` is cleared on every move, so a length of four
+  // is exactly her first four here.
+  if (
+    inPlacement(prev) && standingRung < topRung &&
+    recent.length === LADDER.fastLane && recent.every(Boolean)
+  ) {
+    return { state: { ...state, rung: standingRung + 1, recent: [], times: [] }, move: 'promoted', fromRung: standingRung };
+  }
+
   if (recent.length < LADDER.window) return { state, move: null, fromRung: prev.rung };
 
   const hits = recent.filter(Boolean).length;
@@ -114,7 +150,11 @@ export function recordSkillAnswer(
     return { state: { ...state, rung: standingRung + 1, recent: [], times: [] }, move: 'promoted', fromRung: standingRung };
   }
   if (hits <= LADDER.demoteAt && standingRung > 0) {
-    return { state: { ...state, rung: standingRung - 1, recent: [], times: [] }, move: 'demoted', fromRung: standingRung };
+    return {
+      state: { ...state, rung: standingRung - 1, recent: [], times: [], demotions: (prev.demotions ?? 0) + 1 },
+      move: 'demoted',
+      fromRung: standingRung,
+    };
   }
   // Sitting at the top and acing it: keep the window fresh so she isn't stuck
   // holding a full window that can only ever trigger a demotion.

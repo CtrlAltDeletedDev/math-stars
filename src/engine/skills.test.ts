@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor } from '@/data/skills';
-import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS } from './skillLadder';
+import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS, inPlacement } from './skillLadder';
 import { PracticeQueue } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
+import { masteryFor } from './mastery';
 import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, allCatalogueLevelIds } from '@/data/topics';
 import { UserProgress, SkillState } from '@/types';
 
@@ -158,7 +159,10 @@ describe('fractions', () => {
 // ---------------------------------------------------------------------------
 
 describe('the promote/demote rule', () => {
-  const run = (results: boolean[], start = newSkillState('adding')) =>
+  // A child the topic has already placed: one demotion behind her, so the fast
+  // lane is closed and this is the rule she lives under from then on.
+  const settled = (rung = 0): SkillState => ({ ...newSkillState('adding'), rung, demotions: 1 });
+  const run = (results: boolean[], start = settled()) =>
     results.reduce((st, r) => recordSkillAnswer(st, r).state, start);
 
   it('does not move her before a full window', () => {
@@ -178,7 +182,7 @@ describe('the promote/demote rule', () => {
   });
 
   it('demotes after 3 of 8 correct', () => {
-    const start = { ...newSkillState('adding'), rung: 2 };
+    const start = settled(2);
     const st = run([true, true, true, false, false, false, false, false], start);
     expect(st.rung).toBe(1);
   });
@@ -198,7 +202,7 @@ describe('the promote/demote rule', () => {
   it('does not oscillate on a mixed run', () => {
     // Alternating right/wrong is 50% — comfortably between the two thresholds,
     // so she should sit still rather than bounce.
-    let st = { ...newSkillState('adding'), rung: 2 };
+    let st = settled(2);
     const moves: string[] = [];
     for (let i = 0; i < 200; i++) {
       const r = recordSkillAnswer(st, i % 2 === 0);
@@ -210,7 +214,7 @@ describe('the promote/demote rule', () => {
   });
 
   it('reports the move so the screen can celebrate it', () => {
-    let st = newSkillState('adding');
+    let st = settled();
     let promoted = false;
     for (let i = 0; i < LADDER.window; i++) {
       const r = recordSkillAnswer(st, true);
@@ -224,6 +228,78 @@ describe('the promote/demote rule', () => {
     const st = run(Array(50).fill(true));
     expect(st.attempts).toBe(50);
     expect(st.correct).toBe(50);
+  });
+});
+
+describe('the fast lane', () => {
+  // Every topic starts her on its first rung. A first grader who can already
+  // add to 20 began on "+1" and needed 32 answers to climb to where she was.
+  const feed = (results: boolean[], start: SkillState, ceiling?: number) =>
+    results.reduce((st, r) => recordSkillAnswer(st, r, ceiling).state, start);
+
+  it('moves a new topic up after 4 right in a row', () => {
+    const st = feed(Array(LADDER.fastLane).fill(true), newSkillState('adding'));
+    expect(st.rung).toBe(1);
+    expect(st.recent).toEqual([]);
+  });
+
+  it('climbs four rungs in sixteen answers, where the ordinary rule needed thirty-two', () => {
+    expect(feed(Array(16).fill(true), newSkillState('adding')).rung).toBe(4);
+  });
+
+  it('needs her first four at a rung to be right; after a miss the ordinary rule decides', () => {
+    const missed = feed([true, true, true, false], newSkillState('adding'));
+    expect(missed.rung).toBe(0);
+    // 7 of 8 still promotes, at the full window.
+    const st = feed([true, true, true, true], missed);
+    expect(st.rung).toBe(1);
+    // ...and the next rung gets its own fresh chance at the fast lane.
+    expect(feed(Array(LADDER.fastLane).fill(true), st).rung).toBe(2);
+  });
+
+  it('closes for good the first time the topic moves her down', () => {
+    const tooHard = feed(Array(LADDER.window).fill(false), { ...newSkillState('adding'), rung: 3 });
+    expect(tooHard.rung).toBe(2);
+    expect(tooHard.demotions).toBe(1);
+    expect(feed(Array(LADDER.fastLane).fill(true), tooHard).rung, 'four is no longer enough').toBe(2);
+    expect(feed(Array(LADDER.window).fill(true), tooHard).rung).toBe(3);
+  });
+
+  it('never climbs past her grade, and does not count it as outgrowing the grade', () => {
+    const st = feed(Array(LADDER.fastLane).fill(true), { ...newSkillState('adding'), rung: 4 }, 4);
+    expect(st.rung).toBe(4);
+    expect(st.ceilingHits).toBe(0);
+  });
+
+  it('ignores answers from another rung, as the ordinary rule does', () => {
+    const start = newSkillState('adding');
+    const st = Array(LADDER.fastLane).fill(true)
+      .reduce((s: SkillState, r: boolean) => recordSkillAnswer(s, r, undefined, 2).state, start);
+    expect(st.rung).toBe(0);
+    expect(st.recent).toEqual([]);
+  });
+
+  it('leaves a save from before demotions were counted on the ordinary rule', () => {
+    // No count means no evidence she has never been moved down.
+    const legacy: SkillState = { skillId: 'adding', rung: 1, recent: [], attempts: 90, correct: 70, ceilingHits: 0 };
+    expect(inPlacement(legacy)).toBe(false);
+    expect(feed(Array(LADDER.fastLane).fill(true), legacy).rung).toBe(1);
+  });
+
+  it('fills the ring at the rate the fast lane is paying, and at the ordinary rate after', () => {
+    // Grade 1 Adding has 5 rungs in scope, so one rung is a fifth of the ring.
+    const progress = (state: SkillState): UserProgress => ({ ...buildInitialProgress(), gradeLevel: '1', skills: { adding: state } });
+    const placing = { ...newSkillState('adding'), recent: [true, true] };
+    expect(masteryFor('adding', progress(placing)).fill).toBeCloseTo((2 / LADDER.fastLane) / 5);
+    const placed = { ...placing, demotions: 1 };
+    expect(masteryFor('adding', progress(placed)).fill).toBeCloseTo((2 / LADDER.promoteAt) / 5);
+  });
+
+  it('keeps the count of demotions through a save', () => {
+    const saved = { ...buildInitialProgress(), skills: { adding: { ...newSkillState('adding'), rung: 2, demotions: 3 } } };
+    expect(normalizeProgress(saved)!.skills.adding.demotions).toBe(3);
+    const junk = { ...buildInitialProgress(), skills: { adding: { ...newSkillState('adding'), demotions: -2 } } };
+    expect(normalizeProgress(junk as never)!.skills.adding.demotions).toBeUndefined();
   });
 });
 
@@ -311,7 +387,7 @@ describe('an answer only moves her when it came from her own rung', () => {
   it('keeps its old meaning when the caller says nothing', () => {
     // Every pre-existing caller and test omits the argument, and must still get
     // the original behaviour.
-    const start: SkillState = { ...newSkillState('adding'), rung: 2 };
+    const start: SkillState = { ...newSkillState('adding'), rung: 2, demotions: 1 };
     const st = Array(LADDER.window).fill(true)
       .reduce((s: SkillState, r: boolean) => recordSkillAnswer(s, r).state, start);
     expect(st.rung).toBe(3);
