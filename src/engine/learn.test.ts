@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   ALL_LESSONS, INTERACTIVE_LESSONS, LESSONS_BY_ID, Lesson, Scene,
-  lessonsFor, recommendedLesson, lessonForMistake,
+  lessonsFor, recommendedLesson, lessonForMistake, practiceLevelFor,
 } from '@/data/learn';
 import { LESSONS } from '@/data/lessons';
-import { SKILLS_BY_ID } from '@/data/skills';
+import { SKILLS_BY_ID, questionForRung } from '@/data/skills';
 import { getLevelById } from '@/data/categories';
 import { ceilingFor } from '@/data/grades';
+import { SKILL_FOR_LEVEL } from '@/data/topics';
+import { ErrorTag } from '@/types';
 
 // Lessons are data, so the mistakes worth guarding are data mistakes: a "try"
 // whose marked answer is wrong, a picture that shows a different sum from the
@@ -206,5 +208,73 @@ describe('finding a lesson', () => {
     expect(lessonForMistake('stories', 'added-story-numbers', 9, 4)?.id).toBe('some-and-the-rest');
     expect(lessonForMistake('taking-away', 'off-by-one', 4, 4)?.id).toBe('hop-back');
     expect(lessonForMistake('shapes', 'off-by-one', 2, 0)).toBeNull();
+  });
+});
+
+describe('Number Tricks lessons', () => {
+  // Number Tricks mistakes were filed under Adding and Mystery Number until
+  // its questions said which ladder they belong to. Filed in the right place,
+  // they need lessons in that place for "do this lesson together" to work.
+
+  it('has a lesson for doubles, making ten and counting on', () => {
+    expect(lessonsFor('strategies', ceilingFor('strategies', '1')).map((l) => l.id))
+      .toEqual(['doubles', 'make-ten', 'equals-same', 'count-on']);
+  });
+
+  it('finds the lesson for each Number Tricks mistake a parent is shown', () => {
+    // Every tag a Number Tricks question carries except 'place-value', which
+    // had no lesson before its mistakes were filed here either.
+    expect(lessonForMistake('strategies', 'answered-a-given-number', 4, 1)?.id).toBe('doubles');
+    expect(lessonForMistake('strategies', 'answered-the-whole', 4, 2)?.id).toBe('make-ten');
+    expect(lessonForMistake('strategies', 'off-by-one', 4, 2)?.id).toBe('make-ten');
+    expect(lessonForMistake('strategies', 'off-by-one', 4, 3)?.id).toBe('count-on');
+    // "8 + ? = 10" answered 18: The Equals Sign is the lesson for adding the
+    // two numbers shown, and it was the one offered while these were misfiled
+    // under Mystery Number.
+    expect(lessonForMistake('strategies', 'wrong-operation', 4, 2)?.id).toBe('equals-same');
+  });
+
+  it('only claims to help with mistakes the topic\'s questions can actually show', () => {
+    // A tag no question in the topic carries could never be her commonest
+    // mistake there, so a lesson claiming it would never be suggested.
+    const bad: string[] = [];
+    for (const l of ALL_LESSONS) {
+      for (const p of l.places) {
+        const skill = SKILLS_BY_ID.get(p.skillId)!;
+        const seen = new Set<ErrorTag>();
+        skill.rungs.forEach((_, rung) => {
+          for (let i = 0; i < 150; i++) {
+            for (const t of Object.values(questionForRung(skill, rung)?.distractorMeaning ?? {})) seen.add(t);
+          }
+        });
+        for (const tag of l.helpsWith ?? []) if (!seen.has(tag)) bad.push(`${l.id} in ${p.skillId}: ${tag}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+});
+
+describe('"Practice it now"', () => {
+  it('practises the level of the topic the lesson was opened from', () => {
+    const countOn = LESSONS_BY_ID.get('count-on')!;
+    expect(practiceLevelFor(countOn, 'strategies')?.id).toBe('strategy-count-on');
+    expect(practiceLevelFor(countOn, 'adding')?.id).toBe('addition-3');
+  });
+
+  it('falls back to the lesson\'s own level when it was opened from nowhere in particular', () => {
+    const countOn = LESSONS_BY_ID.get('count-on')!;
+    expect(practiceLevelFor(countOn, null)?.id).toBe('addition-3');
+    expect(practiceLevelFor(countOn, 'clocks')?.id, 'not one of its topics').toBe('addition-3');
+  });
+
+  it('stays inside the topic for every place every lesson has', () => {
+    const bad: string[] = [];
+    for (const l of ALL_LESSONS) {
+      for (const p of l.places) {
+        const level = practiceLevelFor(l, p.skillId);
+        if (!level || SKILL_FOR_LEVEL.get(level.id) !== p.skillId) bad.push(`${l.id} from ${p.skillId} -> ${level?.id}`);
+      }
+    }
+    expect(bad).toEqual([]);
   });
 });

@@ -77,6 +77,17 @@ export type QuestionVisual =
 export interface Question {
   id: string;
   type: QuestionType;
+  /**
+   * The ladder this question practises, when its `type` would say another.
+   *
+   * Doubles and counting on are written as addition, and making ten as a
+   * missing number — that is what they look like on screen, and the dot and
+   * hop aids key off `type` — but Number Tricks serves them, and an answer to
+   * one is evidence about Number Tricks. Routed by type alone, every one of
+   * them was credited to Adding or Mystery Number and the Number Tricks levels
+   * never moved their own ladder. `skillForQuestion` reads this first.
+   */
+  skill?: string;
   prompt: string;
   promptEmoji?: string;
   correctAnswer: string;

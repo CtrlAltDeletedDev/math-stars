@@ -73,3 +73,33 @@ export function masteryFor(
 export function hasOutgrown(skillId: string, progress: UserProgress): boolean {
   return (progress.skills?.[skillId]?.ceilingHits ?? 0) >= 2;
 }
+
+/** What the ladders say she has done, summed across topics — the rewards read this. */
+export interface LadderProgress {
+  /**
+   * How far up her ladders she stands, rungs above the first, summed. A demotion
+   * and the climb back count once, which is the honest measure of ground gained.
+   */
+  rungsClimbed: number;
+  /**
+   * Topics where she stands on the highest rung her grade allows. A topic whose
+   * grade stops at its first rung (money in first grade) is left out: she would
+   * be "at the top" of it before answering a single question.
+   */
+  topicsAtTop: number;
+  /** Every answer the ladders have heard, from any mode. */
+  questionsAnswered: number;
+}
+
+export function ladderProgress(progress: UserProgress): LadderProgress {
+  let rungsClimbed = 0;
+  let topicsAtTop = 0;
+  let questionsAnswered = 0;
+  for (const [skillId, state] of Object.entries(progress.skills ?? {})) {
+    rungsClimbed += state.rung;
+    questionsAnswered += state.attempts;
+    const ceiling = ceilingFor(skillId, progress.gradeLevel);
+    if (ceiling > 0 && state.rung >= ceiling) topicsAtTop++;
+  }
+  return { rungsClimbed, topicsAtTop, questionsAnswered };
+}

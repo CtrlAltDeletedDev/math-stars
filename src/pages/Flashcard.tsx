@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
-import { getLevelById, getCategoryById } from '@/data/categories';
-import { buildSession } from '@/engine/sessionBuilder';
+import { SKILL_FOR_LEVEL, TOPICS_BY_ID } from '@/data/topics';
+import { buildRungSession } from '@/engine/sessionBuilder';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { Question } from '@/types';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
@@ -12,18 +12,16 @@ import { ArrowLeft, Check, House, RotateCcw, X, Zap } from 'lucide-react';
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 export default function Flashcard() {
-  const { categoryId = '', levelId = '' } = useParams<{ categoryId: string; levelId: string }>();
+  // `/flashcard/:skillId`, or the old `/flashcard/:categoryId/:levelId`.
+  const { skillId, levelId = '' } = useParams<{ skillId: string; levelId: string }>();
   const navigate = useNavigate();
   const { progress } = useProgress();
 
-  const level = getLevelById(levelId);
-  const category = getCategoryById(categoryId);
+  const topic = TOPICS_BY_ID.get(skillId ?? SKILL_FOR_LEVEL.get(levelId) ?? '');
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
 
-  const questionsRef = useRef<Question[]>(
-    level ? buildSession(level, progress.srsCards, character?.name ?? 'Friend') : [],
-  );
+  const questionsRef = useRef<Question[]>(topic ? buildRungSession(progress, topic.id) : []);
 
   const [index, setIndex] = useState(0);
   const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
@@ -36,19 +34,19 @@ export default function Flashcard() {
   // A stale bookmark or a renamed level id must never render an empty screen:
   // nothing throws, so the error boundary cannot catch it and she is simply
   // stuck with no way back. Matches the guard in Game.tsx.
-  if (!level || !category) return <Navigate to="/" replace />;
+  if (!topic) return <Navigate to="/" replace />;
 
   const questions = questionsRef.current;
 
   if (questions.length === 0) {
     return (
-      <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+      <BackgroundGradient colors={[topic.bgColor, topic.darkColor]}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 20 }}>
           <div style={{ fontSize: 64 }}>🤔</div>
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff', textAlign: 'center' }}>
-            No questions available yet — play a level first!
+            No questions here yet!
           </div>
-          <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="Back" icon={<ArrowLeft size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.3)" />
+          <BigButton onPress={() => navigate(`/topic/${topic.id}`)} label="Back" icon={<ArrowLeft size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.3)" />
         </div>
       </BackgroundGradient>
     );
@@ -73,7 +71,7 @@ export default function Flashcard() {
   if (done) {
     const pct = Math.round((score.correct / score.total) * 100);
     return (
-      <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+      <BackgroundGradient colors={[topic.bgColor, topic.darkColor]}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 20 }}>
           <div style={{ fontSize: 72 }}>{characterEmoji}</div>
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 32, color: '#fff', textAlign: 'center' }}>
@@ -84,7 +82,7 @@ export default function Flashcard() {
           </div>
           <div style={{ display: 'flex', gap: 14, width: '100%', maxWidth: 360 }}>
             <BigButton onPress={() => { setIndex(0); setScore({ correct: 0, total: 0 }); setDone(false); }} label="Again" icon={<RotateCcw size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="rgba(255,255,255,0.3)" style={{ flex: 1 }} />
-            <BigButton onPress={() => navigate(`/category/${categoryId}`)} label="Done" icon={<House size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={category.bgColor} style={{ flex: 1 }} />
+            <BigButton onPress={() => navigate(`/topic/${topic.id}`)} label="Done" icon={<House size={22} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={topic.bgColor} style={{ flex: 1 }} />
           </div>
         </div>
       </BackgroundGradient>
@@ -92,7 +90,7 @@ export default function Flashcard() {
   }
 
   return (
-    <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+    <BackgroundGradient colors={[topic.bgColor, topic.darkColor]}>
       <div
         style={{
           flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden',
@@ -102,7 +100,7 @@ export default function Flashcard() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
-            onClick={() => navigate(`/category/${categoryId}`)}
+            onClick={() => navigate(`/topic/${topic.id}`)}
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
 
             aria-label="Stop"

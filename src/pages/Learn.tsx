@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
-import { LESSONS_BY_ID, TryStep } from '@/data/learn';
+import { LESSONS_BY_ID, TryStep, practiceLevelFor } from '@/data/learn';
 import { TOPICS_BY_ID } from '@/data/topics';
-import { getLevelById } from '@/data/categories';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { shuffle } from '@/engine/choices';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -57,7 +56,7 @@ export default function Learn() {
   const colors: [string, string] = topic ? [topic.bgColor, topic.darkColor] : ['#5C6BC0', '#283593'];
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const guide = character ? getCharacterEmoji(character.id, progress.totalStars) : '🦉';
-  const practice = getLevelById(lesson.practiceLevelId);
+  const practice = practiceLevelFor(lesson, topic?.id);
   const isDone = index >= lesson.steps.length;
 
   function leave() {

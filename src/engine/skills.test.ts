@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor } from '@/data/skills';
-import { recordSkillAnswer, newSkillState, LADDER, isMaxed } from './skillLadder';
+import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS } from './skillLadder';
 import { PracticeQueue } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
@@ -566,6 +566,71 @@ describe('the grade ceiling', () => {
       state = recordSkillAnswer(state, true, top).state;
     }
     expect(state.ceilingHits ?? 0).toBe(0);
+  });
+});
+
+describe('answer times', () => {
+  const at = (rung: number, times?: number[]): SkillState => ({ ...newSkillState('adding'), rung, ...(times ? { times } : {}) });
+
+  it('keeps how long a right answer at her own rung took', () => {
+    const { state } = recordSkillAnswer(at(2), true, undefined, 2, 3400.6);
+    expect(state.times).toEqual([3401]);
+  });
+
+  it('leaves out misses, which say nothing about fluency', () => {
+    expect(recordSkillAnswer(at(2), false, undefined, 2, 3400).state.times).toBeUndefined();
+  });
+
+  it('leaves out answers from another rung, or from no rung', () => {
+    expect(recordSkillAnswer(at(2), true, undefined, 1, 3400).state.times).toBeUndefined();
+    expect(recordSkillAnswer(at(2), true, undefined, null, 3400).state.times).toBeUndefined();
+  });
+
+  it('leaves out a time that is not an answer time', () => {
+    for (const ms of [0, -5, NaN, Infinity, MAX_ANSWER_MS + 1]) {
+      expect(recordSkillAnswer(at(2), true, undefined, 2, ms).state.times, String(ms)).toBeUndefined();
+    }
+  });
+
+  it('keeps only the latest window of them', () => {
+    let state = at(2);
+    // Alternate right and wrong: 4 of 8 neither promotes nor demotes her.
+    for (let i = 1; i <= 20; i++) state = recordSkillAnswer(state, i % 2 === 0, undefined, 2, i * 100).state;
+    expect(state.rung).toBe(2);
+    expect(state.times).toEqual([600, 800, 1000, 1200, 1400, 1600, 1800, 2000]);
+  });
+
+  it('starts again when she moves rung', () => {
+    let state = at(2);
+    for (let i = 0; i < LADDER.window; i++) state = recordSkillAnswer(state, true, undefined, 2, 2000).state;
+    expect(state.rung).toBe(3);
+    expect(state.times).toEqual([]);
+  });
+
+  it('keeps them while she sits at the top acing it', () => {
+    let state = at(4);
+    for (let i = 0; i < LADDER.window; i++) state = recordSkillAnswer(state, true, 4, 4, 2000).state;
+    expect(state.rung).toBe(4);
+    expect(state.times).toHaveLength(LADDER.window);
+  });
+
+  it('reports the middle time once there are a few to go on', () => {
+    expect(typicalAnswerMs(at(2, [1000, 9000]))).toBeNull();
+    expect(typicalAnswerMs(at(2, [9000, 1000, 3000]))).toBe(3000);
+    expect(typicalAnswerMs(at(2, [1000, 2000, 4000, 30000]))).toBe(3000);
+  });
+
+  it('survive a save, and junk in them does not', () => {
+    const saved = {
+      ...buildInitialProgress(),
+      skills: {
+        adding: { ...at(2), times: [1200, 'x', -3, null, 2400] },
+        'taking-away': at(1),
+      },
+    } as unknown as UserProgress;
+    const loaded = normalizeProgress(saved)!;
+    expect(loaded.skills.adding.times).toEqual([1200, 2400]);
+    expect(loaded.skills['taking-away'].times).toBeUndefined();
   });
 });
 

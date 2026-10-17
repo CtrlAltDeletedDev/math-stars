@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
 import { SKILLS, rankFor, unlockedSkillIds } from '@/data/skills';
-import { rungAccuracy, isMaxed } from '@/engine/skillLadder';
+import { rungAccuracy, isMaxed, typicalAnswerMs } from '@/engine/skillLadder';
 import { hasOutgrown } from '@/engine/mastery';
 import { GRADES, GradeLevel, ceilingFor } from '@/data/grades';
 import { lessonForMistake } from '@/data/learn';
@@ -427,6 +427,7 @@ export default function Parent() {
             {SKILLS.filter((sk) => progress.skills?.[sk.id]).map((sk) => {
               const st = progress.skills[sk.id];
               const acc = rungAccuracy(st);
+              const typicalMs = typicalAnswerMs(st);
               const rung = sk.rungs[Math.min(st.rung, sk.rungs.length - 1)];
               return (
                 <div key={sk.id} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
@@ -445,6 +446,7 @@ export default function Parent() {
                   <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>
                     {st.attempts} answered
                     {acc !== null ? ` · ${Math.round(acc * 100)}% on the last ${st.recent.length}` : ''}
+                    {typicalMs !== null ? ` · about ${(typicalMs / 1000).toFixed(1)}s per right answer` : ''}
                   </div>
                 </div>
               );

@@ -85,6 +85,14 @@ through `recordSkillAnswer`, routed by `skillForQuestion` so mixed levels credit
 ladders. Without it, categories and skills drift back into two worlds that model the same
 maths and never talk — which is the bug this design exists to prevent.
 
+**Every mode reads the ladders, not the category list.** Play passes no levels, so anything
+built from category history goes stale for the child who only uses the main button — the Daily
+Challenge was ten `n + 1`s a day for her. The Daily Challenge, Master Mode and Quick Review deal
+from her serving rung (`src/engine/sessionBuilder.ts`), "Next" after a level is
+`nextLevelInTopic`, and any badge or sticker that rewards passing levels also accepts the same
+progress from `ladderProgress` (`src/engine/rewards.ts`). `sessions.test.ts` and
+`rewards.test.ts` guard this.
+
 **Record what she actually did.** The first wrong tap gets a kind retry on screen but is
 still scored, fed to SRS and fed to the ladder. When it was discarded, guessing scored ~50%
 and promoted her into work she couldn't do. Keep "did she find it?" (what she sees) and

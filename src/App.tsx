@@ -32,7 +32,7 @@ export default function App() {
       <Route path="/practice" element={<Practice />} />
       <Route path="/game/daily/challenge" element={<DailyGame />} />
       <Route path="/game/review/practice" element={<ReviewGame />} />
-      <Route path="/game/master/:categoryId" element={<MasterGame />} />
+      <Route path="/game/master/:topicId" element={<MasterGame />} />
       <Route path="/game/:categoryId/:levelId" element={<Game />} />
       <Route path="/celebration/:categoryId/:levelId" element={<Celebration />} />
       <Route path="/lesson/:categoryId/:levelId" element={<Lesson />} />
@@ -42,6 +42,8 @@ export default function App() {
       <Route path="/parent" element={<Parent />} />
       <Route path="/stickers" element={<Stickers />} />
       <Route path="/story/:categoryId" element={<Story />} />
+      <Route path="/flashcard/:skillId" element={<Flashcard />} />
+      {/* The old per-level form, so a saved link still lands on the same topic. */}
       <Route path="/flashcard/:categoryId/:levelId" element={<Flashcard />} />
       <Route path="/worksheet" element={<Worksheet />} />
       <Route path="*" element={<Navigate to="/" replace />} />

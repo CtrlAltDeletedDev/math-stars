@@ -20,6 +20,13 @@ export const LADDER = {
   demoteAt: 3,
 } as const;
 
+/** Longer than this is a child who wandered off, not a slow answer. */
+export const MAX_ANSWER_MS = 60_000;
+
+function usableAnswerMs(ms: number | undefined): ms is number {
+  return typeof ms === 'number' && Number.isFinite(ms) && ms > 0 && ms <= MAX_ANSWER_MS;
+}
+
 export function newSkillState(skillId: string): SkillState {
   return { skillId, rung: 0, recent: [], attempts: 0, correct: 0, ceilingHits: 0 };
 }
@@ -58,6 +65,11 @@ export function recordSkillAnswer(
    *              did before this argument existed
    */
   servedRung?: number | null,
+  /**
+   * How long she took, if the screen measured it. Kept under exactly the rules
+   * the window uses, and only for a right answer -- see `SkillState.times`.
+   */
+  ms?: number,
 ): LadderResult {
   const skill = SKILLS_BY_ID.get(prev.skillId);
   const ladderTop = skill ? skill.rungs.length - 1 : 0;
@@ -84,6 +96,9 @@ export function recordSkillAnswer(
 
   const recent = [...prev.recent, wasCorrect].slice(-LADDER.window);
   const state: SkillState = { ...counted, recent };
+  if (wasCorrect && usableAnswerMs(ms)) {
+    state.times = [...(prev.times ?? []), Math.round(ms)].slice(-LADDER.window);
+  }
 
   if (recent.length < LADDER.window) return { state, move: null, fromRung: prev.rung };
 
@@ -96,10 +111,10 @@ export function recordSkillAnswer(
   // questions, so three failed windows changed nothing she could see. She now
   // lands where the evidence actually puts her.
   if (hits >= LADDER.promoteAt && standingRung < topRung) {
-    return { state: { ...state, rung: standingRung + 1, recent: [] }, move: 'promoted', fromRung: standingRung };
+    return { state: { ...state, rung: standingRung + 1, recent: [], times: [] }, move: 'promoted', fromRung: standingRung };
   }
   if (hits <= LADDER.demoteAt && standingRung > 0) {
-    return { state: { ...state, rung: standingRung - 1, recent: [] }, move: 'demoted', fromRung: standingRung };
+    return { state: { ...state, rung: standingRung - 1, recent: [], times: [] }, move: 'demoted', fromRung: standingRung };
   }
   // Sitting at the top and acing it: keep the window fresh so she isn't stuck
   // holding a full window that can only ever trigger a demotion.
@@ -122,6 +137,17 @@ export function recordSkillAnswer(
   }
 
   return { state, move: null, fromRung: prev.rung };
+}
+
+/**
+ * Her middle time for a right answer at the current rung, for the parent
+ * dashboard. Null until there are a few to go on: one quick tap is not a habit.
+ */
+export function typicalAnswerMs(state: SkillState): number | null {
+  const t = [...(state.times ?? [])].sort((a, b) => a - b);
+  if (t.length < 3) return null;
+  const mid = Math.floor(t.length / 2);
+  return t.length % 2 ? t[mid] : Math.round((t[mid - 1] + t[mid]) / 2);
 }
 
 /** Accuracy at the current rung, for the parent dashboard. Null until there's evidence. */

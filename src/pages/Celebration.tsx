@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation, Navigate } from 'react-router-dom';
 import { getCategoryById } from '@/data/categories';
+import { TOPICS_BY_ID, nextLevelInTopic, topicIdFor } from '@/data/topics';
+import { SKILLS_BY_ID } from '@/data/skills';
+import { GAME_CONFIG } from '@/constants/gameConfig';
+import type { LevelUp } from '@/engine/foldAnswers';
 import { Level } from '@/types';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { useProgress } from '@/store/useProgress';
@@ -29,33 +33,41 @@ export default function Celebration() {
     newBadges: BadgeEarned[];
     newStickers: string[];
     streakBonus: number;
+    levelUps?: LevelUp[];
     dcStreakBonus?: number;
     wrongAnswers: WrongAnswer[];
     isDailyChallenge?: boolean;
     isMasterMode?: boolean;
-    masterCategoryId?: string;
+    masterTopicId?: string;
   } | null;
   const correctCount = state?.correctCount ?? 0;
   const totalCount = state?.totalCount ?? 10;
   const newBadges = state?.newBadges ?? [];
   const newStickers = state?.newStickers ?? [];
   const streakBonus = state?.streakBonus ?? 0;
+  const levelUps = state?.levelUps ?? [];
   const dcStreakBonus = state?.dcStreakBonus ?? 0;
   const wrongAnswers = state?.wrongAnswers ?? [];
   const isDailyChallenge = state?.isDailyChallenge ?? false;
   const isMasterMode = state?.isMasterMode ?? false;
-  const masterCategoryId = state?.masterCategoryId ?? '';
+  // Master Mode is per topic. Without router state (a bookmark) the id in the
+  // URL is all there is, and it may be an old category id.
+  const masterTopic = categoryId === 'master'
+    ? TOPICS_BY_ID.get(topicIdFor(state?.masterTopicId || levelId) ?? '')
+    : undefined;
 
   const score = totalCount > 0 ? correctCount / totalCount : 0;
   const stars = calculateStars(score);
   const passed = didPassLevel(score);
   const isPerfect = correctCount === totalCount && totalCount >= 5;
 
-  const realCategory = categoryId === 'master' ? getCategoryById(masterCategoryId || levelId) : getCategoryById(categoryId);
+  const realCategory = categoryId === 'master' ? null : getCategoryById(categoryId);
   const category = categoryId === 'daily'
-    ? { id: 'daily', bgColor: '#FF9F43', darkColor: '#EE5A24', title: 'Daily Challenge', emoji: '🌟', levels: [] }
+    ? { id: 'daily', bgColor: '#FF9F43', darkColor: '#EE5A24', title: 'Daily Challenge', emoji: '🌟' }
     : categoryId === 'review'
-    ? { id: 'review', bgColor: '#43A047', darkColor: '#1B5E20', title: 'Practice Mistakes', emoji: '💪', levels: [] }
+    ? { id: 'review', bgColor: '#43A047', darkColor: '#1B5E20', title: 'Practice Mistakes', emoji: '💪' }
+    : categoryId === 'master'
+    ? (masterTopic ?? null)
     : (realCategory ?? null);
 
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
@@ -63,12 +75,12 @@ export default function Celebration() {
   const characterName = character?.name ?? 'Math Star';
 
   // After passing, the natural next action is the next level — not replaying
-  // this one, and certainly not backing out to the map to hunt for it.
-  const nextLevel: Level | null = (() => {
-    if (!passed || isDailyChallenge || isMasterMode || !realCategory) return null;
-    const idx = realCategory.levels.findIndex((l) => l.id === levelId);
-    return idx >= 0 ? realCategory.levels[idx + 1] ?? null : null;
-  })();
+  // this one, and certainly not backing out to the map to hunt for it. The next
+  // level of the same topic, that is, inside her grade (see nextLevelInTopic).
+  const nextLevel: Level | null =
+    passed && !isDailyChallenge && !isMasterMode && realCategory
+      ? nextLevelInTopic(levelId, progress.gradeLevel)
+      : null;
 
   const [visibleStars, setVisibleStars] = useState(0);
   const [showBurst, setShowBurst] = useState(false);
@@ -76,11 +88,18 @@ export default function Celebration() {
   const [showReview, setShowReview] = useState(false);
   const currentBadge = newBadges[badgeIndex] ?? null;
 
-  const toastMessages = [
+  // One array for the life of the screen. Toast restarts its queue whenever it
+  // is handed a new one, and the star animation re-renders this page several
+  // times a second, so a fresh array per render kept rewinding to message one.
+  const toastMessages = useMemo(() => [
+    ...levelUps.flatMap(({ skillId }) => {
+      const skill = SKILLS_BY_ID.get(skillId);
+      return skill ? [`${skill.emoji} ${skill.title} levelled up! +${GAME_CONFIG.levelUpBonusStars} ⭐`] : [];
+    }),
     ...newStickers.map(() => '🎨 New sticker unlocked!'),
     ...(streakBonus > 0 ? [`🔥 Streak bonus: +${streakBonus} ⭐`] : []),
     ...(dcStreakBonus > 0 ? [`⭐ Daily bonus: +${dcStreakBonus} stars!`] : []),
-  ];
+  ], [state]); // eslint-disable-line
 
   useEffect(() => {
     let i = 0;
@@ -170,7 +189,7 @@ export default function Celebration() {
               <BigButton
                 onPress={() =>
                   navigate(
-                    isMasterMode ? `/game/master/${masterCategoryId}` : `/game/${categoryId}/${levelId}`,
+                    isMasterMode ? `/game/master/${masterTopic?.id ?? levelId}` : `/game/${categoryId}/${levelId}`,
                     { replace: true },
                   )
                 }
@@ -182,7 +201,7 @@ export default function Celebration() {
             )}
             {nextLevel && (
               <BigButton
-                onPress={() => navigate(`/game/${categoryId}/${nextLevel.id}`, { replace: true })}
+                onPress={() => navigate(`/game/${nextLevel.categoryId}/${nextLevel.id}`, { replace: true })}
                 label="Next"
                 icon={<ArrowRight size={22} strokeWidth={ICON_STROKE} aria-hidden />}
                 color="#fff"

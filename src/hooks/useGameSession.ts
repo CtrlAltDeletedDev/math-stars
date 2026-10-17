@@ -10,7 +10,7 @@ interface SessionState {
   correctCount: number;
   streak: number;
   hotStreak: number;
-  results: { question: Question; correct: boolean; chosen: string }[];
+  results: { question: Question; correct: boolean; chosen: string; ms?: number }[];
   srsUpdates: SRSCard[];
   isComplete: boolean;
 }
@@ -53,7 +53,7 @@ export function useGameSession(
   // synchronously: on the last question of a session they persist the run
   // immediately, and reading `state.srsUpdates` at that moment still shows the
   // pre-update array, which silently dropped every session's final answer.
-  function recordAnswer(selectedChoice: string): { correct: boolean; card: SRSCard | null } {
+  function recordAnswer(selectedChoice: string, ms?: number): { correct: boolean; card: SRSCard | null } {
     const question = currentQuestion;
     if (!question) return { correct: false, card: null };
 
@@ -73,7 +73,7 @@ export function useGameSession(
         correctCount: newCorrectCount,
         streak: newStreak,
         hotStreak: newHotStreak,
-        results: [...prev.results, { question, correct, chosen: selectedChoice }],
+        results: [...prev.results, { question, correct, chosen: selectedChoice, ms }],
         srsUpdates: [...prev.srsUpdates, updatedCard],
         isComplete: isLast,
       };

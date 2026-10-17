@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
-import { getCategoryById } from '@/data/categories';
+import { TOPICS_BY_ID, topicIdFor } from '@/data/topics';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { buildMasterSession } from '@/engine/sessionBuilder';
 import { useGameSession } from '@/hooks/useGameSession';
@@ -24,7 +24,9 @@ import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 const TIMER_SECONDS = 10;
 
 export default function MasterGame() {
-  const { categoryId = '' } = useParams<{ categoryId: string }>();
+  // A topic id, or an old category id from a bookmark — both resolve to a topic.
+  const { topicId: param = '' } = useParams<{ topicId: string }>();
+  const topicId = topicIdFor(param) ?? '';
   const navigate = useNavigate();
   const { progress, recordMasterComplete, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
@@ -32,14 +34,14 @@ export default function MasterGame() {
   const speech = useSpeechRecognition();
   const { speak, cancel } = useSpeakQuestion();
 
-  const category = getCategoryById(categoryId);
+  const topic = TOPICS_BY_ID.get(topicId);
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterName = character?.name ?? 'Friend';
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
   const timerSeconds = progress.slowMode ? 15 : TIMER_SECONDS;
   const feedbackMs = progress.slowMode ? GAME_CONFIG.feedbackDurationMs * 2 : GAME_CONFIG.feedbackDurationMs;
 
-  const questionsRef = useRef(category ? buildMasterSession(category, progress.srsCards, characterName) : []);
+  const questionsRef = useRef(topic ? buildMasterSession(progress, topic.id, characterName) : []);
   const session = useGameSession(questionsRef.current, progress.srsCards, characterName);
 
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -139,11 +141,11 @@ export default function MasterGame() {
         hasCompleted.current = true;
         sounds.playLevelUp();
         const { newBadges, newStickers, streakBonus } = recordMasterComplete(
-          categoryId, finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
+          topicId, finalCorrectCount, session.totalQuestions, finalSrsUpdates, nextConsecutive,
           finalResults,
         );
         recordQuestionsAnswered(session.totalQuestions);
-        navigate(`/celebration/master/${categoryId}`, {
+        navigate(`/celebration/master/${topicId}`, {
           replace: true,
           state: {
             correctCount: finalCorrectCount,
@@ -153,7 +155,7 @@ export default function MasterGame() {
             streakBonus,
             wrongAnswers: wrongAnswersRef.current,
             isMasterMode: true,
-            masterCategoryId: categoryId,
+            masterTopicId: topicId,
           },
         });
       } else {
@@ -213,7 +215,7 @@ export default function MasterGame() {
   }, [showFeedback, cancel]);
 
   // Guards live below every hook so the hook order is identical on every render.
-  if (!category) return <Navigate to="/" replace />;
+  if (!topic) return <Navigate to="/" replace />;
 
   const question = session.currentQuestion;
   if (!question) return <Navigate to="/" replace />;
@@ -221,7 +223,7 @@ export default function MasterGame() {
   const hotStreak = session.hotStreak;
 
   return (
-    <BackgroundGradient colors={[category.bgColor, category.darkColor]}>
+    <BackgroundGradient colors={[topic.bgColor, topic.darkColor]}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', gap: 12, overflow: 'hidden', position: 'relative' }}>
 
         {showQuitConfirm && (
@@ -237,7 +239,7 @@ export default function MasterGame() {
               <div style={{ fontFamily: 'Nunito', fontSize: 15, color: '#666' }}>Your progress won't be saved.</div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
-                  onClick={() => navigate(`/category/${categoryId}`)}
+                  onClick={() => navigate(`/topic/${topicId}`)}
                   style={{ flex: 1, background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: 14, padding: '12px 0', fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}
                 >Yes, quit</button>
                 <button
@@ -281,7 +283,7 @@ export default function MasterGame() {
         </div>
 
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, color: '#fff', textAlign: 'center', letterSpacing: 0.5 }}>
-          ⭐ Master: {category.title}
+          ⭐ Master: {topic.title}
         </div>
 
         <StreakBar streak={session.streak} />

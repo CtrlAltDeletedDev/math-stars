@@ -13,6 +13,14 @@ export interface BadgeCheckContext {
   consecutiveCorrect: number;
   categoriesCompleted: number;
   totalLevelsCompleted: number;
+  /**
+   * The same progress measured on the ladders (see `ladderProgress`). Anything
+   * that rewards passing levels also accepts these, so the reward does not
+   * depend on which button she pressed to make the progress.
+   */
+  rungsClimbed: number;
+  topicsAtTop: number;
+  questionsAnswered: number;
   sessionCorrect: number;
   sessionTotal: number;
   dailyChallengeStreak?: number;
@@ -87,22 +95,22 @@ export const BADGES: BadgeDef[] = [
     id: 'first_level',
     title: 'Level Up!',
     emoji: '🎉',
-    description: 'Completed your first level',
-    check: (ctx) => ctx.totalLevelsCompleted >= 1,
+    description: 'Levelled up for the first time',
+    check: (ctx) => ctx.totalLevelsCompleted >= 1 || ctx.rungsClimbed >= 1,
   },
   {
     id: 'five_levels',
     title: 'Level Master',
     emoji: '🎓',
-    description: 'Completed 5 levels',
-    check: (ctx) => ctx.totalLevelsCompleted >= 5,
+    description: 'Levelled up 5 times',
+    check: (ctx) => ctx.totalLevelsCompleted >= 5 || ctx.rungsClimbed >= 5,
   },
   {
     id: 'category_complete',
-    title: 'Category Champ!',
+    title: 'Topic Champ!',
     emoji: '👑',
-    description: 'Completed all levels in a category',
-    check: (ctx) => ctx.categoriesCompleted >= 1,
+    description: 'Climbed a topic to the top',
+    check: (ctx) => ctx.categoriesCompleted >= 1 || ctx.topicsAtTop >= 1,
   },
   {
     id: 'daily_challenge_first',
