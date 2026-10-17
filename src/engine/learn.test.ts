@@ -218,13 +218,20 @@ describe('Number Tricks lessons', () => {
 
   it('has a lesson for doubles, making ten and counting on', () => {
     expect(lessonsFor('strategies', ceilingFor('strategies', '1')).map((l) => l.id))
-      .toEqual(['doubles', 'make-ten', 'count-on']);
+      .toEqual(['doubles', 'make-ten', 'equals-same', 'count-on']);
   });
 
   it('finds the lesson for each Number Tricks mistake a parent is shown', () => {
+    // Every tag a Number Tricks question carries except 'place-value', which
+    // had no lesson before its mistakes were filed here either.
     expect(lessonForMistake('strategies', 'answered-a-given-number', 4, 1)?.id).toBe('doubles');
     expect(lessonForMistake('strategies', 'answered-the-whole', 4, 2)?.id).toBe('make-ten');
+    expect(lessonForMistake('strategies', 'off-by-one', 4, 2)?.id).toBe('make-ten');
     expect(lessonForMistake('strategies', 'off-by-one', 4, 3)?.id).toBe('count-on');
+    // "8 + ? = 10" answered 18: The Equals Sign is the lesson for adding the
+    // two numbers shown, and it was the one offered while these were misfiled
+    // under Mystery Number.
+    expect(lessonForMistake('strategies', 'wrong-operation', 4, 2)?.id).toBe('equals-same');
   });
 
   it('only claims to help with mistakes the topic\'s questions can actually show', () => {

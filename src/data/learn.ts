@@ -308,8 +308,8 @@ const MAKE_TEN: Lesson = {
   places: [{ skillId: 'strategies', rung: 2 }],
   practiceLevelId: 'strategy-make-ten',
   // "The frame holds 10 altogether" is written for answering with the ten
-  // itself, and "that's all the counters outside" for giving a number she was shown.
-  helpsWith: ['answered-the-whole', 'answered-a-given-number'],
+  // itself, and "count the empty spaces, there is just one" for landing one off.
+  helpsWith: ['answered-the-whole', 'off-by-one'],
   steps: [
     {
       kind: 'watch',
@@ -720,6 +720,9 @@ const EQUALS_MEANS_SAME: Lesson = {
   places: [
     { skillId: 'mystery-number', rung: 2 },
     { skillId: 'fact-families', rung: 4 },
+    // Making ten is a missing number too, and adding the two numbers shown
+    // ("8 + ? = 10" -> 18) is the mistake this lesson's "23" hint is written for.
+    { skillId: 'strategies', rung: 2 },
   ],
   practiceLevelId: 'miss-mixed-20',
   helpsWith: ['wrong-operation', 'answered-the-whole'],

@@ -127,6 +127,24 @@ describe('modes that only know the question', () => {
     expect(skills.strategies.attempts).toBe(1);
   });
 
+  it('files a Number Tricks mistake from a mixed session under Number Tricks', () => {
+    const q = questionFromId('dbl-6')!;
+    const [chosen, tag] = Object.entries(q.distractorMeaning ?? {})[0];
+    for (const source of ['daily', 'review', 'adding']) {
+      const { errorPatterns } = foldMixedAnswers({}, {}, [{ question: q, correct: false, chosen }], source, '1');
+      expect(errorPatterns, source).toEqual({ strategies: { [tag]: 1 } });
+    }
+  });
+
+  it('never moves a ladder from a mixed session, even on a full window of right answers', () => {
+    // These sessions draw across rungs, so no answer in one says where she stands.
+    const answers = Array.from({ length: LADDER.window * 2 }, () => right(questionFromId('dbl-3')!));
+    const { skills } = foldMixedAnswers(standingOn({ strategies: 0 }), {}, answers, 'strategies', '1');
+    expect(skills.strategies.attempts).toBe(LADDER.window * 2);
+    expect(skills.strategies.rung).toBe(0);
+    expect(skills.strategies.recent).toEqual([]);
+  });
+
   it('routes a Number Tricks review in Practice to Number Tricks', () => {
     const p: UserProgress = { ...buildInitialProgress(), gradeLevel: '1', practiceFocus: ['clocks'], srsCards: { 'dbl-6': due('dbl-6') } };
     const q = new PracticeQueue(p);
