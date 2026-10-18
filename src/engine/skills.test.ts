@@ -5,7 +5,9 @@ import { PracticeQueue, ROUND_SIZE, chooseRoundSkills, roundPlan } from './pract
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
 import { masteryFor } from './mastery';
-import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, allCatalogueLevelIds } from '@/data/topics';
+import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, allCatalogueLevelIds, skillForQuestion } from '@/data/topics';
+import { questionFromId } from './questionGenerator';
+import { isServableCard } from './sessionBuilder';
 import { UserProgress, SkillState } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -41,12 +43,39 @@ describe('skill ladders', () => {
     const empty: string[] = [];
     for (const skill of SKILLS) {
       skill.rungs.forEach((r, i) => {
-        if (r.source.kind === 'bank' && bankPoolFor(r.source).length < 4) {
-          empty.push(`${skill.id}#${i}: only ${bankPoolFor(r.source as never).length} questions`);
+        const banks = r.source.kind === 'bank' ? [r.source]
+          : r.source.kind === 'mix' ? r.source.parts.map((p) => p.source).filter((p) => p.kind === 'bank') : [];
+        for (const bank of banks) {
+          if (bankPoolFor(bank as never).length < 4) empty.push(`${skill.id}#${i}: only ${bankPoolFor(bank as never).length} questions`);
         }
       });
     }
     expect(empty).toEqual([]);
+  });
+
+  it('give the small hand-written topics generated questions as well as their own', () => {
+    // These rungs drew only on banks of 8-40 questions, so a child at the top
+    // of her grade saw the same few for ever.
+    const GENERATED = /^(gclock|gcount|gorder|gcmp)-/;
+    for (const id of ['clocks', 'counting', 'comparing']) {
+      const skill = SKILLS_BY_ID.get(id)!;
+      skill.rungs.forEach((_, rung) => {
+        let generated = 0, written = 0;
+        for (let i = 0; i < 300; i++) {
+          const q = questionForRung(skill, rung)!;
+          if (GENERATED.test(q.id)) {
+            generated++;
+            const rebuilt = questionFromId(q.id);
+            expect(rebuilt?.prompt, `${q.id} must rebuild for its review`).toBe(q.prompt);
+            expect(rebuilt?.correctAnswer).toBe(q.correctAnswer);
+            expect(isServableCard(q.id), `${q.id} would be pruned`).toBe(true);
+          } else written++;
+          expect(skillForQuestion(q, ''), `${q.id} must credit ${id}`).toBe(id);
+        }
+        expect(generated, `${id}#${rung}`).toBeGreaterThan(150);
+        expect(written, `${id}#${rung} keeps its hand-written questions`).toBeGreaterThan(50);
+      });
+    }
   });
 
   it('get harder as the rungs go up', () => {

@@ -49,6 +49,7 @@ export default function QuestionCard({ question }: Props) {
   const showNumberLine = question.type === 'skip_count';
   const hopMax = hopLineMax(question);
   const isLong = question.prompt.length > 40;
+  const wideEmoji = !!question.promptEmoji && [...question.promptEmoji].length > 6;
 
   return (
     <div style={{
@@ -76,7 +77,13 @@ export default function QuestionCard({ question }: Props) {
       </button>
 
       {question.promptEmoji && (
-        <div style={{ fontSize: isLong ? 32 : 44, lineHeight: 1.2, textAlign: 'center', letterSpacing: 4 }}>
+        <div style={{
+          fontSize: isLong ? 32 : 44, lineHeight: 1.2, textAlign: 'center', letterSpacing: 4,
+          // A picture wide enough to reach the corner starts below the read-aloud
+          // button: counting questions draw objects in full rows of five, and one
+          // hidden under the button is a wrong answer she was set up to give.
+          marginTop: wideEmoji ? 40 : 0,
+        }}>
           {question.promptEmoji}
         </div>
       )}

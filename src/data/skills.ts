@@ -30,20 +30,6 @@ export type RungSource =
    */
   | { kind: 'mix'; parts: { weight: number; source: Exclude<RungSource, { kind: 'mix' }> }[] };
 
-/** A generator for most of a rung's questions, the hand-written bank for the rest. */
-function generatedWithBank(
-  params: Record<string, number | string>,
-  types: string[],
-  difficulty: number[],
-): RungSource {
-  return {
-    kind: 'mix',
-    parts: [
-      { weight: 2, source: { kind: 'generated', params } },
-      { weight: 1, source: { kind: 'bank', types, difficulty } },
-    ],
-  };
-}
 
 export interface Rung {
   /** Shown to a parent, not to the child. */
@@ -57,6 +43,21 @@ export interface Skill {
   emoji: string;
   /** Kid-facing rank names, one per rung reached. */
   rungs: Rung[];
+}
+
+/** A generator for most of a rung's questions, the hand-written bank for the rest. */
+function generatedWithBank(
+  params: Record<string, number | string>,
+  types: string[],
+  difficulty: number[],
+): RungSource {
+  return {
+    kind: 'mix',
+    parts: [
+      { weight: 2, source: { kind: 'generated', params } },
+      { weight: 1, source: { kind: 'bank', types, difficulty } },
+    ],
+  };
 }
 
 export const SKILLS: Skill[] = [
@@ -177,8 +178,8 @@ export const SKILLS: Skill[] = [
     title: 'Comparing',
     emoji: '⚖️',
     rungs: [
-      { label: 'Comparing to 10', source: { kind: 'bank', types: ['number_compare'], difficulty: [1] } },
-      { label: 'Comparing to 20', source: { kind: 'bank', types: ['number_compare'], difficulty: [1, 2] } },
+      { label: 'Comparing to 10', source: generatedWithBank({ operation: 'compare', max: 10 }, ['number_compare'], [1]) },
+      { label: 'Comparing to 20', source: generatedWithBank({ operation: 'compare', max: 20 }, ['number_compare'], [1, 2]) },
     ],
   },
   {
@@ -196,9 +197,9 @@ export const SKILLS: Skill[] = [
     title: 'Clocks',
     emoji: '🕐',
     rungs: [
-      { label: "O'clock", source: { kind: 'bank', types: ['tell_time'], difficulty: [1] } },
-      { label: 'Half past too', source: { kind: 'bank', types: ['tell_time'], difficulty: [1, 2] } },
-      { label: 'Quarter past and quarter to', source: { kind: 'bank', types: ['tell_time'], difficulty: [2, 3] } },
+      { label: "O'clock", source: generatedWithBank({ operation: 'clock', minutes: '0' }, ['tell_time'], [1]) },
+      { label: 'Half past too', source: generatedWithBank({ operation: 'clock', minutes: '0,30' }, ['tell_time'], [1, 2]) },
+      { label: 'Quarter past and quarter to', source: generatedWithBank({ operation: 'clock', minutes: '0,30,15,45' }, ['tell_time'], [2, 3]) },
     ],
   },
   {
@@ -255,9 +256,9 @@ export const SKILLS: Skill[] = [
     title: 'Counting',
     emoji: '🔟',
     rungs: [
-      { label: 'Counting to 10', source: { kind: 'bank', types: ['counting', 'number_order'], difficulty: [1] } },
-      { label: 'Counting to 20', source: { kind: 'bank', types: ['counting', 'number_order'], difficulty: [1, 2] } },
-      { label: 'Ordering numbers', source: { kind: 'bank', types: ['counting', 'number_order'], difficulty: [2, 3] } },
+      { label: 'Counting to 10', source: generatedWithBank({ operation: 'count', max: 10 }, ['counting', 'number_order'], [1]) },
+      { label: 'Counting to 20', source: generatedWithBank({ operation: 'count', max: 20 }, ['counting', 'number_order'], [1, 2]) },
+      { label: 'Ordering numbers', source: generatedWithBank({ operation: 'count', max: 100, mode: 'order' }, ['counting', 'number_order'], [2, 3]) },
     ],
   },
 ];
