@@ -56,8 +56,8 @@ describe('skill ladders', () => {
   it('give the small hand-written topics generated questions as well as their own', () => {
     // These rungs drew only on banks of 8-40 questions, so a child at the top
     // of her grade saw the same few for ever.
-    const GENERATED = /^(gclock|gcount|gorder|gcmp)-/;
-    for (const id of ['clocks', 'counting', 'comparing']) {
+    const GENERATED = /^(gclock|gcount|gorder|gcmp|geo|gbond|gpv)-/;
+    for (const id of ['clocks', 'counting', 'comparing', 'even-odd', 'number-bonds', 'place-value']) {
       const skill = SKILLS_BY_ID.get(id)!;
       skill.rungs.forEach((_, rung) => {
         let generated = 0, written = 0;

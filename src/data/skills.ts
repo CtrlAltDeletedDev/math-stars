@@ -187,9 +187,22 @@ export const SKILLS: Skill[] = [
     title: 'Tens & Ones',
     emoji: '🔢',
     rungs: [
-      { label: 'Finding ones and tens', source: { kind: 'bank', types: ['place_value'], difficulty: [1] } },
-      { label: 'Building numbers', source: { kind: 'bank', types: ['place_value'], difficulty: [1, 2] } },
-      { label: 'Comparing two-digit numbers', source: { kind: 'bank', types: ['place_value'], difficulty: [2, 3] } },
+      { label: 'Finding ones and tens', source: generatedWithBank({ operation: 'place_value', mode: 'digits' }, ['place_value'], [1]) },
+      { label: 'Building numbers', source: generatedWithBank({ operation: 'place_value', mode: 'build' }, ['place_value'], [1, 2]) },
+      // Generated comparing offers just the two numbers, so a guess is right half
+      // the time; building questions (four options) and the bank's mix of the two
+      // keep the rung from being one a lucky streak can climb.
+      {
+        label: 'Comparing two-digit numbers',
+        source: {
+          kind: 'mix',
+          parts: [
+            { weight: 2, source: { kind: 'generated', params: { operation: 'place_value', mode: 'compare' } } },
+            { weight: 1, source: { kind: 'generated', params: { operation: 'place_value', mode: 'build' } } },
+            { weight: 1, source: { kind: 'bank', types: ['place_value'], difficulty: [2, 3] } },
+          ],
+        },
+      },
     ],
   },
   {
@@ -207,8 +220,8 @@ export const SKILLS: Skill[] = [
     title: 'Number Bonds',
     emoji: '🔗',
     rungs: [
-      { label: 'Bonds to 5 and 10', source: { kind: 'bank', types: ['number_bond'], difficulty: [1] } },
-      { label: 'Bonds to 20', source: { kind: 'bank', types: ['number_bond'], difficulty: [1, 2] } },
+      { label: 'Bonds to 5 and 10', source: generatedWithBank({ operation: 'bond', targets: '5,10' }, ['number_bond'], [1]) },
+      { label: 'Bonds to 20', source: generatedWithBank({ operation: 'bond', targets: '5,10,20' }, ['number_bond'], [1, 2]) },
     ],
   },
   {
@@ -228,8 +241,8 @@ export const SKILLS: Skill[] = [
     title: 'Even & Odd',
     emoji: '🟰',
     rungs: [
-      { label: 'Even or odd to 10', source: { kind: 'bank', types: ['even_odd'], difficulty: [1] } },
-      { label: 'Even or odd to 20', source: { kind: 'bank', types: ['even_odd'], difficulty: [1, 2] } },
+      { label: 'Even or odd to 10', source: generatedWithBank({ operation: 'even_odd', max: 10 }, ['even_odd'], [1]) },
+      { label: 'Even or odd to 20', source: generatedWithBank({ operation: 'even_odd', max: 20 }, ['even_odd'], [1, 2]) },
     ],
   },
   {

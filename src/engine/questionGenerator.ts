@@ -6,6 +6,9 @@ import { moneyFromId } from '@/data/moneyGen';
 import { generateClockQuestion, clockFromId, CLOCK_ID_PATTERN } from '@/data/clockGen';
 import { generateCountQuestion, countFromId, COUNT_ID_PATTERN } from '@/data/countGen';
 import { generateCompareQuestion, compareFromId, COMPARE_ID_PATTERN } from '@/data/compareGen';
+import { generateEvenOddQuestion, evenOddFromId, EVEN_ODD_ID_PATTERN } from '@/data/evenOddGen';
+import { generateBondQuestion, bondFromId, BOND_ID_PATTERN } from '@/data/bondGen';
+import { generatePlaceValueQuestion, placeValueFromId, PLACE_VALUE_ID_PATTERN } from '@/data/placeValueGen';
 import { buildTaggedChoices, randomInt, shuffle } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
@@ -532,6 +535,9 @@ export function questionFromId(id: string, characterName = 'You'): Question | nu
   if (CLOCK_ID_PATTERN.test(id)) return clockFromId(id);
   if (COUNT_ID_PATTERN.test(id)) return countFromId(id);
   if (COMPARE_ID_PATTERN.test(id)) return compareFromId(id);
+  if (EVEN_ODD_ID_PATTERN.test(id)) return evenOddFromId(id);
+  if (BOND_ID_PATTERN.test(id)) return bondFromId(id);
+  if (PLACE_VALUE_ID_PATTERN.test(id)) return placeValueFromId(id);
   return null;
 }
 
@@ -574,6 +580,9 @@ export function generateFromParams(params: Record<string, number | string>, char
   if (op === 'clock') return generateClockQuestion(params);
   if (op === 'count') return generateCountQuestion(params);
   if (op === 'compare') return generateCompareQuestion(params);
+  if (op === 'even_odd') return generateEvenOddQuestion(params);
+  if (op === 'bond') return generateBondQuestion(params);
+  if (op === 'place_value') return generatePlaceValueQuestion(params);
   if (op === 'doubles') return generateDoublesQuestion(Number(params.maxAddend));
   if (op === 'make_ten') return generateMakeTenQuestion(Number(params.target));
   if (op === 'count_on') return generateCountOnQuestion(Number(params.maxStart));
@@ -620,6 +629,9 @@ export function canRebuildFromId(id: string): boolean {
     /^money-change-\d+-\d+$/.test(id) ||
     CLOCK_ID_PATTERN.test(id) ||
     COUNT_ID_PATTERN.test(id) ||
-    COMPARE_ID_PATTERN.test(id)
+    COMPARE_ID_PATTERN.test(id) ||
+    EVEN_ODD_ID_PATTERN.test(id) ||
+    BOND_ID_PATTERN.test(id) ||
+    PLACE_VALUE_ID_PATTERN.test(id)
   );
 }
