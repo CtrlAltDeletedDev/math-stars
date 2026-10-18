@@ -138,6 +138,21 @@ describe('Quick Review', () => {
     const qs = buildRungSession(child('1', {}), 'adding');
     expect(qs.every((q) => { const p = addends(q); return p !== null && (p[0] === 1 || p[1] === 1); })).toBe(true);
   });
+
+  it('never asks the same question twice under two ids', () => {
+    // The o'clock rung mixes the bank's "time-6-0" with the generator's
+    // "gclock-read-6-00": different ids, the same clock face.
+    const look = (q: Question) => [q.prompt, q.promptEmoji, JSON.stringify(q.visual), q.correctAnswer].join('|');
+    for (let i = 0; i < 40; i++) {
+      for (const qs of [
+        buildRungSession(child('1', { clocks: 0 }), 'clocks'),
+        buildMasterSession(child('1', { clocks: 1 }), 'clocks'),
+        buildRungSession(child('2', { 'even-odd': 0 }), 'even-odd'),
+      ]) {
+        expect(new Set(qs.map(look)).size, qs.map((q) => q.id).join(' ')).toBe(qs.length);
+      }
+    }
+  });
 });
 
 describe('old links', () => {

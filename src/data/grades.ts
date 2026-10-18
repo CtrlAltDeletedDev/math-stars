@@ -55,6 +55,7 @@ const GRADE_1_CEILINGS: Record<string, number> = {
   strategies: 4, // doubles, make ten, count on, make twenty
   shapes: 2,
   measuring: 1,
+  counting: 3, // counting on past 20, to 100
   // New in first grade
   'mystery-number': 2, // missing number in any position to 20, "17 = ? + 6" included
   // Adding and subtracting as the same facts, to 20 — the first-grade unit asks

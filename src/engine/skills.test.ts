@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor } from '@/data/skills';
-import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS } from './skillLadder';
-import { PracticeQueue } from './practiceSession';
+import { SKILLS, SKILLS_BY_ID, questionForRung, bankPoolFor, rankFor, unlockedSkillIds } from '@/data/skills';
+import { recordSkillAnswer, newSkillState, LADDER, isMaxed, typicalAnswerMs, MAX_ANSWER_MS, inPlacement } from './skillLadder';
+import { PracticeQueue, ROUND_SIZE, chooseRoundSkills, roundPlan } from './practiceSession';
 import { buildInitialProgress, normalizeProgress } from '@/store/storage';
 import { passedLevel } from './scoring';
-import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, allCatalogueLevelIds } from '@/data/topics';
+import { masteryFor } from './mastery';
+import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, allCatalogueLevelIds, skillForQuestion } from '@/data/topics';
+import { questionFromId } from './questionGenerator';
+import { isServableCard } from './sessionBuilder';
 import { UserProgress, SkillState } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -40,12 +43,41 @@ describe('skill ladders', () => {
     const empty: string[] = [];
     for (const skill of SKILLS) {
       skill.rungs.forEach((r, i) => {
-        if (r.source.kind === 'bank' && bankPoolFor(r.source).length < 4) {
-          empty.push(`${skill.id}#${i}: only ${bankPoolFor(r.source as never).length} questions`);
+        const banks = r.source.kind === 'bank' ? [r.source]
+          : r.source.kind === 'mix' ? r.source.parts.map((p) => p.source).filter((p) => p.kind === 'bank') : [];
+        for (const bank of banks) {
+          if (bankPoolFor(bank as never).length < 4) empty.push(`${skill.id}#${i}: only ${bankPoolFor(bank as never).length} questions`);
         }
       });
     }
     expect(empty).toEqual([]);
+  });
+
+  it('give the small hand-written topics generated questions as well as their own', () => {
+    // These rungs drew only on banks of 8-40 questions, so a child at the top
+    // of her grade saw the same few for ever.
+    const GENERATED = /^(gclock|gcount|gorder|gcmp|geo|gbond|gpv)-/;
+    for (const id of ['clocks', 'counting', 'comparing', 'even-odd', 'number-bonds', 'place-value']) {
+      const skill = SKILLS_BY_ID.get(id)!;
+      skill.rungs.forEach(({ source }, rung) => {
+        let generated = 0, written = 0;
+        for (let i = 0; i < 300; i++) {
+          const q = questionForRung(skill, rung)!;
+          if (GENERATED.test(q.id)) {
+            generated++;
+            const rebuilt = questionFromId(q.id);
+            expect(rebuilt?.prompt, `${q.id} must rebuild for its review`).toBe(q.prompt);
+            expect(rebuilt?.correctAnswer).toBe(q.correctAnswer);
+            expect(isServableCard(q.id), `${q.id} would be pruned`).toBe(true);
+          } else written++;
+          expect(skillForQuestion(q, ''), `${q.id} must credit ${id}`).toBe(id);
+        }
+        expect(generated, `${id}#${rung}`).toBeGreaterThan(150);
+        // A rung added since (Counting to 100) never had a bank to keep.
+        if (source.kind === 'generated') return;
+        expect(written, `${id}#${rung} keeps its hand-written questions`).toBeGreaterThan(50);
+      });
+    }
   });
 
   it('get harder as the rungs go up', () => {
@@ -158,7 +190,10 @@ describe('fractions', () => {
 // ---------------------------------------------------------------------------
 
 describe('the promote/demote rule', () => {
-  const run = (results: boolean[], start = newSkillState('adding')) =>
+  // A child the topic has already placed: one demotion behind her, so the fast
+  // lane is closed and this is the rule she lives under from then on.
+  const settled = (rung = 0): SkillState => ({ ...newSkillState('adding'), rung, demotions: 1 });
+  const run = (results: boolean[], start = settled()) =>
     results.reduce((st, r) => recordSkillAnswer(st, r).state, start);
 
   it('does not move her before a full window', () => {
@@ -178,7 +213,7 @@ describe('the promote/demote rule', () => {
   });
 
   it('demotes after 3 of 8 correct', () => {
-    const start = { ...newSkillState('adding'), rung: 2 };
+    const start = settled(2);
     const st = run([true, true, true, false, false, false, false, false], start);
     expect(st.rung).toBe(1);
   });
@@ -198,7 +233,7 @@ describe('the promote/demote rule', () => {
   it('does not oscillate on a mixed run', () => {
     // Alternating right/wrong is 50% — comfortably between the two thresholds,
     // so she should sit still rather than bounce.
-    let st = { ...newSkillState('adding'), rung: 2 };
+    let st = settled(2);
     const moves: string[] = [];
     for (let i = 0; i < 200; i++) {
       const r = recordSkillAnswer(st, i % 2 === 0);
@@ -210,7 +245,7 @@ describe('the promote/demote rule', () => {
   });
 
   it('reports the move so the screen can celebrate it', () => {
-    let st = newSkillState('adding');
+    let st = settled();
     let promoted = false;
     for (let i = 0; i < LADDER.window; i++) {
       const r = recordSkillAnswer(st, true);
@@ -224,6 +259,97 @@ describe('the promote/demote rule', () => {
     const st = run(Array(50).fill(true));
     expect(st.attempts).toBe(50);
     expect(st.correct).toBe(50);
+  });
+});
+
+describe('the fast lane', () => {
+  // Every topic starts her on its first rung. A first grader who can already
+  // add to 20 began on "+1" and needed 32 answers to climb to where she was.
+  const feed = (results: boolean[], start: SkillState, ceiling?: number) =>
+    results.reduce((st, r) => recordSkillAnswer(st, r, ceiling).state, start);
+
+  it('moves a new topic up after 4 right in a row', () => {
+    const st = feed(Array(LADDER.fastLane).fill(true), newSkillState('adding'));
+    expect(st.rung).toBe(1);
+    expect(st.recent).toEqual([]);
+  });
+
+  it('climbs four rungs in sixteen answers, where the ordinary rule needed thirty-two', () => {
+    expect(feed(Array(16).fill(true), newSkillState('adding')).rung).toBe(4);
+  });
+
+  it('needs her first four at a rung to be right; after a miss the ordinary rule decides', () => {
+    const missed = feed([true, true, true, false], newSkillState('adding'));
+    expect(missed.rung).toBe(0);
+    // 7 of 8 still promotes, at the full window.
+    const st = feed([true, true, true, true], missed);
+    expect(st.rung).toBe(1);
+    // ...and the next rung gets its own fresh chance at the fast lane.
+    expect(feed(Array(LADDER.fastLane).fill(true), st).rung).toBe(2);
+  });
+
+  it('closes for good the first time the topic moves her down', () => {
+    const tooHard = feed(Array(LADDER.window).fill(false), { ...newSkillState('adding'), rung: 3 });
+    expect(tooHard.rung).toBe(2);
+    expect(tooHard.demotions).toBe(1);
+    expect(feed(Array(LADDER.fastLane).fill(true), tooHard).rung, 'four is no longer enough').toBe(2);
+    expect(feed(Array(LADDER.window).fill(true), tooHard).rung).toBe(3);
+  });
+
+  it('never climbs past her grade, and does not count it as outgrowing the grade', () => {
+    const st = feed(Array(LADDER.fastLane).fill(true), { ...newSkillState('adding'), rung: 4 }, 4);
+    expect(st.rung).toBe(4);
+    expect(st.ceilingHits).toBe(0);
+  });
+
+  it('ignores answers from another rung, as the ordinary rule does', () => {
+    const start = newSkillState('adding');
+    const st = Array(LADDER.fastLane).fill(true)
+      .reduce((s: SkillState, r: boolean) => recordSkillAnswer(s, r, undefined, 2).state, start);
+    expect(st.rung).toBe(0);
+    expect(st.recent).toEqual([]);
+  });
+
+  it('leaves a save from before demotions were counted on the ordinary rule', () => {
+    // No count means no evidence she has never been moved down.
+    const legacy: SkillState = { skillId: 'adding', rung: 1, recent: [], attempts: 90, correct: 70, ceilingHits: 0 };
+    expect(inPlacement(legacy)).toBe(false);
+    expect(feed(Array(LADDER.fastLane).fill(true), legacy).rung).toBe(1);
+  });
+
+  it('fills the ring at the rate the fast lane is paying, and at the ordinary rate after', () => {
+    // Grade 1 Adding has 5 rungs in scope, so one rung is a fifth of the ring.
+    const progress = (state: SkillState): UserProgress => ({ ...buildInitialProgress(), gradeLevel: '1', skills: { adding: state } });
+    const placing = { ...newSkillState('adding'), recent: [true, true] };
+    expect(masteryFor('adding', progress(placing)).fill).toBeCloseTo((2 / LADDER.fastLane) / 5);
+    const placed = { ...placing, demotions: 1 };
+    expect(masteryFor('adding', progress(placed)).fill).toBeCloseTo((2 / LADDER.promoteAt) / 5);
+  });
+
+  it('never shows a full ring at the top of her grade', () => {
+    // First grade tops adding out at rung 4. Six or seven right answers in a
+    // window that has not yet reset used to draw the ring full.
+    const at = (recent: boolean[]): UserProgress => ({
+      ...buildInitialProgress(), gradeLevel: '1',
+      skills: { adding: { ...newSkillState('adding'), rung: 4, demotions: 1, recent } },
+    });
+    for (let n = 0; n < LADDER.window; n++) {
+      const m = masteryFor('adding', at(Array(n).fill(true)));
+      expect(m.atCeiling).toBe(true);
+      expect(m.fill, `${n} right`).toBeLessThan(1);
+    }
+    let state = at([]).skills.adding;
+    for (let i = 0; i < 3 * LADDER.window; i++) {
+      state = recordSkillAnswer(state, true, 4).state;
+      expect(masteryFor('adding', at(state.recent)).fill).toBeLessThan(1);
+    }
+  });
+
+  it('keeps the count of demotions through a save', () => {
+    const saved = { ...buildInitialProgress(), skills: { adding: { ...newSkillState('adding'), rung: 2, demotions: 3 } } };
+    expect(normalizeProgress(saved)!.skills.adding.demotions).toBe(3);
+    const junk = { ...buildInitialProgress(), skills: { adding: { ...newSkillState('adding'), demotions: -2 } } };
+    expect(normalizeProgress(junk as never)!.skills.adding.demotions).toBeUndefined();
   });
 });
 
@@ -311,7 +437,7 @@ describe('an answer only moves her when it came from her own rung', () => {
   it('keeps its old meaning when the caller says nothing', () => {
     // Every pre-existing caller and test omits the argument, and must still get
     // the original behaviour.
-    const start: SkillState = { ...newSkillState('adding'), rung: 2 };
+    const start: SkillState = { ...newSkillState('adding'), rung: 2, demotions: 1 };
     const st = Array(LADDER.window).fill(true)
       .reduce((s: SkillState, r: boolean) => recordSkillAnswer(s, r).state, start);
     expect(st.rung).toBe(3);
@@ -534,6 +660,188 @@ describe('practice queue', () => {
 // ---------------------------------------------------------------------------
 // The v2 -> v3 migration
 // ---------------------------------------------------------------------------
+
+describe('rounds of Play', () => {
+  // Play used to spread every question over every topic in her grade, about 1
+  // in 16 each in first grade, so no topic got the 8 answers a promotion needs
+  // within a sitting. A round concentrates on a few.
+  const grade1 = (skills: Record<string, Partial<SkillState>> = {}): UserProgress => ({
+    ...buildInitialProgress(), gradeLevel: '1',
+    skills: Object.fromEntries(Object.entries(skills).map(([id, st]) =>
+      [id, { ...newSkillState(id), attempts: 20, correct: 15, ...st }])),
+  });
+  const pool = (p: UserProgress) => unlockedSkillIds(p.skills, p.gradeLevel);
+
+  it('starts a new player on adding and taking away, plus one more', () => {
+    for (let i = 0; i < 50; i++) {
+      const round = chooseRoundSkills(grade1(), pool(grade1()));
+      expect(round.slice(0, 2)).toEqual(['adding', 'taking-away']);
+      expect(round).toHaveLength(3);
+      expect(pool(grade1())).toContain(round[2]);
+    }
+  });
+
+  it('keeps her on what she is climbing, not on what she has topped out', () => {
+    // Clocks tops out at rung 1 in first grade; adding and counting can still climb.
+    const p = grade1({ adding: { rung: 2 }, counting: { rung: 0 }, clocks: { rung: 1 } });
+    let climbing = 0, topped = 0;
+    for (let i = 0; i < 400; i++) {
+      const [a, b] = chooseRoundSkills(p, pool(p));
+      climbing += [a, b].filter((id) => id === 'adding' || id === 'counting').length;
+      topped += [a, b].filter((id) => id === 'clocks').length;
+    }
+    expect(climbing).toBe(800);
+    expect(topped).toBe(0);
+  });
+
+  it('favours the topic nearest its next step', () => {
+    const p = grade1({
+      adding: { rung: 2, recent: [true, true, true, true, true] },
+      'taking-away': { rung: 2, recent: [] },
+      counting: { rung: 0, recent: [] },
+    });
+    let near = 0;
+    for (let i = 0; i < 2000; i++) if (chooseRoundSkills(p, pool(p)).slice(0, 2).includes('adding')) near++;
+    // Six times the weight of each of the other two: it should make almost every round.
+    expect(near / 2000).toBeGreaterThan(0.85);
+  });
+
+  it('rotates rather than repeating the same three', () => {
+    const p = grade1({ adding: { rung: 2 }, 'taking-away': { rung: 2 }, counting: { rung: 0 }, comparing: { rung: 0 } });
+    let previous: string[] = [];
+    let repeats = 0;
+    const thirds = new Set<string>();
+    for (let i = 0; i < 300; i++) {
+      const round = chooseRoundSkills(p, pool(p), previous);
+      if (JSON.stringify([...round].sort()) === JSON.stringify([...previous].sort())) repeats++;
+      thirds.add(round[2]);
+      previous = round;
+    }
+    expect(repeats / 300).toBeLessThan(0.15);
+    expect(thirds.size, 'over many rounds the third slot reaches most of her grade').toBeGreaterThan(pool(p).length * 0.6);
+  });
+
+  it('asks the two main topics four times each, so a topic can move within one round', () => {
+    const q = new PracticeQueue(grade1({ adding: { rung: 2 }, counting: { rung: 0 } }));
+    const [a, b, c] = q.roundSkills();
+    const asked: Record<string, number> = {};
+    for (let i = 0; i < ROUND_SIZE; i++) {
+      const pick = q.next()!;
+      asked[pick.skillId!] = (asked[pick.skillId!] ?? 0) + 1;
+    }
+    expect(asked).toEqual({ [a]: 4, [b]: 4, [c]: 2 });
+    expect(roundPlan([a, b, c]).slice(0, 4)).toEqual([a, b, a, b]);
+  });
+
+  it('asks fresh questions only from the round\'s topics', () => {
+    const q = new PracticeQueue(grade1({ adding: { rung: 2 }, counting: { rung: 0 } }));
+    const round = q.roundSkills();
+    for (let i = 0; i < ROUND_SIZE; i++) {
+      const pick = q.next()!;
+      if (pick.rung !== null) expect(round, pick.question.id).toContain(pick.skillId);
+    }
+  });
+
+  it('starts the next round on request, and by itself if nobody asks', () => {
+    const q = new PracticeQueue(grade1());
+    expect(q.roundSkills()).toHaveLength(3);
+    for (let i = 0; i < ROUND_SIZE; i++) q.next();
+    const first = q.roundSkills();
+    q.next(); // the eleventh question belongs to a new round
+    expect(q.roundSkills()).toHaveLength(3);
+    q.startRound();
+    expect(q.roundSkills()).toHaveLength(3);
+    expect(first[0]).toBe('adding');
+  });
+
+  it('stays on the topic a topic screen sent her to, and on a parent\'s Focus Mode picks', () => {
+    expect(new PracticeQueue(grade1(), 'You', 'clocks').roundSkills()).toEqual(['clocks']);
+    const focused = { ...grade1(), practiceFocus: ['adding', 'money', 'fractions', 'clocks'] };
+    expect(new PracticeQueue(focused).roundSkills().sort()).toEqual(['adding', 'clocks', 'fractions', 'money']);
+  });
+
+  it('keeps the main topics\' four turns when misses and reviews are due', () => {
+    // Reviews used to take the 5th and 10th questions and push the plan along,
+    // so the second topic got three turns and could never finish the fast lane.
+    const due = (questionId: string) => ({
+      questionId, easeFactor: 2.5, intervalDays: 1, nextDueDate: Date.now() - 1000, repetitions: 0, lastSeen: 0,
+    });
+    const p = {
+      ...grade1({ adding: { rung: 2 }, counting: { rung: 0 } }),
+      srsCards: Object.fromEntries(['add-3+4', 'add-2+5', 'add-6+3', 'add-4+4'].map((id) => [id, due(id)])),
+    };
+    const q = new PracticeQueue(p);
+    let reviews = 0;
+    for (let r = 0; r < 6; r++) {
+      const asked: Record<string, number> = {};
+      let main: string[] = [];
+      for (let i = 0; i < ROUND_SIZE; i++) {
+        const pick = q.next()!;
+        if (i === 0) main = q.roundSkills().slice(0, 2);
+        if (pick.rung === null) { reviews++; continue; }
+        asked[pick.skillId!] = (asked[pick.skillId!] ?? 0) + 1;
+        // She gets every one of the first topic's questions wrong.
+        if (pick.skillId === main[0]) q.missed(pick.question, pick.skillId, pick.rung);
+      }
+      expect(asked[main[0]], `round ${r}: ${JSON.stringify(asked)}`).toBeGreaterThanOrEqual(4);
+      expect(asked[main[1]], `round ${r}: ${JSON.stringify(asked)}`).toBeGreaterThanOrEqual(4);
+    }
+    expect(reviews, 'the reviews still come round').toBeGreaterThan(0);
+  });
+
+  it('works through a whole Focus Mode list, round after round', () => {
+    // Each round used to start again from the top of the list, so with five
+    // topics the last ones were asked about once a round or not at all.
+    const focus = ['adding', 'taking-away', 'counting', 'comparing', 'shapes'];
+    const q = new PracticeQueue({ ...grade1(), practiceFocus: focus });
+    const asked: Record<string, number> = {};
+    for (let i = 0; i < 3 * ROUND_SIZE; i++) {
+      if (i > 0 && i % ROUND_SIZE === 0) q.startRound();
+      const pick = q.next()!;
+      asked[pick.skillId!] = (asked[pick.skillId!] ?? 0) + 1;
+    }
+    expect(asked).toEqual(Object.fromEntries(focus.map((id) => [id, 6])));
+  });
+
+  it('gives a topic left over from another grade variety turns only', () => {
+    // She started Clocks in first grade and has since been moved to K. It stays
+    // in reach, but its ceiling there is the ladder's top, so it would always
+    // look climbable and crowd out the topics her grade is about.
+    const p: UserProgress = {
+      ...buildInitialProgress(), gradeLevel: 'K',
+      skills: { clocks: { ...newSkillState('clocks'), attempts: 12, correct: 9 } },
+    };
+    let third = 0;
+    for (let i = 0; i < 400; i++) {
+      const round = chooseRoundSkills(p, pool(p));
+      expect(round.slice(0, 2)).not.toContain('clocks');
+      if (round[2] === 'clocks') third++;
+    }
+    expect(third).toBeGreaterThan(0);
+  });
+
+  it('does not ask a question again a moment after asking it under another id', () => {
+    // The o'clock rung has twelve faces, drawn from a bank and a generator that
+    // give the same face different ids.
+    const q = new PracticeQueue(grade1({ clocks: { rung: 0 } }), 'You', 'clocks');
+    const looks: string[] = [];
+    for (let i = 0; i < 300; i++) {
+      const { question } = q.next()!;
+      const look = `${question.prompt}|${JSON.stringify(question.visual)}`;
+      expect(looks.slice(-3), `${question.id} at question ${i}`).not.toContain(look);
+      looks.push(look);
+    }
+  });
+
+  it('leads with the topic whose lesson she has just watched', () => {
+    const p = grade1({ adding: { rung: 2 }, 'taking-away': { rung: 2 } });
+    for (let i = 0; i < 20; i++) {
+      const q = new PracticeQueue(p, 'You', null, ROUND_SIZE, 'counting');
+      expect(q.roundSkills()[0]).toBe('counting');
+      expect(q.next()!.skillId).toBe('counting');
+    }
+  });
+});
 
 describe('the grade ceiling', () => {
   it('stops the rung at the ceiling and counts the blocked promotion', () => {

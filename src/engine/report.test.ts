@@ -46,6 +46,18 @@ describe('what she keeps getting wrong', () => {
     expect(pattern.suggestion.length).toBeGreaterThan(10);
   });
 
+  it('does not tell a parent about signs and fingers for a clock mistake', () => {
+    // The clock generator tags going back an hour 'wrong-operation' and an hour
+    // off 'off-by-one'; the general sentences are about sums.
+    const p = save({ errorPatterns: { clocks: { 'wrong-operation': 6, 'off-by-one': 5, 'answered-a-given-number': 4 } } });
+    const patterns = mistakesForSkill(p, 'clocks');
+    expect(patterns).toHaveLength(3);
+    for (const { label, suggestion } of patterns) {
+      expect(`${label} ${suggestion}`).not.toMatch(/sign|finger|sums|take away|adding/i);
+      expect(`${label} ${suggestion}`).toMatch(/clock|hour|hand/i);
+    }
+  });
+
   it('ranks across skills by how often it happens, not by share', () => {
     // 20 of 40 beats 3 of 3: a pattern seen twenty times matters more than one
     // that is 100% of almost nothing.

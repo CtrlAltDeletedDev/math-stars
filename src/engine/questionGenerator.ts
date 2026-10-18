@@ -3,6 +3,12 @@ import { generateWordProblem, wordProblemFromId } from '@/data/wordProblems';
 import { generateStoryProblem, storyProblemFromId, StoryType, STORY_ID_PATTERN } from '@/data/storyProblems';
 import { fractionFromId } from '@/data/fractions';
 import { moneyFromId } from '@/data/moneyGen';
+import { generateClockQuestion, clockFromId, CLOCK_ID_PATTERN } from '@/data/clockGen';
+import { generateCountQuestion, countFromId, COUNT_ID_PATTERN } from '@/data/countGen';
+import { generateCompareQuestion, compareFromId, COMPARE_ID_PATTERN } from '@/data/compareGen';
+import { generateEvenOddQuestion, evenOddFromId, EVEN_ODD_ID_PATTERN } from '@/data/evenOddGen';
+import { generateBondQuestion, bondFromId, BOND_ID_PATTERN } from '@/data/bondGen';
+import { generatePlaceValueQuestion, placeValueFromId, PLACE_VALUE_ID_PATTERN } from '@/data/placeValueGen';
 import { buildTaggedChoices, randomInt, shuffle } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
@@ -526,6 +532,12 @@ export function questionFromId(id: string, characterName = 'You'): Question | nu
   if (m) return skipCountQuestion(+m[1], +m[2], +m[3], +m[2] + +m[1] * +m[3]);
   if (id.startsWith('frac-')) return fractionFromId(id);
   if (id.startsWith('money-')) return moneyFromId(id);
+  if (CLOCK_ID_PATTERN.test(id)) return clockFromId(id);
+  if (COUNT_ID_PATTERN.test(id)) return countFromId(id);
+  if (COMPARE_ID_PATTERN.test(id)) return compareFromId(id);
+  if (EVEN_ODD_ID_PATTERN.test(id)) return evenOddFromId(id);
+  if (BOND_ID_PATTERN.test(id)) return bondFromId(id);
+  if (PLACE_VALUE_ID_PATTERN.test(id)) return placeValueFromId(id);
   return null;
 }
 
@@ -564,6 +576,13 @@ export function generateFromParams(params: Record<string, number | string>, char
     const kind = (params.kind as 'addition' | 'subtraction' | 'both' | 'any') ?? 'both';
     return generateMissingNumberQuestion(Number(params.maxSum), kind);
   }
+  // The small hand-written topics' generators, for the practice ladder.
+  if (op === 'clock') return generateClockQuestion(params);
+  if (op === 'count') return generateCountQuestion(params);
+  if (op === 'compare') return generateCompareQuestion(params);
+  if (op === 'even_odd') return generateEvenOddQuestion(params);
+  if (op === 'bond') return generateBondQuestion(params);
+  if (op === 'place_value') return generatePlaceValueQuestion(params);
   if (op === 'doubles') return generateDoublesQuestion(Number(params.maxAddend));
   if (op === 'make_ten') return generateMakeTenQuestion(Number(params.target));
   if (op === 'count_on') return generateCountOnQuestion(Number(params.maxStart));
@@ -607,6 +626,12 @@ export function canRebuildFromId(id: string): boolean {
     /^frac-cmp-(biggest|smallest)-\d+(-\d+)+$/.test(id) ||
     /^money-(name|like)-[a-z]+(-\d+)?$/.test(id) ||
     /^money-mixed-\d+(-\d+)*$/.test(id) ||
-    /^money-change-\d+-\d+$/.test(id)
+    /^money-change-\d+-\d+$/.test(id) ||
+    CLOCK_ID_PATTERN.test(id) ||
+    COUNT_ID_PATTERN.test(id) ||
+    COMPARE_ID_PATTERN.test(id) ||
+    EVEN_ODD_ID_PATTERN.test(id) ||
+    BOND_ID_PATTERN.test(id) ||
+    PLACE_VALUE_ID_PATTERN.test(id)
   );
 }

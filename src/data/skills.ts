@@ -22,7 +22,14 @@ export type RungSource =
   | { kind: 'generated'; params: Record<string, number | string> }
   | { kind: 'fraction'; dens: number[]; mode: 'recognise' | 'ofSet' | 'compare' }
   | { kind: 'money'; mode: MoneyMode }
-  | { kind: 'bank'; types: string[]; difficulty: number[] };
+  | { kind: 'bank'; types: string[]; difficulty: number[] }
+  /**
+   * Several sources, one picked per question by weight. How the small
+   * hand-written banks gain a generator without losing what was written: the
+   * bank's questions still come up, just no longer as the only ones.
+   */
+  | { kind: 'mix'; parts: { weight: number; source: Exclude<RungSource, { kind: 'mix' }> }[] };
+
 
 export interface Rung {
   /** Shown to a parent, not to the child. */
@@ -36,6 +43,21 @@ export interface Skill {
   emoji: string;
   /** Kid-facing rank names, one per rung reached. */
   rungs: Rung[];
+}
+
+/** A generator for most of a rung's questions, the hand-written bank for the rest. */
+function generatedWithBank(
+  params: Record<string, number | string>,
+  types: string[],
+  difficulty: number[],
+): RungSource {
+  return {
+    kind: 'mix',
+    parts: [
+      { weight: 2, source: { kind: 'generated', params } },
+      { weight: 1, source: { kind: 'bank', types, difficulty } },
+    ],
+  };
 }
 
 export const SKILLS: Skill[] = [
@@ -156,8 +178,8 @@ export const SKILLS: Skill[] = [
     title: 'Comparing',
     emoji: '⚖️',
     rungs: [
-      { label: 'Comparing to 10', source: { kind: 'bank', types: ['number_compare'], difficulty: [1] } },
-      { label: 'Comparing to 20', source: { kind: 'bank', types: ['number_compare'], difficulty: [1, 2] } },
+      { label: 'Comparing to 10', source: generatedWithBank({ operation: 'compare', max: 10 }, ['number_compare'], [1]) },
+      { label: 'Comparing to 20', source: generatedWithBank({ operation: 'compare', max: 20 }, ['number_compare'], [1, 2]) },
     ],
   },
   {
@@ -165,9 +187,22 @@ export const SKILLS: Skill[] = [
     title: 'Tens & Ones',
     emoji: '🔢',
     rungs: [
-      { label: 'Finding ones and tens', source: { kind: 'bank', types: ['place_value'], difficulty: [1] } },
-      { label: 'Building numbers', source: { kind: 'bank', types: ['place_value'], difficulty: [1, 2] } },
-      { label: 'Comparing two-digit numbers', source: { kind: 'bank', types: ['place_value'], difficulty: [2, 3] } },
+      { label: 'Finding ones and tens', source: generatedWithBank({ operation: 'place_value', mode: 'digits' }, ['place_value'], [1]) },
+      { label: 'Building numbers', source: generatedWithBank({ operation: 'place_value', mode: 'build' }, ['place_value'], [1, 2]) },
+      // Generated comparing offers just the two numbers, so a guess is right half
+      // the time; building questions (four options) and the bank's mix of the two
+      // keep the rung from being one a lucky streak can climb.
+      {
+        label: 'Comparing two-digit numbers',
+        source: {
+          kind: 'mix',
+          parts: [
+            { weight: 2, source: { kind: 'generated', params: { operation: 'place_value', mode: 'compare' } } },
+            { weight: 1, source: { kind: 'generated', params: { operation: 'place_value', mode: 'build' } } },
+            { weight: 1, source: { kind: 'bank', types: ['place_value'], difficulty: [2, 3] } },
+          ],
+        },
+      },
     ],
   },
   {
@@ -175,9 +210,9 @@ export const SKILLS: Skill[] = [
     title: 'Clocks',
     emoji: '🕐',
     rungs: [
-      { label: "O'clock", source: { kind: 'bank', types: ['tell_time'], difficulty: [1] } },
-      { label: 'Half past too', source: { kind: 'bank', types: ['tell_time'], difficulty: [1, 2] } },
-      { label: 'Quarter past and quarter to', source: { kind: 'bank', types: ['tell_time'], difficulty: [2, 3] } },
+      { label: "O'clock", source: generatedWithBank({ operation: 'clock', minutes: '0' }, ['tell_time'], [1]) },
+      { label: 'Half past too', source: generatedWithBank({ operation: 'clock', minutes: '0,30' }, ['tell_time'], [1, 2]) },
+      { label: 'Quarter past and quarter to', source: generatedWithBank({ operation: 'clock', minutes: '0,30,15,45', later: 1 }, ['tell_time'], [2, 3]) },
     ],
   },
   {
@@ -185,8 +220,8 @@ export const SKILLS: Skill[] = [
     title: 'Number Bonds',
     emoji: '🔗',
     rungs: [
-      { label: 'Bonds to 5 and 10', source: { kind: 'bank', types: ['number_bond'], difficulty: [1] } },
-      { label: 'Bonds to 20', source: { kind: 'bank', types: ['number_bond'], difficulty: [1, 2] } },
+      { label: 'Bonds to 5 and 10', source: generatedWithBank({ operation: 'bond', targets: '5,10' }, ['number_bond'], [1]) },
+      { label: 'Bonds to 20', source: generatedWithBank({ operation: 'bond', targets: '5,10,20' }, ['number_bond'], [1, 2]) },
     ],
   },
   {
@@ -206,8 +241,8 @@ export const SKILLS: Skill[] = [
     title: 'Even & Odd',
     emoji: '🟰',
     rungs: [
-      { label: 'Even or odd to 10', source: { kind: 'bank', types: ['even_odd'], difficulty: [1] } },
-      { label: 'Even or odd to 20', source: { kind: 'bank', types: ['even_odd'], difficulty: [1, 2] } },
+      { label: 'Even or odd to 10', source: generatedWithBank({ operation: 'even_odd', max: 10 }, ['even_odd'], [1]) },
+      { label: 'Even or odd to 20', source: generatedWithBank({ operation: 'even_odd', max: 20 }, ['even_odd'], [1, 2]) },
     ],
   },
   {
@@ -234,9 +269,11 @@ export const SKILLS: Skill[] = [
     title: 'Counting',
     emoji: '🔟',
     rungs: [
-      { label: 'Counting to 10', source: { kind: 'bank', types: ['counting', 'number_order'], difficulty: [1] } },
-      { label: 'Counting to 20', source: { kind: 'bank', types: ['counting', 'number_order'], difficulty: [1, 2] } },
-      { label: 'Ordering numbers', source: { kind: 'bank', types: ['counting', 'number_order'], difficulty: [2, 3] } },
+      { label: 'Counting to 10', source: generatedWithBank({ operation: 'count', max: 10 }, ['counting', 'number_order'], [1]) },
+      { label: 'Counting to 20', source: generatedWithBank({ operation: 'count', max: 20 }, ['counting', 'number_order'], [1, 2]) },
+      { label: 'Ordering numbers', source: generatedWithBank({ operation: 'count', max: 20, mode: 'order' }, ['counting', 'number_order'], [2, 3]) },
+      // Added at the top, so no saved rung moves. Kindergarten stops below it.
+      { label: 'Counting to 100', source: { kind: 'generated', params: { operation: 'count', max: 100, mode: 'order' } } },
     ],
   },
 ];
@@ -299,18 +336,30 @@ export function bankPoolFor(source: Extract<RungSource, { kind: 'bank' }>): Ques
 export function questionForRung(skill: Skill, rung: number): Question | null {
   const r = skill.rungs[Math.min(rung, skill.rungs.length - 1)];
   if (!r) return null;
+  return questionFromSource(r.source);
+}
 
-  switch (r.source.kind) {
+function questionFromSource(source: RungSource): Question | null {
+  switch (source.kind) {
     case 'generated':
-      return generateFromParams(r.source.params);
+      return generateFromParams(source.params);
     case 'fraction':
-      return generateFractionQuestion(r.source.dens, r.source.mode);
+      return generateFractionQuestion(source.dens, source.mode);
     case 'money':
-      return generateMoneyQuestion(r.source.mode);
+      return generateMoneyQuestion(source.mode);
     case 'bank': {
-      const pool = bankPoolFor(r.source);
+      const pool = bankPoolFor(source);
       if (pool.length === 0) return null;
       return pool[Math.floor(Math.random() * pool.length)];
+    }
+    case 'mix': {
+      const total = source.parts.reduce((n, p) => n + p.weight, 0);
+      let pick = Math.random() * total;
+      for (const part of source.parts) {
+        pick -= part.weight;
+        if (pick <= 0) return questionFromSource(part.source);
+      }
+      return questionFromSource(source.parts[source.parts.length - 1].source);
     }
   }
 }

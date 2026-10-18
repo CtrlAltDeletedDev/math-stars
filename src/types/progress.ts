@@ -57,6 +57,12 @@ export interface SkillState {
    */
   times?: number[];
   /**
+   * How many times this topic has moved her down. Zero means it is still
+   * placing her, and the fast lane applies (see skillLadder.ts). Absent on a
+   * save from before it was counted, which keeps the ordinary rule.
+   */
+  demotions?: number;
+  /**
    * How many times the sliding window said "promote" and the grade ceiling said
    * no. Two or more means she has outgrown the band — the Parent screen uses it
    * to suggest moving her up a year.

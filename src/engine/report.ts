@@ -66,6 +66,28 @@ export interface MistakePattern {
 }
 
 /**
+ * The same tags where a topic means something else by them. A clock has no
+ * signs to misread and nothing to count on fingers, so the general sentences
+ * would tell a parent something untrue; these say what the clock mistake is.
+ */
+const SKILL_TAG_COPY: Record<string, Partial<typeof TAG_COPY>> = {
+  clocks: {
+    'off-by-one': {
+      label: 'reading the hour one off, or moving the clock on two hours instead of one',
+      suggestion: 'Look at the short hand together and say which number it has just passed. At half past it sits between two numbers, and the hour is the one it has left.',
+    },
+    'wrong-operation': {
+      label: 'turning the clock back when the question says later',
+      suggestion: 'On a real clock, move the long hand round together and watch which way "later" goes.',
+    },
+    'answered-a-given-number': {
+      label: 'giving back the time the question started from',
+      suggestion: 'She can read the clock; the question is what is slipping. Read "in one hour" aloud and move the hands on together.',
+    },
+  },
+};
+
+/**
  * What she keeps getting wrong on one skill, commonest first.
  *
  * 'unknown' is excluded rather than ranked: it is a near miss with no story,
@@ -83,7 +105,7 @@ export function mistakesForSkill(progress: UserProgress, skillId: string): Mista
   return meaningful
     .filter(([, n]) => n >= PATTERN_MIN_COUNT)
     .sort((a, b) => b[1] - a[1])
-    .map(([tag, count]) => ({ tag, count, share: count / total, ...TAG_COPY[tag] }));
+    .map(([tag, count]) => ({ tag, count, share: count / total, ...(SKILL_TAG_COPY[skillId]?.[tag] ?? TAG_COPY[tag]) }));
 }
 
 export interface SkillMistake extends MistakePattern {

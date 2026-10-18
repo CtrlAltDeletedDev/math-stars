@@ -94,6 +94,7 @@ function sanitizeSkills(skills: Record<string, SkillState>): Record<string, Skil
         ? state.ceilingHits
         : 0,
       ...(times.length > 0 ? { times } : {}),
+      ...(Number.isInteger(state.demotions) && state.demotions! >= 0 ? { demotions: state.demotions } : {}),
     };
   }
 

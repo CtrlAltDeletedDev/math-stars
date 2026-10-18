@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { SKILLS_BY_ID, rankFor } from '@/data/skills';
-import { PracticeQueue, PracticePick } from '@/engine/practiceSession';
+import { PracticeQueue, PracticePick, ROUND_SIZE } from '@/engine/practiceSession';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useSpeakQuestion } from '@/hooks/useSpeakQuestion';
@@ -14,9 +14,15 @@ import AnswerGrid from '@/components/game/AnswerGrid';
 import FeedbackOverlay from '@/components/game/FeedbackOverlay';
 import HintBubble from '@/components/game/HintBubble';
 import Toast from '@/components/ui/Toast';
+import ProgressBar from '@/components/ui/ProgressBar';
+import RoundCard from '@/components/game/RoundCard';
+import LessonOffer from '@/components/game/LessonOffer';
+import { Lesson } from '@/data/learn';
+import { forgetLessonVisit, lessonToOffer, leaveForLesson, returnFromLesson } from '@/engine/lessonOffer';
+import { ErrorTag } from '@/types';
 import { BADGES } from '@/data/badges';
 import { GAME_CONFIG } from '@/constants/gameConfig';
-import { House, InfinityIcon, Volume2, VolumeX, X } from 'lucide-react';
+import { House, Volume2, VolumeX, X } from 'lucide-react';
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const PRACTICE_COLORS: [string, string] = ['#7E57C2', '#4527A0'];
@@ -26,7 +32,7 @@ export default function Practice() {
   const { progress, recordPracticeAnswer, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
-  const { speak, cancel } = useSpeakQuestion();
+  const { speak, say, cancel } = useSpeakQuestion();
 
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
@@ -35,8 +41,17 @@ export default function Practice() {
   const characterName = character?.name ?? 'You';
   const [searchParams] = useSearchParams();
   const sessionSkill = searchParams.get('skill');
-  const queue = useMemo(() => new PracticeQueue(progress, characterName, sessionSkill), []); // eslint-disable-line
-  const [pick, setPick] = useState<PracticePick | null>(() => queue.next());
+  // The queue and its first question come from one initializer, so a render
+  // React repeats in development cannot draw a question twice and put the
+  // round's plan out of step. Back from a lesson Play offered, she carries on
+  // the same sitting, led by the topic the lesson was about.
+  const [start] = useState(() => {
+    const back = returnFromLesson();
+    const q = new PracticeQueue(progress, characterName, sessionSkill, ROUND_SIZE, back.lead);
+    return { queue: q, first: q.next(), offered: back.offered };
+  });
+  const queue = start.queue;
+  const [pick, setPick] = useState<PracticePick | null>(start.first);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
@@ -50,6 +65,26 @@ export default function Practice() {
   // Badges and stickers have always been earnable here; nothing used to say so.
   const [toasts, setToasts] = useState<string[]>([]);
 
+  // Play runs in rounds of ROUND_SIZE on the few topics the queue chose, and
+  // ends each one on a card showing what moved. The refs are what the advance
+  // timer reads; `roundCount` is what the progress bar draws.
+  const [roundCount, setRoundCount] = useState(0);
+  const [roundOver, setRoundOver] = useState(false);
+  const [roundSkills, setRoundSkills] = useState<string[]>(() => queue.roundSkills());
+  const round = useRef({
+    answered: 0, correct: 0, stars: 0, levelledUp: [] as string[],
+    /** Tagged mistakes per topic this round, to spot the same one twice. */
+    mistakes: {} as Record<string, Partial<Record<ErrorTag, number>>>,
+    /** Topics actually asked this round; a review can take the variety topic's turns. */
+    asked: [] as string[],
+  });
+
+  // A lesson offered between questions when she is struggling (see
+  // engine/lessonOffer.ts): at most once per topic per sitting.
+  const [offer, setOffer] = useState<{ lesson: Lesson; skillId: string } | null>(null);
+  const pendingOffer = useRef<{ lesson: Lesson; skillId: string } | null>(null);
+  const offeredFor = useRef(start.offered);
+
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const levelUpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -60,6 +95,8 @@ export default function Practice() {
   useEffect(() => {
     queue.syncProgress(progress);
   }, [progress, queue]);
+
+  useEffect(() => forgetLessonVisit(), []);
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -119,10 +156,37 @@ export default function Practice() {
     // whose meaning is worth keeping — not whatever she landed on after the
     // retry told her it was wrong.
     const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
-    const { move, skill, newBadges, newStickers, streakBonus } = recordPracticeAnswer(
+    const { move, skill, newBadges, newStickers, streakBonus, starsAwarded } = recordPracticeAnswer(
       pick.skillId, question.id, correct, pick.rung, { question, chosen: answeredChoice, ms },
     );
     recordQuestionsAnswered(1);
+
+    round.current.answered += 1;
+    if (correct) round.current.correct += 1;
+    round.current.stars += starsAwarded + streakBonus;
+    if (pick.skillId && pick.rung !== null && !round.current.asked.includes(pick.skillId)) {
+      round.current.asked = [...round.current.asked, pick.skillId];
+    }
+    if (move === 'promoted' && skill && !round.current.levelledUp.includes(skill.skillId)) {
+      round.current.levelledUp = [...round.current.levelledUp, skill.skillId];
+    }
+    setRoundCount(round.current.answered);
+
+    if (pick.skillId && skill) {
+      const tag = correct ? undefined : question.distractorMeaning?.[answeredChoice];
+      const counts = round.current.mistakes[pick.skillId] ?? {};
+      round.current.mistakes[pick.skillId] = counts;
+      if (tag && tag !== 'unknown') counts[tag] = (counts[tag] ?? 0) + 1;
+      const topTag = (Object.entries(counts) as [ErrorTag, number][]).sort((a, b) => b[1] - a[1])[0]?.[0];
+      const lesson = lessonToOffer(progress, {
+        skillId: pick.skillId, move, rung: skill.rung, tag,
+        tagCountThisRound: tag ? counts[tag] ?? 0 : 0, topTagThisRound: topTag,
+      }, offeredFor.current);
+      if (lesson) {
+        offeredFor.current.add(pick.skillId);
+        pendingOffer.current = { lesson, skillId: pick.skillId };
+      }
+    }
 
     const earned = [
       ...newBadges.map((b) => {
@@ -149,8 +213,53 @@ export default function Practice() {
       setSelectedChoice(null);
       setShowHint(false);
       setTriedChoices([]);
-      setPick(queue.next());
+      if (pendingOffer.current) {
+        const next = pendingOffer.current;
+        pendingOffer.current = null;
+        if (progress.autoReadEnabled) say(`Want to see a trick? ${next.lesson.title}`);
+        else cancel();
+        setOffer(next);
+        return;
+      }
+      continueRound();
     }, feedbackMs);
+  }
+
+  /** The next question, or the end-of-round card once the round is used up. */
+  function continueRound() {
+    if (round.current.answered >= ROUND_SIZE) {
+      cancel();
+      setRoundOver(true);
+      return;
+    }
+    setPick(queue.next());
+  }
+
+  function showLesson() {
+    if (!offer) return;
+    // "Done" in the lesson comes back to Play, on the same topic if she was on one.
+    // Replacing this screen in history, as the lesson does on the way back,
+    // keeps Back from walking her through Play, the lesson and Play again.
+    const back = sessionSkill ? `/practice?skill=${sessionSkill}` : '/practice';
+    leaveForLesson(offeredFor.current, offer.skillId);
+    navigate(`/learn/${offer.lesson.id}?topic=${offer.skillId}&return=${encodeURIComponent(back)}`, { replace: true });
+  }
+
+  function keepPlaying() {
+    setOffer(null);
+    setShowQuit(false);
+    continueRound();
+  }
+
+  function keepGoing() {
+    queue.startRound();
+    round.current = { answered: 0, correct: 0, stars: 0, levelledUp: [], mistakes: {}, asked: [] };
+    setRoundCount(0);
+    setRoundSkills(queue.roundSkills());
+    setLevelUp(null);
+    setShowQuit(false);
+    setRoundOver(false);
+    setPick(queue.next());
   }
 
   if (!pick) {
@@ -162,6 +271,40 @@ export default function Practice() {
             No questions right now!
           </div>
           <BigButton onPress={() => navigate('/')} label="Home" icon={<House size={24} strokeWidth={ICON_STROKE} aria-hidden />} color="#fff" textColor={PRACTICE_COLORS[0]} style={{ width: '100%', maxWidth: 300 }} />
+        </div>
+      </BackgroundGradient>
+    );
+  }
+
+  // Every branch keeps Toast first under the same background, so React keeps
+  // the one Toast across them instead of remounting it and replaying old news.
+  if (offer) {
+    return (
+      <BackgroundGradient colors={PRACTICE_COLORS}>
+        <Toast messages={toasts} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', overflow: 'auto' }}>
+          <LessonOffer lesson={offer.lesson} characterEmoji={characterEmoji} onShowMe={showLesson} onKeepPlaying={keepPlaying} />
+        </div>
+      </BackgroundGradient>
+    );
+  }
+
+  if (roundOver) {
+    return (
+      <BackgroundGradient colors={PRACTICE_COLORS}>
+        <Toast messages={toasts} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', overflow: 'auto' }}>
+          <RoundCard
+            progress={progress}
+            skillIds={roundSkills.filter((id) => round.current.asked.includes(id))}
+            levelledUp={round.current.levelledUp}
+            correct={round.current.correct}
+            total={round.current.answered}
+            stars={round.current.stars}
+            characterEmoji={characterEmoji}
+            onKeepGoing={keepGoing}
+            onHome={() => navigate('/')}
+          />
         </div>
       </BackgroundGradient>
     );
@@ -224,12 +367,11 @@ export default function Practice() {
             style={{ background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: 12, width: 44, height: 44, fontSize: 20, cursor: 'pointer', color: '#fff', fontFamily: 'Nunito', fontWeight: 700 }}
             aria-label="Stop"
           ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 17, color: '#fff' }}>
-              <InfinityIcon size={18} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-3px' }} aria-hidden /> Practice
-            </div>
-            <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
-              {correctCount} right{streak >= 3 ? ` · 🔥 ${streak} in a row` : ''}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* How far through this round: the round ends on a card, not never. */}
+            <ProgressBar current={roundCount} total={ROUND_SIZE} />
+            <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center', minHeight: 17 }}>
+              {streak >= 3 ? `🔥 ${streak} in a row` : ''}
             </div>
           </div>
           <button
