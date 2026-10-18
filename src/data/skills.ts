@@ -212,7 +212,7 @@ export const SKILLS: Skill[] = [
     rungs: [
       { label: "O'clock", source: generatedWithBank({ operation: 'clock', minutes: '0' }, ['tell_time'], [1]) },
       { label: 'Half past too', source: generatedWithBank({ operation: 'clock', minutes: '0,30' }, ['tell_time'], [1, 2]) },
-      { label: 'Quarter past and quarter to', source: generatedWithBank({ operation: 'clock', minutes: '0,30,15,45' }, ['tell_time'], [2, 3]) },
+      { label: 'Quarter past and quarter to', source: generatedWithBank({ operation: 'clock', minutes: '0,30,15,45', later: 1 }, ['tell_time'], [2, 3]) },
     ],
   },
   {
@@ -271,7 +271,9 @@ export const SKILLS: Skill[] = [
     rungs: [
       { label: 'Counting to 10', source: generatedWithBank({ operation: 'count', max: 10 }, ['counting', 'number_order'], [1]) },
       { label: 'Counting to 20', source: generatedWithBank({ operation: 'count', max: 20 }, ['counting', 'number_order'], [1, 2]) },
-      { label: 'Ordering numbers', source: generatedWithBank({ operation: 'count', max: 100, mode: 'order' }, ['counting', 'number_order'], [2, 3]) },
+      { label: 'Ordering numbers', source: generatedWithBank({ operation: 'count', max: 20, mode: 'order' }, ['counting', 'number_order'], [2, 3]) },
+      // Added at the top, so no saved rung moves. Kindergarten stops below it.
+      { label: 'Counting to 100', source: { kind: 'generated', params: { operation: 'count', max: 100, mode: 'order' } } },
     ],
   },
 ];

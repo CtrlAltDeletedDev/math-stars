@@ -35,10 +35,10 @@ type Range = 10 | 20;
 interface Thing { key: string; emoji: string; one: string; many: string }
 
 // Single-code-point emoji only, so every one of them is one object on screen
-// and one character to count in a test. Socks and shoes first: they come in
-// pairs in real life, which is the whole idea.
+// and one character to count in a test. Shoes first: they come in pairs in
+// real life, which is the whole idea. Not socks: 🧦 is drawn as a pair, so
+// three of them on screen is six socks.
 const THINGS: readonly Thing[] = [
-  { key: 'sock', emoji: '🧦', one: 'sock', many: 'socks' },
   { key: 'shoe', emoji: '👟', one: 'shoe', many: 'shoes' },
   { key: 'apple', emoji: '🍎', one: 'apple', many: 'apples' },
   { key: 'duck', emoji: '🦆', one: 'duck', many: 'ducks' },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
@@ -18,7 +18,7 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import RoundCard from '@/components/game/RoundCard';
 import LessonOffer from '@/components/game/LessonOffer';
 import { Lesson } from '@/data/learn';
-import { lessonToOffer } from '@/engine/lessonOffer';
+import { forgetLessonVisit, lessonToOffer, leaveForLesson, returnFromLesson } from '@/engine/lessonOffer';
 import { ErrorTag } from '@/types';
 import { BADGES } from '@/data/badges';
 import { GAME_CONFIG } from '@/constants/gameConfig';
@@ -32,7 +32,7 @@ export default function Practice() {
   const { progress, recordPracticeAnswer, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
   useBackgroundMusic(progress.musicEnabled);
-  const { speak, cancel } = useSpeakQuestion();
+  const { speak, say, cancel } = useSpeakQuestion();
 
   const character = CHARACTERS.find((c) => c.id === progress.characterId);
   const characterEmoji = character ? getCharacterEmoji(character.id, progress.totalStars) : '⭐';
@@ -41,8 +41,17 @@ export default function Practice() {
   const characterName = character?.name ?? 'You';
   const [searchParams] = useSearchParams();
   const sessionSkill = searchParams.get('skill');
-  const queue = useMemo(() => new PracticeQueue(progress, characterName, sessionSkill), []); // eslint-disable-line
-  const [pick, setPick] = useState<PracticePick | null>(() => queue.next());
+  // The queue and its first question come from one initializer, so a render
+  // React repeats in development cannot draw a question twice and put the
+  // round's plan out of step. Back from a lesson Play offered, she carries on
+  // the same sitting, led by the topic the lesson was about.
+  const [start] = useState(() => {
+    const back = returnFromLesson();
+    const q = new PracticeQueue(progress, characterName, sessionSkill, ROUND_SIZE, back.lead);
+    return { queue: q, first: q.next(), offered: back.offered };
+  });
+  const queue = start.queue;
+  const [pick, setPick] = useState<PracticePick | null>(start.first);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
@@ -66,13 +75,15 @@ export default function Practice() {
     answered: 0, correct: 0, stars: 0, levelledUp: [] as string[],
     /** Tagged mistakes per topic this round, to spot the same one twice. */
     mistakes: {} as Record<string, Partial<Record<ErrorTag, number>>>,
+    /** Topics actually asked this round; a review can take the variety topic's turns. */
+    asked: [] as string[],
   });
 
   // A lesson offered between questions when she is struggling (see
   // engine/lessonOffer.ts): at most once per topic per sitting.
   const [offer, setOffer] = useState<{ lesson: Lesson; skillId: string } | null>(null);
   const pendingOffer = useRef<{ lesson: Lesson; skillId: string } | null>(null);
-  const offeredFor = useRef(new Set<string>());
+  const offeredFor = useRef(start.offered);
 
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -84,6 +95,8 @@ export default function Practice() {
   useEffect(() => {
     queue.syncProgress(progress);
   }, [progress, queue]);
+
+  useEffect(() => forgetLessonVisit(), []);
 
   useEffect(() => () => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current);
@@ -151,6 +164,9 @@ export default function Practice() {
     round.current.answered += 1;
     if (correct) round.current.correct += 1;
     round.current.stars += starsAwarded + streakBonus;
+    if (pick.skillId && pick.rung !== null && !round.current.asked.includes(pick.skillId)) {
+      round.current.asked = [...round.current.asked, pick.skillId];
+    }
     if (move === 'promoted' && skill && !round.current.levelledUp.includes(skill.skillId)) {
       round.current.levelledUp = [...round.current.levelledUp, skill.skillId];
     }
@@ -198,9 +214,11 @@ export default function Practice() {
       setShowHint(false);
       setTriedChoices([]);
       if (pendingOffer.current) {
-        cancel();
-        setOffer(pendingOffer.current);
+        const next = pendingOffer.current;
         pendingOffer.current = null;
+        if (progress.autoReadEnabled) say(`Want to see a trick? ${next.lesson.title}`);
+        else cancel();
+        setOffer(next);
         return;
       }
       continueRound();
@@ -220,21 +238,26 @@ export default function Practice() {
   function showLesson() {
     if (!offer) return;
     // "Done" in the lesson comes back to Play, on the same topic if she was on one.
+    // Replacing this screen in history, as the lesson does on the way back,
+    // keeps Back from walking her through Play, the lesson and Play again.
     const back = sessionSkill ? `/practice?skill=${sessionSkill}` : '/practice';
-    navigate(`/learn/${offer.lesson.id}?topic=${offer.skillId}&return=${encodeURIComponent(back)}`);
+    leaveForLesson(offeredFor.current, offer.skillId);
+    navigate(`/learn/${offer.lesson.id}?topic=${offer.skillId}&return=${encodeURIComponent(back)}`, { replace: true });
   }
 
   function keepPlaying() {
     setOffer(null);
+    setShowQuit(false);
     continueRound();
   }
 
   function keepGoing() {
     queue.startRound();
-    round.current = { answered: 0, correct: 0, stars: 0, levelledUp: [], mistakes: {} };
+    round.current = { answered: 0, correct: 0, stars: 0, levelledUp: [], mistakes: {}, asked: [] };
     setRoundCount(0);
     setRoundSkills(queue.roundSkills());
     setLevelUp(null);
+    setShowQuit(false);
     setRoundOver(false);
     setPick(queue.next());
   }
@@ -253,9 +276,12 @@ export default function Practice() {
     );
   }
 
+  // Every branch keeps Toast first under the same background, so React keeps
+  // the one Toast across them instead of remounting it and replaying old news.
   if (offer) {
     return (
       <BackgroundGradient colors={PRACTICE_COLORS}>
+        <Toast messages={toasts} />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', overflow: 'auto' }}>
           <LessonOffer lesson={offer.lesson} characterEmoji={characterEmoji} onShowMe={showLesson} onKeepPlaying={keepPlaying} />
         </div>
@@ -270,7 +296,7 @@ export default function Practice() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 20px', overflow: 'auto' }}>
           <RoundCard
             progress={progress}
-            skillIds={roundSkills}
+            skillIds={roundSkills.filter((id) => round.current.asked.includes(id))}
             levelledUp={round.current.levelledUp}
             correct={round.current.correct}
             total={round.current.answered}

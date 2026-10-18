@@ -34,6 +34,17 @@ function hopLineMax(q: Question): number | null {
   return top <= 20 ? 20 : null;
 }
 
+/**
+ * How many things a picture draws side by side: an emoji with its modifiers
+ * ("3️⃣" is three code points) counts once, spaces not at all.
+ */
+function glyphCount(text: string): number {
+  type Segmenter = { segment(s: string): Iterable<{ segment: string }> };
+  const Seg = (Intl as unknown as { Segmenter?: new (l?: string, o?: object) => Segmenter }).Segmenter;
+  if (Seg) return [...new Seg(undefined, { granularity: 'grapheme' }).segment(text)].filter((g) => g.segment.trim()).length;
+  return [...text].filter((c) => c.trim() && !/[\uFE0F\u20E3\u200D]/.test(c)).length;
+}
+
 // A one-line sum wants to be huge; a three-sentence story at that size runs off
 // a phone screen and pushes the answers out of reach.
 function promptFontSize(prompt: string): number {
@@ -49,7 +60,8 @@ export default function QuestionCard({ question }: Props) {
   const showNumberLine = question.type === 'skip_count';
   const hopMax = hopLineMax(question);
   const isLong = question.prompt.length > 40;
-  const wideEmoji = !!question.promptEmoji && [...question.promptEmoji].length > 6;
+  // Five across at this size reaches the read-aloud button on a phone.
+  const wideEmoji = !!question.promptEmoji && glyphCount(question.promptEmoji) >= 5;
 
   return (
     <div style={{

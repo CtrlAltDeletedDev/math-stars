@@ -139,6 +139,20 @@ function servingRung(progress: UserProgress, skillId: string): number {
   return Math.min(progress.skills?.[skillId]?.rung ?? 0, ceilingFor(skillId, progress.gradeLevel));
 }
 
+/**
+ * What a question looks like to her, as opposed to its id. A rung that mixes a
+ * hand-written bank with a generator can draw the bank's "time-6-0" and the
+ * generator's "gclock-read-6-00": two ids, one clock showing six o'clock.
+ */
+export function sameness(q: Question): string {
+  return ['look', q.type, q.prompt, q.promptEmoji ?? '', JSON.stringify(q.visual ?? null), q.correctAnswer].join('|');
+}
+
+/** Ids and looks to keep out of a session: everything already in it. */
+function alreadyIn(questions: readonly Question[]): Set<string> {
+  return new Set(questions.flatMap((q) => [q.id, sameness(q)]));
+}
+
 /** Up to `n` different questions from one rung — fewer if its pool is small. */
 function questionsAtRung(skillId: string, rung: number, n: number, avoid: Set<string>): Question[] {
   const skill = SKILLS_BY_ID.get(skillId);
@@ -147,8 +161,9 @@ function questionsAtRung(skillId: string, rung: number, n: number, avoid: Set<st
   let misses = 0;
   while (out.length < n && misses < 40) {
     const q = questionForRung(skill, rung);
-    if (!q || avoid.has(q.id)) { misses++; continue; }
+    if (!q || avoid.has(q.id) || avoid.has(sameness(q))) { misses++; continue; }
     avoid.add(q.id);
+    avoid.add(sameness(q));
     out.push(q);
   }
   return out;
@@ -209,7 +224,7 @@ function dueQuestions(
  */
 export function buildDailyChallengeSession(progress: UserProgress, characterName = 'You'): Question[] {
   const reviews = dueQuestions(progress, MIXED_SESSION_REVIEWS, characterName);
-  const avoid = new Set(reviews.map((q) => q.id));
+  const avoid = alreadyIn(reviews);
 
   const available = unlockedSkillIds(progress.skills, progress.gradeLevel);
   const started = available.filter((id) => (progress.skills?.[id]?.attempts ?? 0) > 0);
@@ -274,7 +289,7 @@ export function buildMasterSession(
     progress, MIXED_SESSION_REVIEWS, characterName,
     (q) => skillForQuestion(q, '') === skillId,
   );
-  const avoid = new Set(reviews.map((q) => q.id));
+  const avoid = alreadyIn(reviews);
   const fresh = dealRoundRobin(rungs.map((rung) => ({ skillId, rung })), n - reviews.length, avoid);
   return presentAll(shuffle([...reviews, ...fresh]));
 }

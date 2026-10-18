@@ -42,8 +42,10 @@ export default function DailyChallengeCard({ progress, onPress }: Props) {
   return (
     <button
       onPointerDown={() => setPressed(true)}
-      onPointerUp={() => { setPressed(false); onPress(); }}
+      onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
+      // A click, not pointer up, for the same reason as BigButton.
+      onClick={onPress}
       style={{
         background: 'linear-gradient(135deg, #FF9F43, #EE5A24)',
         borderRadius: 16,

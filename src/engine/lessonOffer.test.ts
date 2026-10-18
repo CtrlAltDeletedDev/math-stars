@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { UserProgress } from '@/types';
 import { buildInitialProgress } from '@/store/storage';
-import { lessonToOffer, REPEATS_TO_OFFER } from './lessonOffer';
+import { forgetLessonVisit, leaveForLesson, lessonToOffer, REPEATS_TO_OFFER, returnFromLesson } from './lessonOffer';
+import { daysAgoString, todayString } from './dates';
 
 // When Play stops to offer a lesson. A demotion used to happen in silence, and
 // the lesson for the mistake she kept making sat two taps away on a screen a
@@ -57,5 +58,27 @@ describe('offering a lesson in Play', () => {
 
   it('does not stop her for a promotion', () => {
     expect(lessonToOffer(grade1(), { skillId: 'stories', move: 'promoted', rung: 5, tagCountThisRound: 0 }, none)).toBeNull();
+  });
+
+  it('does not offer a lesson she has already watched today', () => {
+    const struggle = { skillId: 'taking-away', move: 'demoted' as const, rung: 3, tagCountThisRound: 0, topTagThisRound: 'off-by-one' as const };
+    expect(lessonToOffer(grade1({ 'hop-back': todayString() }), struggle, none)?.id).not.toBe('hop-back');
+    expect(lessonToOffer(grade1({ 'hop-back': daysAgoString(3) }), struggle, none)?.id).toBe('hop-back');
+    const repeat = { skillId: 'strategies', move: null, rung: 2, tag: 'answered-the-whole' as const, tagCountThisRound: 2 };
+    expect(lessonToOffer(grade1({ 'make-ten': todayString() }), repeat, none)).toBeNull();
+  });
+});
+
+describe('coming back from an offered lesson', () => {
+  it('remembers what was offered and which topic to lead with', () => {
+    forgetLessonVisit();
+    expect(returnFromLesson()).toEqual({ offered: new Set(), lead: null });
+    leaveForLesson(new Set(['adding']), 'stories');
+    const back = returnFromLesson();
+    expect([...back.offered].sort()).toEqual(['adding', 'stories']);
+    expect(back.lead).toBe('stories');
+    expect(returnFromLesson(), 'reading twice gives the same answer').toEqual(back);
+    forgetLessonVisit();
+    expect(returnFromLesson().lead).toBeNull();
   });
 });

@@ -34,10 +34,17 @@ export interface TopicMastery {
  * What a promotion costs is the honest denominator — `LADDER.promoteAt` right
  * answers normally, `LADDER.fastLane` while the fast lane is open — so the
  * segment fills at the rate she is actually earning it.
+ *
+ * At the ceiling there is no promotion to earn. The ladder empties her window
+ * once a whole one is good enough (skillLadder.ts), so the segment counts
+ * towards a whole window and stops one short: on the way to that reset it
+ * used to reach a full ring a question or two early, the finished state the
+ * ring exists to never show.
  */
-function windowFraction(recent: readonly boolean[], fastLane: boolean): number {
+function windowFraction(recent: readonly boolean[], fastLane: boolean, atCeiling: boolean): number {
   if (recent.length === 0) return 0;
   const hits = recent.filter(Boolean).length;
+  if (atCeiling) return Math.min(hits, LADDER.window - 1) / LADDER.window;
   return Math.min(1, hits / (fastLane ? LADDER.fastLane : LADDER.promoteAt));
 }
 
@@ -51,7 +58,7 @@ export function masteryFor(
   const rung = Math.min(state?.rung ?? 0, ceiling);
   const atCeiling = rung >= ceiling;
   // At the ceiling there is no promotion to earn, fast or otherwise.
-  const partial = windowFraction(state?.recent ?? [], !!state && !atCeiling && inFastLane(state));
+  const partial = windowFraction(state?.recent ?? [], !!state && !atCeiling && inFastLane(state), atCeiling);
 
   // `ceiling + 1` segments: one per rung, plus the one she is working through.
   // At the ceiling the arc shows only the current window, so it climbs, resets

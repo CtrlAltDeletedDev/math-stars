@@ -19,8 +19,10 @@ import { SKILLS_BY_ID } from '@/data/skills';
 // and needed 32 answers to climb to where she was. Until a topic has moved her
 // *down* once, 4 right out of the first 4 at a rung moves her up. The first
 // demotion means she has found her level, and the 6-of-8 rule takes over for
-// good. Four in a row is not luck: guessing among four options gets there one
-// time in 256.
+// good. Four right is rarely luck: guessing among four options gets there one
+// time in 256, among three one in 81. Comparing's "which is more?" has two, so
+// a guess gets there one time in 16; that costs her one rung too high, which
+// her first wrong answers there undo, and the demotion closes the lane.
 
 export const LADDER = {
   window: 8,

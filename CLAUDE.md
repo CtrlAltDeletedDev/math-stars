@@ -99,15 +99,19 @@ first demotion closes it for good. Only `demotions === 0` opens it: a save from 
 `SkillState.demotions` existed has no evidence she was never moved down, so `normalizeProgress`
 must not default the field to 0.
 
-**Play is rounds, not a stream.** `chooseRoundSkills` gives each round of ten two topics she can
-climb plus one for variety, and `roundPlan` asks them A B A B C A B A B C so each main topic gets
-a full fast-lane window. Spreading every pick over every topic in her grade is the old behaviour:
-about 1 question in 16 per topic, so nothing ever moved within a sitting. The round ends on
-`RoundCard`, which never shows a full or finished state.
+**Play is rounds, not a stream.** `chooseRoundSkills` gives each round of ten two topics in her
+grade she can climb plus one for variety, and `roundPlan` asks them A B A B C A B A B C so each
+main topic gets a full fast-lane window. That plan is by slot: reviews and misses from elsewhere
+take only C's turns, and a main topic's miss comes back in its own turn, so A and B always get
+their four. Spreading every pick over every topic in her grade is the old behaviour: about 1
+question in 16 per topic, so nothing ever moved within a sitting. A topic screen's Play and Focus
+Mode just take turns, carrying on across rounds. The round ends on `RoundCard`, which never shows a
+full or finished state.
 
 **Lesson offers are rare on purpose.** Play offers a lesson between questions on a demotion, or the
 same tagged mistake twice on a topic in a round (`src/engine/lessonOffer.ts`): once per topic per
-sitting, never above her grade, and for a repeated mistake only a lesson written for that mistake.
+sitting, never above her grade, never one she watched today, and for a repeated mistake only a
+lesson written for that mistake. Coming back from it carries the sitting on, led by that topic.
 
 **Record what she actually did.** The first wrong tap gets a kind retry on screen but is
 still scored, fed to SRS and fed to the ladder. When it was discarded, guessing scored ~50%

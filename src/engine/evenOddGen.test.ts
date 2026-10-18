@@ -143,6 +143,12 @@ describe.each(RUNGS)('%s', (_label, params, max) => {
     for (const q of pictures) expect(readPairs(q.promptEmoji!)!.count).toBeLessThanOrEqual(10);
   });
 
+  it('never draws a thing whose emoji is already a pair', () => {
+    // 🧦 shows two socks, so "🧦🧦 🧦" would be six socks with the answer "odd".
+    // Gloves and the like are the same trap.
+    for (const q of qs) expect(q.promptEmoji ?? '', q.id).not.toMatch(/🧦|🧤|👖|👀/u);
+  });
+
   it('does not park the answer at a predictable rank', () => {
     for (const want of ['even', 'odd']) {
       const ranks = Array<number>(width).fill(0);

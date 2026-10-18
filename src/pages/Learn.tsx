@@ -64,7 +64,7 @@ export default function Learn() {
     // Offered from inside Play, the lesson hands her back to Play. Only a Play
     // path is honoured, so a crafted link cannot send her anywhere else.
     const back = search.get('return');
-    if (back && /^\/practice(\?skill=[a-z-]+)?$/.test(back)) { navigate(back); return; }
+    if (back && /^\/practice(\?skill=[a-z-]+)?$/.test(back)) { navigate(back, { replace: true }); return; }
     navigate(topic ? `/topic/${topic.id}` : '/');
   }
 

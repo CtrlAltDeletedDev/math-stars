@@ -7,10 +7,15 @@ import { ErrorTag, Question } from '@/types';
 // trusts `correctAnswer`. Failures are collected and asserted once, so a broken
 // rule lists every question it broke on.
 
-const RUNGS = [
-  { label: "o'clock", params: { operation: 'clock', minutes: '0' }, minutes: [0], forms: ['hour', 'read'], maxDifficulty: 1 },
-  { label: 'half past too', params: { operation: 'clock', minutes: '0,30' }, minutes: [0, 30], forms: ['half', 'hour', 'read'], maxDifficulty: 2 },
-  { label: 'quarter past and quarter to', params: { operation: 'clock', minutes: '0,30,15,45' }, minutes: [0, 15, 30, 45], forms: ['half', 'hour', 'read'], maxDifficulty: 3 },
+// The ladder's three rungs, then the first two again with later times asked,
+// which no rung does today (first grade only reads the face) but the generator
+// supports and the ids it rebuilds from include.
+const RUNGS: { label: string; params: Record<string, string | number>; minutes: number[]; forms: string[]; maxDifficulty: number }[] = [
+  { label: "o'clock", params: { operation: 'clock', minutes: '0' }, minutes: [0], forms: ['read'], maxDifficulty: 1 },
+  { label: 'half past too', params: { operation: 'clock', minutes: '0,30' }, minutes: [0, 30], forms: ['read'], maxDifficulty: 2 },
+  { label: 'quarter past and quarter to', params: { operation: 'clock', minutes: '0,30,15,45', later: 1 }, minutes: [0, 15, 30, 45], forms: ['half', 'hour', 'read'], maxDifficulty: 3 },
+  { label: "o'clock, and later", params: { operation: 'clock', minutes: '0', later: 1 }, minutes: [0], forms: ['hour', 'read'], maxDifficulty: 1 },
+  { label: 'half past, and later', params: { operation: 'clock', minutes: '0,30', later: 1 }, minutes: [0, 30], forms: ['half', 'hour', 'read'], maxDifficulty: 2 },
 ];
 
 const SAMPLE = 4000;

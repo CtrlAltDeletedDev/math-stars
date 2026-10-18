@@ -243,18 +243,21 @@ function parseMinutes(raw: number | string | undefined): number[] {
 /**
  * One telling-time question for a ladder rung.
  *
- *   { operation: 'clock', minutes: '0' }          o'clock
- *   { operation: 'clock', minutes: '0,30' }       half past too
- *   { operation: 'clock', minutes: '0,30,15,45' } quarter past and quarter to
+ *   { operation: 'clock', minutes: '0' }                    o'clock
+ *   { operation: 'clock', minutes: '0,30' }                 half past too
+ *   { operation: 'clock', minutes: '0,30,15,45', later: 1 } quarters, and later times
  *
- * Mostly reading the face. On the o'clock rung one question in five asks for
- * the time an hour later; from half past on, one in five asks that and one in
- * five asks for half an hour later.
+ * Reading the face. With `later`, one question in five also asks for the time
+ * an hour later, and where the minutes allow, one in five for half an hour
+ * later. Telling the time to the hour and half hour is first grade; working out
+ * a later one is not, so only the quarter-hour rung, above first grade's
+ * ceiling, asks it.
  */
 export function generateClockQuestion(params: Record<string, number | string>): Question {
   const minutes = parseMinutes(params.minutes);
   const pick = (xs: readonly number[]) => xs[randomInt(0, xs.length - 1)];
   const hour = randomInt(1, 12);
+  if (!Number(params.later)) return clockQuestion('read', at(hour, pick(minutes)), minutes);
 
   // Half an hour on from a minute this rung teaches, to another it teaches.
   const halfStarts = minutes.filter((m) => minutes.includes(pairedMinute(m)));
