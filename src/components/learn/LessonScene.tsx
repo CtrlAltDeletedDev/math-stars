@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Scene, CompareRow } from '@/data/learn';
 import HopLine from '@/components/game/HopLine';
 import { Scale } from 'lucide-react';
+import { BondScene, CoinsScene, GroupsScene, ObjectsScene, PairsScene, TensOnesScene } from './countScenes';
+import { ClockScene, FractionScene, LengthsScene, PatternScene, ShapeScene, WeighScene } from './shapeScenes';
 
 // The pictures lessons are made of. Each one is drawn from a few numbers in
 // src/data/learn.ts, so a lesson is data and a new one needs no new drawing.
@@ -271,5 +273,17 @@ export default function LessonScene({ scene }: { scene: Scene }) {
     case 'doubles': return <DoublesScene {...scene} />;
     case 'balance': return <BalanceScene {...scene} />;
     case 'big': return <BigScene text={scene.text} />;
+    case 'objects': return <ObjectsScene {...scene} />;
+    case 'pairs': return <PairsScene {...scene} />;
+    case 'groups': return <GroupsScene {...scene} />;
+    case 'tensOnes': return <TensOnesScene {...scene} />;
+    case 'bond': return <BondScene {...scene} />;
+    case 'coins': return <CoinsScene {...scene} />;
+    case 'clock': return <ClockScene {...scene} />;
+    case 'shape': return <ShapeScene {...scene} />;
+    case 'pattern': return <PatternScene {...scene} />;
+    case 'lengths': return <LengthsScene {...scene} />;
+    case 'weigh': return <WeighScene {...scene} />;
+    case 'fraction': return <FractionScene {...scene} />;
   }
 }

@@ -2,6 +2,7 @@ import { ErrorTag, Level } from '@/types';
 import { LESSONS } from './lessons';
 import { getLevelById } from './categories';
 import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, TOPICS_BY_ID } from './topics';
+import { TOPIC_LESSONS } from './learnTopics';
 
 // Lessons that teach, for a child who cannot read them yet.
 //
@@ -31,10 +32,11 @@ import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, TOPICS_BY_ID } from './topics';
 export type Scene =
   /**
    * A number line. `hops` arcs are drawn from `start` in direction `dir`; with
-   * `animate` they appear one at a time. `interactive` hands her the hop line to
-   * work it out herself, starting from `start`.
+   * `animate` they appear one at a time. `step` makes each hop that long, for
+   * counting by 2s, 5s and 10s. `interactive` hands her the hop line to work it
+   * out herself, starting from `start`.
    */
-  | { kind: 'numberLine'; max: number; start: number; hops?: number; dir?: 1 | -1; animate?: boolean; interactive?: boolean }
+  | { kind: 'numberLine'; max: number; start: number; hops?: number; dir?: 1 | -1; animate?: boolean; interactive?: boolean; step?: number }
   /** Ten frame: `first` counters, then `second` in another colour, `outside` waiting below. */
   | { kind: 'tenFrame'; first: number; second?: number; outside?: number; emoji?: string; askEmpty?: boolean }
   /** Bar model: the whole on top, its two parts underneath. null is the unknown. */
@@ -45,7 +47,58 @@ export type Scene =
   | { kind: 'doubles'; n: number; extra?: number }
   /** A level balance: "=" means both sides are worth the same. */
   | { kind: 'balance'; left: string; right: string }
-  | { kind: 'big'; text: string };
+  | { kind: 'big'; text: string }
+
+  // Drawn in components/learn/countScenes.tsx --------------------------------
+
+  /**
+   * `n` things to count, in rows of five. `counting` numbers them one at a
+   * time as the guide counts, and the last number stays lit: that is how many.
+   */
+  | { kind: 'objects'; n: number; emoji: string; counting?: boolean }
+  /** `n` things put two by two. One left without a partner makes `n` odd. */
+  | { kind: 'pairs'; n: number; emoji?: string }
+  /** `groups` equal groups of `size`. `counting` shows the running total under each group: 5, 10, 15. */
+  | { kind: 'groups'; groups: number; size: number; emoji: string; counting?: boolean }
+  /** Tens rods and ones cubes, one picture per number; two numbers stand side by side to compare. */
+  | { kind: 'tensOnes'; numbers: number[] }
+  /** A number bond: the whole in the top circle, its two parts below. null is the unknown. */
+  | { kind: 'bond'; whole: number | null; parts: [number | null, number | null] }
+  /**
+   * Coins in a row, values in cents (1, 5, 10, 25). `counting` shows the running
+   * total under each coin; `names` writes penny / nickel / dime / quarter under them.
+   */
+  | { kind: 'coins'; coins: number[]; counting?: boolean; names?: boolean }
+
+  // Drawn in components/learn/shapeScenes.tsx --------------------------------
+
+  /** A clock face, `minute` a multiple of 5. `highlight` makes one hand stand out. */
+  | { kind: 'clock'; hour: number; minute: number; highlight?: 'hour' | 'minute' }
+  /** One shape. `mark` numbers its sides or its corners, one at a time. */
+  | { kind: 'shape'; shape: ShapeName; mark?: 'sides' | 'corners' }
+  /**
+   * A repeating pattern, left to right. `unit` is how long the part that
+   * repeats is, and each repeat gets its own box; `blank` ends on a "?" box.
+   */
+  | { kind: 'pattern'; items: string[]; unit?: number; blank?: boolean }
+  /** Things drawn `length` units long from one starting line; `units` lays numbered cubes along each. */
+  | { kind: 'lengths'; items: LengthItem[]; units?: boolean }
+  /** A pan balance tipped down on the heavier side. */
+  | { kind: 'weigh'; left: string; right: string; heavier: 'left' | 'right' }
+  /** A shape cut into `parts`, `shaded` of them coloured. `unequal` cuts pieces that are not the same size. */
+  | { kind: 'fraction'; shape: 'circle' | 'bar' | 'square'; parts: number; shaded: number; unequal?: boolean };
+
+export type ShapeName =
+  | 'triangle' | 'square' | 'rectangle' | 'circle' | 'pentagon' | 'hexagon' | 'octagon' | 'rhombus' | 'trapezoid';
+
+export interface LengthItem {
+  emoji: string;
+  label: string;
+  /** In units: cubes, or paper clips. */
+  length: number;
+  /** Where it starts, in units from the line. Not 0 is how a picture shows "not lined up". */
+  start?: number;
+}
 
 export interface CompareRow {
   label: string;
@@ -86,8 +139,11 @@ export interface Lesson {
   emoji: string;
   /** The topics (skills) it belongs to, and the rung it teaches in each. */
   places: { skillId: string; rung: number }[];
-  /** Where "Practice it now" goes. */
-  practiceLevelId: string;
+  /**
+   * Where "Practice it now" goes. Left out only for a topic with no levels
+   * (Fractions is practice-only), where it opens Play on that topic instead.
+   */
+  practiceLevelId?: string;
   /** Mistakes this lesson is the answer to — how a lesson gets recommended. */
   helpsWith?: ErrorTag[];
   steps: LessonStep[];
@@ -789,6 +845,8 @@ export const INTERACTIVE_LESSONS: Lesson[] = [
   STILL_NEEDS,
   THINK_ADDITION,
   EQUALS_MEANS_SAME,
+  // Every other topic's, one file each in src/data/learnTopics/.
+  ...TOPIC_LESSONS,
 ];
 
 // ---------------------------------------------------------------------------
@@ -836,12 +894,19 @@ export function rungIn(lesson: Lesson, skillId: string): number | undefined {
   return lesson.places.find((p) => p.skillId === skillId)?.rung;
 }
 
-/** A topic's lessons up to `ceiling`, easiest first, interactive before slides at the same rung. */
+/**
+ * A topic's lessons up to `ceiling`, easiest first, interactive before slides
+ * at the same rung. A text slide is left out where a lesson she can watch and
+ * try teaches the same rung of the same topic: it is still there for an old
+ * link, but it is not offered beside the lesson that replaced it.
+ */
 export function lessonsFor(skillId: string, ceiling: number): Lesson[] {
+  const taught = new Set(INTERACTIVE_LESSONS.map((l) => rungIn(l, skillId)).filter((r) => r !== undefined));
   return ALL_LESSONS
     .filter((l) => {
       const r = rungIn(l, skillId);
-      return r !== undefined && r <= ceiling;
+      if (r === undefined || r > ceiling) return false;
+      return !(SLIDE_LESSONS.includes(l) && taught.has(r));
     })
     .sort((a, b) => rungIn(a, skillId)! - rungIn(b, skillId)!);
 }
@@ -883,8 +948,8 @@ export function recommendedLesson(
  * its own topic; elsewhere it is that topic's level at the lesson's rung.
  */
 export function practiceLevelFor(lesson: Lesson, fromSkillId?: string | null): Level | null {
-  const own = getLevelById(lesson.practiceLevelId);
-  if (!fromSkillId || SKILL_FOR_LEVEL.get(lesson.practiceLevelId) === fromSkillId) return own;
+  const own = lesson.practiceLevelId ? getLevelById(lesson.practiceLevelId) : null;
+  if (!fromSkillId || (lesson.practiceLevelId && SKILL_FOR_LEVEL.get(lesson.practiceLevelId) === fromSkillId)) return own;
   const rung = rungIn(lesson, fromSkillId);
   const ref = rung === undefined ? undefined : TOPICS_BY_ID.get(fromSkillId)?.levels.find((r) => r.rung === rung);
   return (ref && getLevelById(ref.levelId)) || own;

@@ -123,9 +123,10 @@ export default function Learn() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 360, marginTop: 10 }}>
             {isDone ? (
               <>
-                {practice && (
+                {/* A topic with no levels (Fractions) practises in Play instead. */}
+                {(practice || topic) && (
                   <BigButton
-                    onPress={() => navigate(`/game/${practice.categoryId}/${practice.id}`, { replace: true })}
+                    onPress={() => navigate(practice ? `/game/${practice.categoryId}/${practice.id}` : `/practice?skill=${topic!.id}`, { replace: true })}
                     label="Practice it now"
                     icon={<Play size={22} strokeWidth={ICON_STROKE} fill="currentColor" aria-hidden />}
                     color="#fff"
