@@ -270,6 +270,20 @@ describe('"try" steps', () => {
     }
   });
 
+  it('speak only words and numbers', () => {
+    // Everything in say, then.say and a hint is read out by speech synthesis,
+    // which reads "25¢" as "25 cent sign", "1/2" as "1 slash 2" and "3:30"
+    // however it likes, and an emoji by its name.
+    const bad: string[] = [];
+    for (const l of INTERACTIVE_LESSONS) {
+      for (const { s, where } of steps(l)) {
+        const spoken = [s.say, ...(s.kind === 'try' ? [s.then.say, ...Object.values(s.hints ?? {})] : [])];
+        for (const t of spoken) if (/[¢×÷<>]|\d\/\d|\d:\d|\p{Extended_Pictographic}/u.test(t)) bad.push(`${where}: ${t}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
   it('do not guess a pronoun for anyone in a story', () => {
     for (const l of INTERACTIVE_LESSONS) {
       for (const { s, where } of steps(l)) {
