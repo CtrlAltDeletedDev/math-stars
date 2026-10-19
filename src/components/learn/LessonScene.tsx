@@ -25,9 +25,16 @@ const PAD = 16;
 const UNIT = 22;
 const LINE_Y = 72;
 const HOP_MS = 700;
+/** The most numbers a line shows one tick each; wider, it ticks once per hop. */
+const MOST_NUMBERS = 14;
+/** Room for one hop when the line ticks once per hop; a bit less when there are many. */
+const HOP_UNIT = 30;
+const HOP_UNIT_CROWDED = 26;
+/** More hops than this and their numbers no longer fit side by side on a phone. */
+const CROWDED_TICKS = 12;
 
-function NumberLineScene({ max, start, hops = 0, dir = 1, animate = false }: {
-  max: number; start: number; hops?: number; dir?: 1 | -1; animate?: boolean;
+function NumberLineScene({ max, start, hops = 0, dir = 1, animate = false, step = 1 }: {
+  max: number; start: number; hops?: number; dir?: 1 | -1; animate?: boolean; step?: number;
 }) {
   // How many hops are drawn so far. Animated scenes count up on a timer so the
   // hops land roughly as the guide says each number.
@@ -42,53 +49,92 @@ function NumberLineScene({ max, start, hops = 0, dir = 1, animate = false }: {
       if (n >= hops) clearInterval(id);
     }, HOP_MS);
     return () => clearInterval(id);
-  }, [animate, hops, start, dir]);
+  }, [animate, hops, start, dir, step]);
 
   // Zoom to where the hops happen, at least 11 numbers wide. On a phone the
   // whole 0–20 line is too small to watch; her homework line is still what the
   // "try" steps use, so she sees both.
-  const end = start + dir * hops;
+  const end = start + dir * hops * step;
   let lo = Math.max(0, Math.min(start, end) - 2);
   let hi = Math.min(max, Math.max(start, end) + 2);
   while (hi - lo < 10 && (lo > 0 || hi < max)) {
     if (hi < max) hi++;
     if (hi - lo < 10 && lo > 0) lo--;
   }
-  const width = PAD * 2 + UNIT * (hi - lo);
-  const x = (n: number) => PAD + (n - lo) * UNIT;
-  const here = start + dir * shown;
+  // Counting by 2s, 5s or 10s can cover more numbers than fit one tick each
+  // (0 to 100 by 10s). Then the line ticks only where a hop can land: start,
+  // start ± one hop and so on, which is the multiples of the step when she
+  // starts on one. One hop either side, at least 6 hops wide, and every hop
+  // still lands on a numbered tick.
+  let every = 1;
+  if (step > 1 && hi - lo > MOST_NUMBERS) {
+    every = step;
+    lo = Math.min(start, end);
+    hi = Math.max(start, end);
+    if (lo - step >= 0) lo -= step;
+    if (hi + step <= max) hi += step;
+    while ((hi - lo) / step < 6 && (lo - step >= 0 || hi + step <= max)) {
+      if (hi + step <= max) hi += step;
+      if ((hi - lo) / step < 6 && lo - step >= 0) lo -= step;
+    }
+  }
+  const ticks = (hi - lo) / every;
+  // More hops than a phone can number side by side (0 to 100 by 5s): the
+  // numbers under the line take turns between two rows, and everything is
+  // drawn bigger, because the whole line is shrunk to fit.
+  const crowded = every > 1 && ticks > CROWDED_TICKS;
+  const unit = every === 1 ? UNIT : crowded ? HOP_UNIT_CROWDED : HOP_UNIT;
+  const pad = crowded ? 24 : PAD; // room for the ring round the start
+  const width = pad * 2 + unit * ticks;
+  // Room under the line for a ringed 100; a line of single steps keeps its old size.
+  const height = crowded ? 128 : step > 1 ? 106 : 100;
+  // A long hop (one 10 across ten numbers) gets a taller arc, so it reads as a hop, not a bridge.
+  const lift = every === 1 ? Math.min(42 + (step - 1) * 4, 62) : 42;
+  const x = (n: number) => pad + ((n - lo) / every) * unit;
+  const labelY = (n: number) => LINE_Y + (crowded && ((n - lo) / every) % 2 === 1 ? 44 : 22);
+  const here = start + dir * shown * step;
   const colour = dir === 1 ? FORWARD : BACK;
+  // Counting by 2s, every number she has landed on stays lit: 2, 4, 6.
+  const landed = (n: number) => {
+    const gone = (n - start) * dir;
+    return step > 1 && gone > 0 && gone % step === 0 && gone / step <= shown;
+  };
+  const labelSize = (n: number) => (crowded ? 20 : step > 1 && n >= 100 ? 12 : n >= 10 ? 13 : 15);
 
   return (
-    <svg viewBox={`0 0 ${width} 100`} style={{ width: '100%', maxWidth: 560 }} role="img"
-         aria-label={`Number line: start on ${start}${hops ? `, ${hops} hops ${dir === 1 ? 'forward' : 'back'}` : ''}`}>
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: 560 }} role="img"
+         aria-label={`Number line: start on ${start}${hops
+           ? `, ${hops} hops${step > 1 ? ` of ${step}` : ''} ${dir === 1 ? 'forward' : 'back'}${step > 1 ? `, landing on ${end}` : ''}`
+           : ''}`}>
       {Array.from({ length: shown }, (_, i) => {
-        const from = start + dir * i;
-        const to = from + dir;
+        const from = start + dir * i * step;
+        const to = from + dir * step;
         const mid = (x(from) + x(to)) / 2;
         return (
           <g key={i} className="anim-pop" style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
-            <path d={`M ${x(from)} ${LINE_Y - 4} Q ${mid} ${LINE_Y - 42} ${x(to)} ${LINE_Y - 4}`}
+            <path d={`M ${x(from)} ${LINE_Y - 4} Q ${mid} ${LINE_Y - lift} ${x(to)} ${LINE_Y - 4}`}
                   fill="none" stroke={colour} strokeWidth="3.5" strokeLinecap="round" />
             {/* Number each hop: counting the hops is the whole skill. */}
-            <text x={mid} y={LINE_Y - 30} textAnchor="middle"
-                  style={{ fontFamily: FONT, fontWeight: 800, fontSize: 12, fill: colour }}>{i + 1}</text>
+            <text x={mid} y={LINE_Y - 9 - lift / 2} textAnchor="middle"
+                  style={{ fontFamily: FONT, fontWeight: 800, fontSize: crowded ? 19 : 12, fill: colour }}>{i + 1}</text>
           </g>
         );
       })}
-      <line x1={PAD - 8} y1={LINE_Y} x2={width - PAD + 8} y2={LINE_Y} stroke={INK} strokeWidth="2.5" />
-      {Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).map((n) => (
+      <line x1={pad - 8} y1={LINE_Y} x2={width - pad + 8} y2={LINE_Y} stroke={INK} strokeWidth="2.5" />
+      {Array.from({ length: ticks + 1 }, (_, i) => lo + i * every).map((n) => (
         <g key={n}>
-          <line x1={x(n)} y1={LINE_Y - 7} x2={x(n)} y2={LINE_Y + 7} stroke={INK} strokeWidth={n % 5 === 0 ? 2.5 : 1.5} />
-          <text x={x(n)} y={LINE_Y + 22} textAnchor="middle"
+          <line x1={x(n)} y1={LINE_Y - 7} x2={x(n)} y2={labelY(n) === LINE_Y + 22 ? LINE_Y + 7 : LINE_Y + 26} stroke={INK}
+                strokeWidth={every === 1 ? (n % 5 === 0 ? 2.5 : 1.5) : n % 10 === 0 ? 2.5 : 2} />
+          <text x={x(n)} y={labelY(n)} textAnchor="middle"
                 style={{
-                  fontFamily: FONT, fontWeight: n === here || n === start ? 800 : 700,
-                  fontSize: n >= 10 ? 13 : 15,
-                  fill: n === here && shown > 0 ? colour : INK,
+                  fontFamily: FONT, fontWeight: n === here || n === start || landed(n) ? 800 : 700,
+                  fontSize: labelSize(n),
+                  fill: (n === here && shown > 0) || landed(n) ? colour : INK,
                 }}>{n}</text>
         </g>
       ))}
-      <circle cx={x(start)} cy={LINE_Y + 18} r="11" fill="none" stroke={INK} strokeWidth="2" />
+      <circle cx={x(start)} cy={labelY(start) - (crowded ? 7 : 4)} r={crowded ? 19 : step > 1 && start >= 100 ? 14 : 11}
+              fill="none" stroke={INK} strokeWidth="2" />
       <circle cx={x(here)} cy={LINE_Y} r="6.5" fill={shown > 0 ? colour : INK} />
     </svg>
   );
