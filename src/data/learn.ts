@@ -60,8 +60,12 @@ export type Scene =
   | { kind: 'pairs'; n: number; emoji?: string }
   /** `groups` equal groups of `size`. `counting` shows the running total under each group: 5, 10, 15. */
   | { kind: 'groups'; groups: number; size: number; emoji: string; counting?: boolean }
-  /** Tens rods and ones cubes, one picture per number; two numbers stand side by side to compare. */
-  | { kind: 'tensOnes'; numbers: number[] }
+  /**
+   * Tens rods and ones cubes, one picture per number, each written underneath;
+   * two numbers stand side by side to compare. `hide` writes "?" instead of the
+   * number, for "what number is this?".
+   */
+  | { kind: 'tensOnes'; numbers: number[]; hide?: boolean }
   /** A number bond: the whole in the top circle, its two parts below. null is the unknown. */
   | { kind: 'bond'; whole: number | null; parts: [number | null, number | null] }
   /**

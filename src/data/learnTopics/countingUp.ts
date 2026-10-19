@@ -242,9 +242,18 @@ const EQUAL_GROUPS: Lesson = {
     },
     {
       kind: 'watch',
-      say: 'You can add them: 5 plus 5 plus 5 is 15. The short way to write it is 5 times 3. It means 5, 3 times.',
-      caption: '5 × 3 = 15',
-      scene: { kind: 'big', text: '5 + 5 + 5 = 15\n5 × 3 = 15' },
+      say: 'You can add them: 5 plus 5 plus 5 is 15. The short way to write 3 groups of 5 is 3 times 5. 3 times 5 is 15.',
+      caption: '3 × 5 = 15',
+      scene: { kind: 'big', text: '5 + 5 + 5 = 15\n3 × 5 = 15' },
+    },
+    {
+      // Play asks the table first ("5 × 3"), and school will read that as 5
+      // groups of 3. Turning it around keeps the convention and still lets her
+      // count by the number she knows.
+      kind: 'watch',
+      say: 'Turn it around, and the answer stays the same. 5 times 3 is 15 too. So for 5 times 3, count by 5s, 3 times. 5, 10, 15.',
+      caption: '5 × 3 = 15 too',
+      scene: { kind: 'big', text: '3 × 5 = 15\n5 × 3 = 15' },
     },
     {
       kind: 'try',
@@ -260,19 +269,19 @@ const EQUAL_GROUPS: Lesson = {
       },
       then: {
         say: 'Yes! 5, 10, 15, 20. 4 groups of 5 make 20.',
-        caption: '5 × 4 = 20',
+        caption: '4 × 5 = 20',
         scene: { kind: 'groups', groups: 4, size: 5, emoji: '🍪', counting: true },
       },
     },
     {
       kind: 'try',
-      say: 'What is 2 times 6? That means 2, 6 times. Count by 2s.',
+      say: 'What is 2 times 6? Turn it around: 6 groups of 2. Count by 2s, one number for each group.',
       caption: '2 × 6 = ?',
       scene: { kind: 'groups', groups: 6, size: 2, emoji: '🍓' },
       choices: ['12', '8', '10', '14'],
       answer: '12',
       hints: {
-        '8': "That's 2 plus 6. Times means groups: 6 groups of 2. Count by 2s!",
+        '8': "That's 2 plus 6. Times is not plus! Count by 2s, one number for each of the 6 groups.",
         '10': "That's only 5 groups. Say one number for each of the 6 groups.",
         '14': "That's 7 groups. There are just 6. Count again by 2s.",
       },

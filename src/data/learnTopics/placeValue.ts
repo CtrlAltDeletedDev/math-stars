@@ -9,9 +9,8 @@ import type { Lesson } from '../learn';
 // treating the two digits as if they could swap places: 36 for 63, the ones
 // digit for the tens, "38 beats 52 because 8 is big".
 //
-// The tens-and-ones picture writes its number underneath, so a "what number is
-// this?" try shows its tens and ones the way play does instead (🔟 for a ten,
-// ● for a one) and plays the rods and cubes through once she has it.
+// A "what number is this?" try draws the rods and cubes with the number hidden,
+// and writes it in once she has it.
 
 const TENS_AND_ONES: Lesson = {
   id: 'tens-and-ones',
@@ -113,7 +112,7 @@ const BUILD_A_NUMBER: Lesson = {
       kind: 'try',
       say: '6 tens and 3 ones. What number is that?',
       caption: '6 tens and 3 ones = ?',
-      scene: { kind: 'big', text: '🔟🔟🔟🔟🔟🔟\n●●●' },
+      scene: { kind: 'tensOnes', numbers: [63], hide: true },
       choices: ['63', '36', '9', '60'],
       answer: '63',
       hints: {
@@ -149,7 +148,7 @@ const BUILD_A_NUMBER: Lesson = {
       kind: 'try',
       say: 'Careful, the ones come first this time! 3 ones and 4 tens. What number is that?',
       caption: '3 ones and 4 tens = ?',
-      scene: { kind: 'big', text: '●●●\n🔟🔟🔟🔟' },
+      scene: { kind: 'tensOnes', numbers: [43], hide: true },
       choices: ['43', '34', '7', '40'],
       answer: '43',
       hints: {

@@ -29,7 +29,14 @@ function say(text: string) {
 
 const PRAISE = ['Yes!', 'You got it!', 'Great thinking!', 'That\'s it!'];
 
+// Keyed by the lesson, so going from one lesson straight to another starts the
+// second at its title card instead of wherever the first one was.
 export default function Learn() {
+  const { lessonId = '' } = useParams<{ lessonId: string }>();
+  return <LessonPlayer key={lessonId} />;
+}
+
+function LessonPlayer() {
   const { lessonId = '' } = useParams<{ lessonId: string }>();
   const [search] = useSearchParams();
   const navigate = useNavigate();

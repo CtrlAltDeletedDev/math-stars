@@ -147,10 +147,10 @@ describe('Comparing and Tens & Ones lessons', () => {
   });
 
   it('never write the answer in the question picture unless the question already says it', () => {
-    // Rods and cubes are drawn with their number underneath, and compared rows
+    // Rods and cubes are drawn with their number underneath unless hidden, and compared rows
     // with their counts, so drawing the answer would hand it over.
     const drawn = (scene?: Scene): number[] =>
-      scene?.kind === 'tensOnes' ? scene.numbers : scene?.kind === 'compare' ? scene.rows.map((r) => r.count) : [];
+      scene?.kind === 'tensOnes' ? (scene.hide ? [] : scene.numbers) : scene?.kind === 'compare' ? scene.rows.map((r) => r.count) : [];
     for (const { lesson } of LESSONS) {
       for (const { s, where } of tries(lesson) as { s: TryStep; where: string }[]) {
         if (drawn(s.scene).includes(Number(s.answer))) {

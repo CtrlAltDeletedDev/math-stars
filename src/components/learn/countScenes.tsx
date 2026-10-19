@@ -1,4 +1,5 @@
 import { CSSProperties, ReactNode, useEffect, useId, useState } from 'react';
+import { COIN_STYLE } from '@/components/game/QuestionVisual';
 import { Scene } from '@/data/learn';
 
 // Pictures for counting, pairs, groups, tens and ones, number bonds and coins.
@@ -324,7 +325,7 @@ const tensAndOnes = (n: number) => {
   return `${n}: ${t} ${t === 1 ? 'ten' : 'tens'} and ${o} ${o === 1 ? 'one' : 'ones'}`;
 };
 
-export function TensOnesScene({ numbers }: Of<'tensOnes'>) {
+export function TensOnesScene({ numbers, hide = false }: Of<'tensOnes'>) {
   // Every ten is one rod of ten joined cubes, every one a loose cube. Rods go
   // in fives (so 120 is 5, 5 and 2) and the loose ones in columns of five,
   // and the number is written underneath. Two numbers stand side by side.
@@ -368,13 +369,15 @@ export function TensOnesScene({ numbers }: Of<'tensOnes'>) {
                   width={c} height={c} rx={Math.min(3, c * 0.15)} fill={RED} stroke={INK} strokeWidth={sw} />
           );
         })}
-        <text x={mid} y={tall + 14 + NUMBER_SIZE * 0.5} dy="0.36em" textAnchor="middle" style={type(NUMBER_SIZE)}>{n}</text>
+        {/* Hidden, it is the question: "?" in the gold every unknown is drawn in. */}
+        <text x={mid} y={tall + 14 + NUMBER_SIZE * 0.5} dy="0.36em" textAnchor="middle"
+              style={{ ...type(NUMBER_SIZE), ...(hide ? { fill: '#C9A400' } : {}) }}>{hide ? '?' : n}</text>
       </g>
     );
   });
 
   return (
-    <Picture w={W} h={H} grow={1.1} label={nums.map(tensAndOnes).join(', beside ')}>
+    <Picture w={W} h={H} grow={1.1} label={hide ? nums.map((n) => tensAndOnes(n).replace(/^\d+: /, '')).join(', beside ') : nums.map(tensAndOnes).join(', beside ')}>
       {drawn}
       {nums.length > 1 && (
         <line x1={slots[0] + sep / 2} x2={slots[0] + sep / 2} y1={0} y2={H} stroke={SOFT_EDGE} strokeWidth={2.5} strokeDasharray="6 6" strokeLinecap="round" />
@@ -425,12 +428,10 @@ export function BondScene({ whole, parts }: Of<'bond'>) {
  * labels and sizes relative to each other, so the dime is the smallest coin
  * even though it is worth more than a penny or a nickel.
  */
-const COIN: Record<number, { fill: string; label: string; size: number; name: string }> = {
-  1: { fill: '#C87941', label: '1¢', size: 40, name: 'penny' },
-  5: { fill: '#B8BDC4', label: '5¢', size: 48, name: 'nickel' },
-  10: { fill: '#A8ADB4', label: '10¢', size: 36, name: 'dime' },
-  25: { fill: '#9BA1A8', label: '25¢', size: 56, name: 'quarter' },
-};
+const COIN_NAMES: Record<number, string> = { 1: 'penny', 5: 'nickel', 10: 'dime', 25: 'quarter' };
+const COIN: Record<number, { fill: string; label: string; size: number; name: string }> = Object.fromEntries(
+  Object.entries(COIN_STYLE).map(([v, style]) => [v, { ...style, name: COIN_NAMES[Number(v)] ?? 'coin' }]),
+);
 const NAME_SIZE = 14;
 const TOTAL_SIZE = 18;
 

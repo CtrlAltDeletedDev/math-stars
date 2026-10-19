@@ -248,7 +248,7 @@ function CompareScene({ rows, match }: { rows: [CompareRow, CompareRow]; match?:
       ))}
       {match && (
         <div style={{ fontFamily: FONT, fontWeight: 800, fontSize: 17, color: '#B07D00', textAlign: 'right' }}>
-          {most - fewest} extra
+          {most === fewest ? 'Same!' : `${most - fewest} extra`}
         </div>
       )}
     </div>
@@ -298,10 +298,13 @@ function BalanceScene({ left, right }: { left: string; right: string }) {
 // --- Big text --------------------------------------------------------------------
 
 function BigScene({ text }: { text: string }) {
-  const long = text.length > 14;
+  // Sized by the longest line, not the whole text: "5 + 5 + 5 = 15" over
+  // "3 × 5 = 15" is two short lines, and used to come out at sentence size.
+  const longest = Math.max(...text.split('\n').map((line) => [...line].length));
+  const size = longest <= 10 ? 48 : longest <= 15 ? 34 : 22;
   return (
     <div style={{
-      fontFamily: FONT, fontWeight: 800, fontSize: long ? 22 : 48, color: INK,
+      fontFamily: FONT, fontWeight: 800, fontSize: size, color: INK,
       textAlign: 'center', whiteSpace: 'pre-line', lineHeight: 1.35,
     }}>{text}</div>
   );

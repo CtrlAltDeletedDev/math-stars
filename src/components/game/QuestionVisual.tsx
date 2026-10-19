@@ -50,7 +50,8 @@ function FractionBar({ numerator, denominator }: { numerator: number; denominato
   );
 }
 
-const COIN_STYLE: Record<number, { fill: string; label: string; size: number }> = {
+/** Shared with the lesson coins (components/learn/countScenes.tsx), so a coin looks the same in both. */
+export const COIN_STYLE: Record<number, { fill: string; label: string; size: number }> = {
   1: { fill: '#C87941', label: '1¢', size: 40 },
   5: { fill: '#B8BDC4', label: '5¢', size: 48 },
   10: { fill: '#A8ADB4', label: '10¢', size: 36 },
