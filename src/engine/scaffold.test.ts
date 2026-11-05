@@ -27,11 +27,17 @@ describe('the fading picture', () => {
     expect(aidModeFor(at(3, [true, true, true, true, false, false]), 'adding', 3)).toBe('show');
   });
 
-  it('is drawn for a review or a question from another rung', () => {
+  it('is drawn for a review, or a question from above her rung', () => {
     const steady = at(3, Array(8).fill(true));
     expect(aidModeFor(steady, null, null)).toBe('show');
     expect(aidModeFor(steady, 'adding', null)).toBe('show');
-    expect(aidModeFor(steady, 'adding', 2)).toBe('show');
+    expect(aidModeFor(steady, 'adding', 4)).toBe('show');
+  });
+
+  it('waits behind a tap for a warm-up from a step she has passed', () => {
+    // Even while she is still new to the rung she stands on.
+    expect(aidModeFor(at(3, []), 'adding', 2)).toBe('tap');
+    expect(aidModeFor(at(3, [false, false, false, false]), 'adding', 0)).toBe('tap');
   });
 
   it('reads the rung she is served at, when her grade clamps her', () => {

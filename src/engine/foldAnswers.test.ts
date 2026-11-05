@@ -146,7 +146,8 @@ describe('modes that only know the question', () => {
   });
 
   it('routes a Number Tricks review in Practice to Number Tricks', () => {
-    const p: UserProgress = { ...buildInitialProgress(), gradeLevel: '1', practiceFocus: ['clocks'], srsCards: { 'dbl-6': due('dbl-6') } };
+    // Focus keeps reviews inside it, so Number Tricks has to be in it.
+    const p: UserProgress = { ...buildInitialProgress(), gradeLevel: '1', practiceFocus: ['clocks', 'strategies'], srsCards: { 'dbl-6': due('dbl-6') } };
     const q = new PracticeQueue(p);
     let review = null;
     for (let i = 1; i <= 5; i++) review = q.next(); // every fifth slot is a review

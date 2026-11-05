@@ -2,7 +2,9 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CATEGORIES } from '@/data/categories';
-import { SKILLS, rankFor, unlockedSkillIds } from '@/data/skills';
+import { SKILLS, SKILLS_BY_ID, rankFor, unlockedSkillIds } from '@/data/skills';
+import { SUMS_SKILLS } from '@/engine/practiceSession';
+import { UserProgress } from '@/types';
 import { rungAccuracy, isMaxed, typicalAnswerMs } from '@/engine/skillLadder';
 import { hasOutgrown } from '@/engine/mastery';
 import { GRADES, GradeLevel, ceilingFor } from '@/data/grades';
@@ -152,6 +154,8 @@ export default function Parent() {
             <ChartColumn size={28} strokeWidth={ICON_STROKE} aria-hidden /> Parent Dashboard
           </div>
         </div>
+
+        <PlusMinusCard progress={progress} />
 
         {/* What to do this week.
             This used to open on a star count, a badge count and "6/51 levels",
@@ -420,7 +424,7 @@ export default function Parent() {
         </div>
         {SKILLS.filter((sk) => progress.skills?.[sk.id]).length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>
-            Nothing yet — tap Play on the home screen to get started.
+            Nothing yet — tap Plus &amp; Minus on the home screen to get started.
           </div>
         ) : (
           <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '6px 18px' }}>
@@ -554,6 +558,59 @@ const actionBtn = (on: boolean): React.CSSProperties => ({
   borderRadius: 14, padding: '10px 14px', minHeight: 44, cursor: 'pointer',
   fontFamily: 'Nunito', fontWeight: 800, fontSize: 14, color: '#fff',
 });
+
+/**
+ * Where Plus & Minus has her, in a parent's words: the step she is on in each,
+ * what comes next, and how it is going. The same two ladders every other mode
+ * reads, so this is true whichever way she got there.
+ */
+function PlusMinusCard({ progress }: { progress: UserProgress }) {
+  const today = progress.dailyQuestionsDate === todayString() ? progress.dailyQuestionsCount : 0;
+  const rows = SUMS_SKILLS.map((id) => {
+    const skill = SKILLS_BY_ID.get(id)!;
+    const st = progress.skills?.[id];
+    const ceiling = ceilingFor(id, progress.gradeLevel);
+    const standing = Math.min(st?.rung ?? 0, ceiling);
+    const acc = st ? rungAccuracy(st) : null;
+    const ms = st ? typicalAnswerMs(st) : null;
+    const next = standing < ceiling ? skill.rungs[standing + 1]?.label : null;
+    return { id, skill, st, standing, ceiling, acc, ms, next };
+  });
+  return (
+    <div style={{ background: 'rgba(255,255,255,0.16)', border: '2px solid rgba(255,255,255,0.35)', borderRadius: 20, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+        <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#fff' }}>➕➖ Plus &amp; Minus</div>
+        <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{today} questions today</div>
+      </div>
+      {rows.map(({ id, skill, st, standing, ceiling, acc, ms, next }) => (
+        <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 15.5, color: '#fff' }}>
+            {skill.emoji} {skill.rungs[standing].label}
+            <span style={{ fontWeight: 700, fontSize: 12.5, color: 'rgba(255,255,255,0.65)' }}> · step {standing + 1} of {ceiling + 1}</span>
+          </div>
+          <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
+            {!st
+              ? 'Not started yet.'
+              : [
+                  acc !== null ? `${Math.round(acc * 100)}% right on her last ${st.recent.length}` : 'Just moved up, fresh start here',
+                  ms !== null ? `about ${(ms / 1000).toFixed(1)}s per right answer` : null,
+                ].filter(Boolean).join(' · ')}
+          </div>
+          <div style={{ fontFamily: 'Nunito', fontSize: 12.5, color: 'rgba(255,255,255,0.65)' }}>
+            {next
+              ? `Next: ${next}`
+              : (st?.ceilingHits ?? 0) >= 2
+                ? 'Top of her grade, and acing it: she may be ready for the next grade.'
+                : 'Top of her grade. It keeps mixing these so they stay fresh.'}
+          </div>
+        </div>
+      ))}
+      <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+        Plus &amp; Minus on the home screen moves her up and down by itself. Every fourth question is a warm-up from a step she has already passed.
+      </div>
+    </div>
+  );
+}
 
 function Stat({ label, value, icon: Icon }: { label: string; value: string | number; icon: LucideIcon }) {
   return (

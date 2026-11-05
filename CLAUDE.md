@@ -35,7 +35,8 @@ Two tables are the spine:
 - `src/data/topics.ts` — maps all 72 levels onto the 17 skill ladders, one topic per skill.
   `src/data/grades.ts` then says which topics a grade covers and how far up each goes.
 
-The child-facing screens are Home (one Play button + a grid of topics),
+The child-facing screens are Home (a big Plus & Minus button, a smaller Mix button, the Daily
+Challenge and a grid of topics),
 `Topic.tsx` (one Play button, a suggested lesson, a lessons strip, a replay strip) and
 `Learn.tsx` (the lesson player). There is no category screen.
 
@@ -120,6 +121,14 @@ their four. Spreading every pick over every topic in her grade is the old behavi
 question in 16 per topic, so nothing ever moved within a sitting. A topic screen's Play and Focus
 Mode just take turns, carrying on across rounds. The round ends on `RoundCard`, which never shows a
 full or finished state.
+
+**Plus & Minus is just sums.** Home's main button (`/sums`, `PracticeQueue` with `{ sums: true }`)
+deals only from `adding` and `taking-away`, in rounds of 20 planned as shuffled blocks of four with
+two of each (`sumsPlan`), so she has to read the sign. Every fourth fresh question is a warm-up from
+one of the three rungs below where she stands, served with its own rung so it never fills the
+promotion window. Its reviews stay inside the two topics. A topic screen's Play and Focus Mode keep
+their reviews inside their topics too; only Mix draws reviews from anywhere. `sums.test.ts` guards
+this.
 
 **Lesson offers are rare on purpose.** Play offers a lesson between questions on a demotion, or the
 same tagged mistake twice on a topic in a round (`src/engine/lessonOffer.ts`): once per topic per

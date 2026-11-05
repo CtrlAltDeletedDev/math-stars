@@ -44,6 +44,53 @@ export const ROUND_SIZE = 10;
 /** Topics one round concentrates on. */
 const ROUND_TOPICS = 3;
 
+// --- Plus & Minus ---------------------------------------------------------
+//
+// The plain-sums practice on Home: adding and taking away, nothing else, one
+// continuous stream that gets harder on its own. The topics still exist as two
+// ladders -- nothing here is saved anywhere new -- this is only a different
+// way of dealing from them.
+
+export const SUMS_SKILLS = ['adding', 'taking-away'] as const;
+
+/** Questions in one round of Plus & Minus: ten of each, and the daily goal. */
+export const SUMS_ROUND_SIZE = 20;
+
+/** Every this-many fresh questions in Plus & Minus, one is a warm-up from a step she has passed. */
+export const WARMUP_EVERY = 4;
+
+/** How far back a warm-up may reach. */
+const WARMUP_REACH = 3;
+
+/**
+ * The order a Plus & Minus round asks its two ladders in: blocks of four, two
+ * of each, shuffled within the block. Even overall so neither ladder is
+ * starved; shuffled so she cannot answer "it's a minus one next" without
+ * reading the sign -- noticing the sign is half of mixed practice.
+ */
+export function sumsPlan(size: number, skills: readonly string[] = SUMS_SKILLS): string[] {
+  const [a, b] = skills;
+  const plan: string[] = [];
+  while (plan.length < size) plan.push(...shuffle([a, a, b, b]));
+  return plan.slice(0, size);
+}
+
+/**
+ * A rung below where she stands, for a warm-up: one of the last few steps she
+ * passed, so the facts she climbed past keep coming up. Null on the first rung,
+ * which has nothing below it.
+ */
+export function warmupRung(standing: number): number | null {
+  if (standing <= 0) return null;
+  const low = Math.max(0, standing - WARMUP_REACH);
+  return low + Math.floor(Math.random() * (standing - low));
+}
+
+export interface QueueOptions {
+  /** Plus & Minus: adding and taking away only, in sumsPlan order, with warm-ups. */
+  sums?: boolean;
+}
+
 const TEACHING_ORDER = new Map(TOPICS.map((t, i) => [t.id, i]));
 
 /**
@@ -152,6 +199,9 @@ export class PracticeQueue {
   private turn = 0;
   /** What the last few questions looked like, whatever their ids (see `sameness`). */
   private recent: string[] = [];
+  /** Fresh questions dealt so far, to space out Plus & Minus warm-ups. */
+  private fresh = 0;
+  private readonly sums: boolean;
 
   constructor(
     private progress: UserProgress,
@@ -165,7 +215,9 @@ export class PracticeQueue {
     private roundSize = ROUND_SIZE,
     /** A topic to lead the first round with: the one whose lesson she just watched. */
     lead: string | null = null,
+    options: QueueOptions = {},
   ) {
+    this.sums = !!options.sums;
     this.startRound(lead);
   }
 
@@ -176,6 +228,12 @@ export class PracticeQueue {
    */
   startRound(lead: string | null = null) {
     const pool = this.skillPool();
+    if (this.sums) {
+      this.round = pool;
+      this.plan = pool.length === 2 ? sumsPlan(this.roundSize, pool) : null;
+      this.picksThisRound = 0;
+      return;
+    }
     const narrowed = this.sessionSkill || (this.progress.practiceFocus ?? []).some((id) => SKILLS_BY_ID.has(id));
     // A topic screen's Play and a parent's Focus Mode have already said what to
     // practise, so those rounds simply take turns through it, carrying on where
@@ -205,6 +263,7 @@ export class PracticeQueue {
    * player met fractions and the times tables in her first session.
    */
   private skillPool(): string[] {
+    if (this.sums) return SUMS_SKILLS.filter((id) => SKILLS_BY_ID.has(id));
     if (this.sessionSkill && SKILLS_BY_ID.has(this.sessionSkill)) return [this.sessionSkill];
     const focus = (this.progress.practiceFocus ?? []).filter((id) => SKILLS_BY_ID.has(id));
     if (focus.length > 0) return focus;
@@ -236,13 +295,29 @@ export class PracticeQueue {
     return this.plan && this.round.length === ROUND_TOPICS ? this.round[ROUND_TOPICS - 1] : null;
   }
 
+  /**
+   * The topics a review may come from, or null for any.
+   *
+   * A sitting someone narrowed -- Plus & Minus, a topic screen's Play, a
+   * parent's Focus Mode -- has said what she is practising, and a clock
+   * question turning up in the middle of Adding's own Play broke that
+   * promise. Only the open, every-topic Play draws reviews from anywhere.
+   */
+  private reviewScope(): Set<string> | null {
+    if (this.sums || this.sessionSkill || (this.progress.practiceFocus ?? []).some((id) => SKILLS_BY_ID.has(id))) {
+      return new Set(this.skillPool());
+    }
+    return null;
+  }
+
   private dueReview(): Question | null {
+    const scope = this.reviewScope();
     const due = Object.values(this.progress.srsCards ?? {})
       .filter(isDue)
       .sort((a, b) => a.nextDueDate - b.nextDueDate);
     for (const card of due) {
       const q = ALL_QUESTIONS_BY_ID.get(card.questionId) ?? questionFromId(card.questionId, this.characterName);
-      if (q) return q;
+      if (q && (!scope || scope.has(skillForQuestion(q, '') ?? ''))) return q;
     }
     return null;
   }
@@ -329,12 +404,19 @@ export class PracticeQueue {
     for (const skillId of [preferred, ...fallback]) {
       const skill = SKILLS_BY_ID.get(skillId);
       if (!skill) continue;
-      const rung = Math.min(
+      const standing = Math.min(
         this.stateFor(skillId).rung,
         ceilingFor(skillId, this.progress.gradeLevel),
       );
+      // Plus & Minus keeps the facts she climbed past coming up: a drill of
+      // nothing but "make a ten" is not what ordinary sums feel like. Served
+      // with its own rung, so it counts toward her totals and the SRS but
+      // never toward moving her on the rung she is standing on.
+      const warm = this.sums && (this.fresh + 1) % WARMUP_EVERY === 0 ? warmupRung(standing) : null;
+      const rung = warm ?? standing;
       const q = this.freshAt(skill, rung);
       if (!q) continue;
+      this.fresh++;
       return { question: { ...q, choices: shuffleChoices(q.choices) }, skillId, rung };
     }
     return null;
