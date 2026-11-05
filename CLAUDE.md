@@ -13,6 +13,34 @@ this device" (`mathstars_shell = 'old'`; `usesNewApp()` in `src/next/store.ts`).
 still runs the old topic screens, which the new app's "More games" door opens. Deleting the old
 shell is the next phase.
 
+**The course teaches; the walk practises.** `src/learn/` is a first-grade course (then second
+grade, as units get written) of units and lessons, as data (`src/learn/types.ts`). Every lesson
+is played by `src/next/screens/Lesson.tsx` in the same order: warm-up from earlier lessons →
+show (I do: a narrated model) → do (we do: *she* moves the model to a goal, with a hint for what
+she has made, "Show me how" after two hints, "Start again") → practice (you do: the picture for
+the first half, then behind "Show me") → a check with no picture or hints. Passing the check
+(3 of 4) fills the lesson's stone. Rules for writing lessons:
+
+- **Models are state.** Thirteen manipulatives (`src/learn/models/`: ten frame, number line,
+  objects, bond, compare, blocks, clock, coins, fraction, shapes, measure, graph, text), each a
+  controlled component drawn from its state and interactive only with `onChange`. Pure state
+  helpers live in `logic-a.ts` / `logic-b.ts`. The gallery at `/#/next/gallery` shows them all.
+- **`course.test.ts` checks every lesson**: each do task is not done at the start and its
+  `solution` meets the goal; each question has exactly one right answer; choice order never gives
+  it away; hints never state the answer; no pronouns for characters. `arith.test.ts` and
+  `world.test.ts` re-solve every question independently and replay every do task through the
+  real model logic.
+- **`figure` vs `picture`.** `figure` is part of the question and always shown (the clock to read,
+  the coins to count). `picture` is support that fades and is gone in the check (counters for a
+  sum). A check must test the bare skill.
+- **Sum items use the fact ids** (`add-7+5`, `sub-13-5`), so lesson answers feed the fact record
+  and the grown-ups grid — without moving her plus/minus track.
+- **It grows with her.** `COURSE` (`src/learn/units/index.ts`) is grade by grade. Today's lesson
+  (`todaysLesson`) is a grown-up's pin, else the first not-done lesson from her grade onward, so
+  finishing a grade carries her into the next. Lessons below her plus/minus path count as done
+  (`placedBy`, which can list both tracks), and "I know this!" on every intro tests her out. A unit
+  with no lessons is skipped; nothing saved refers to a unit's position, only to lesson ids.
+
 Rules for the new app:
 
 - **One learner, one key.** `src/core/learner.ts` is the only model: two tracks (plus, minus),
