@@ -1,7 +1,7 @@
 import { ModelState } from '../types';
 
 /**
- * Every model component takes its state, and an onChange only when she may
+ * Every model component takes its state, and an onChange only when they may
  * change it ("do" steps, and items answered by doing). Without onChange it is
  * a picture. Components must be controlled: draw exactly `state`, and report
  * every change through onChange rather than keeping their own copy.

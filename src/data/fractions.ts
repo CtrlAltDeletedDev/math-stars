@@ -12,7 +12,7 @@ import { buildTaggedChoices, randomInt, shuffle } from '@/engine/choices';
 //   options are right and one of them is marked wrong.
 //
 //   Distractors are real fractions. 2/1 and 1/1 are not mistakes a six-year-old
-//   makes, they are noise, and they teach her that some options are ignorable.
+//   makes, they are noise, and they teach them that some options are ignorable.
 
 const NAMES: Record<number, string> = { 2: 'half', 3: 'third', 4: 'fourth', 6: 'sixth', 8: 'eighth' };
 
@@ -57,7 +57,7 @@ function whatFractionShaded(den: number, num: number, shape: 'circle' | 'bar'): 
     [num - 1, den],
     // Halves have very few near misses — without these, a "what fraction is
     // shaded" question on a 1/2 bar could only muster two options, which is a
-    // coin flip at the exact rung where she starts.
+    // coin flip at the exact rung where they start.
     [num, den + 2],
     [num + 1, den + 1],
     [1, den * 2],
@@ -127,7 +127,7 @@ function fractionOfSet(den: number, whole: number): Question {
  * that more pieces means smaller pieces.
  *
  * All three are drawn, deliberately. The earlier version showed a single bar of
- * the *correct* answer, which handed her the answer in a picture. Showing every
+ * the *correct* answer, which handed them the answer in a picture. Showing every
  * option is the lesson; showing one is a leak.
  */
 function compareFractions(dens: number[], want: 'biggest' | 'smallest'): Question {

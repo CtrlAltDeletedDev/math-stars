@@ -7,11 +7,11 @@ import { STAGES, TRACKS, TrackId, trackOfFact } from './stages';
 
 // One walk: a short run of plain sums.
 //
-// Plus and minus take turns in shuffled blocks of four, two of each, so she
-// has to read the sign rather than follow a pattern. Most sums come from the
-// stone she stands on; every fourth is a look back -- a fact that is due for
-// review, or failing that a warm-up from one of the last few stones she passed
-// -- so what she learned last week keeps coming up. A miss comes back three
+// Plus and minus take turns in shuffled blocks of four, two of each, so they
+// have to read the sign rather than follow a pattern. Most sums come from the
+// stone they stand on; every fourth is a look back -- a fact that is due for
+// review, or failing that a warm-up from one of the last few stones they passed
+// -- so what they learned last week keeps coming up. A miss comes back three
 // sums later, while the fix is fresh.
 //
 // A grown-up's "this week" pick takes the walk over: every turn goes to that
@@ -62,7 +62,7 @@ export class Walk {
     this.plan = focus ? Array(length).fill(focus.track) : turnPlan(length, rng);
   }
 
-  /** Keep the walk's view of her current as she moves up mid-walk. */
+  /** Keep the walk's view of their current as they move up mid-walk. */
   sync(learner: Learner) {
     this.learner = learner;
   }
@@ -100,8 +100,8 @@ export class Walk {
         const review = this.dueReview(t);
         if (review) return { question: review, track: t, stage: null, kind: 'review' };
       }
-      // No warm-ups while a track is still placing her: those turns are better
-      // spent finding where she is.
+      // No warm-ups while a track is still placing them: those turns are better
+      // spent finding where they are.
       const placing = this.learner.tracks[track].demotions === 0;
       const back = placing ? null : warmupStage(here, this.rng);
       if (back !== null) return { question: this.fresh(track, back), track, stage: back, kind: 'warmup' };
@@ -113,7 +113,7 @@ export class Walk {
     return { question: this.fresh(track, here), track, stage: here, kind: 'fresh' };
   }
 
-  /** A sum from a stone she has not just been asked, if a few tries can find one. */
+  /** A sum from a stone they have not just been asked, if a few tries can find one. */
   private fresh(track: TrackId, stage: number): Question {
     const make = STAGES[track][Math.min(stage, STAGES[track].length - 1)].make;
     let q = make();
@@ -134,7 +134,7 @@ export class Walk {
   }
 }
 
-/** One of the last few stones below where she stands; none on the first. */
+/** One of the last few stones below where they stand; none on the first. */
 export function warmupStage(here: number, rng: () => number = Math.random): number | null {
   if (here <= 0) return null;
   const low = Math.max(0, here - WARMUP_REACH);

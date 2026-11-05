@@ -18,7 +18,7 @@ export default function BigButton({ onPress, label, color = '#4A90E2', textColor
     <button
       // Pressed on pointer down for the feel of it, but acted on as a click. On
       // pointer up, the next screen was already drawn when the browser's own
-      // click arrived, and it landed on whatever was now under her finger —
+      // click arrived, and it landed on whatever was now under their finger —
       // "Keep going" answered the first question of the next round.
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}

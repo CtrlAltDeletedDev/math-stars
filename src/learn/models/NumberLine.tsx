@@ -6,7 +6,7 @@ import { KID_FONT } from '@/next/theme';
 import { COL, MotionStyles, tap, usePrevious, useWidth } from './a-shared';
 import { hereOf, hop, hopsOf, numberLineLabel, numberLineWindow, tapNumberLine, undoHop } from './logic-a';
 
-// A number line she can hop along. Forward hops arc in green, back hops in
+// A number line they can hop along. Forward hops arc in green, back hops in
 // orange, and each hop is numbered, because counting the hops is the skill.
 //
 // The line is drawn at the width it is given and never shrinks the numbers
@@ -30,7 +30,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
   const D = DIM[size];
   const scrollRef = useRef<HTMLDivElement>(null);
   const visible = Math.max(120, useWidth(scrollRef, D.guess));
-  // A start the lesson gave is not hers to undo.
+  // A start the lesson gave is not theirs to undo.
   const givenStart = useRef(state.start);
   const keepStart = state.start !== null && state.start === givenStart.current;
   const live = !!onChange;
@@ -39,14 +39,14 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
   const allTicks = Math.floor((state.max - state.min) / step) + 1;
   const room = Math.floor((visible - 2 * D.pad) / D.minUnit) + 1;
   // Too long to fit at a readable size: a picture shows a window around the
-  // hops; her own line keeps every number and scrolls sideways instead, so
-  // she can still start anywhere (it follows her as she hops).
+  // hops; their own line keeps every number and scrolls sideways instead, so
+  // they can still start anywhere (it follows them as they hop).
   const scroll = live && allTicks > room && allTicks <= 61;
   const win = numberLineWindow(state, scroll ? allTicks : room);
   const ticks = Math.round((win.hi - win.lo) / win.step);
   const W = scroll ? 2 * D.pad + ticks * D.minUnit : visible;
   const unit = (W - 2 * D.pad) / Math.max(1, ticks); // px per tick
-  // How wide she would like to be: roomy, not stretched.
+  // How wide they would like to be: roomy, not stretched.
   const natural = Math.min(D.maxW, Math.max(size === 'big' ? 280 : 160, 2 * D.pad + (allTicks - 1) * D.ideal));
   const perOne = unit / win.step;
   const x = (n: number) => D.pad + (n - win.lo) * perOne;
@@ -66,7 +66,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
   if (win.step > 1 && perOne >= 5) {
     for (let n = win.lo; n <= win.hi; n++) if ((n - win.lo) % win.step !== 0) minor.push(n);
   }
-  // Numbers off the tick grid she started on or landed on get a label of their own.
+  // Numbers off the tick grid they started on or landed on get a label of their own.
   const extraLabels = [state.start, here].filter((n): n is number =>
     n !== null && (n - win.lo) % win.step !== 0 && n >= win.lo && n <= win.hi);
   const fontFor = (n: number) => Math.min(D.font, String(n).length >= 3 ? unit * 0.42 : unit * 0.6);
@@ -99,7 +99,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
     ? `linear-gradient(to right, ${edges.l ? 'transparent' : '#000'} 0, #000 ${fade}px, #000 calc(100% - ${fade}px), ${edges.r ? 'transparent' : '#000'} 100%)`
     : undefined;
 
-  // Keep where she is in view on a line that scrolls.
+  // Keep where they are in view on a line that scrolls.
   const hereX = here === null ? null : x(here);
   useEffect(() => {
     const el = scrollRef.current;
@@ -149,7 +149,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
         {...(live ? tap(onLineTap) : {})}
         style={{ display: 'block', maxWidth: scroll ? 'none' : '100%', height: 'auto', overflow: 'hidden', touchAction: 'manipulation', fontFamily: KID_FONT }}
       >
-        {/* The whole height is the hit area: she taps near a number, not on a 2px tick. */}
+        {/* The whole height is the hit area: they tap near a number, not on a 2px tick. */}
         <rect x="0" y="0" width={W} height={D.h} fill="transparent" />
 
         <g>
@@ -199,7 +199,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
               fill="none" stroke={COL.b} strokeWidth={size === 'big' ? 3 : 2}
             />
           )}
-          {/* Where she is: on the line, under the arcs, so the last arrowhead stays crisp. */}
+          {/* Where they are: on the line, under the arcs, so the last arrowhead stays crisp. */}
           {here !== null && (
             <g style={{ transform: `translateX(${x(here)}px)`, transition: `transform .3s ease ${hops.length > firstNew ? dotDelay - 220 : 0}ms` }}>
               <circle cx={0} cy={L} r={size === 'big' ? 9 : 5.5} fill={hereColour} stroke="#fff" strokeWidth={size === 'big' ? 3 : 2}
@@ -216,7 +216,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
             const colour = fwd ? COL.forward : COL.back;
             const isNew = i >= firstNew;
             const delay = isNew ? (i - firstNew) * HOP_MS : 0;
-            // The arrowhead follows the curve's own direction where she lands.
+            // The arrowhead follows the curve's own direction where they land.
             const cy = 2 * peakY - (L - 4);
             const tx = x2 - mid, ty = (L - 4) - cy;
             const tl = Math.hypot(tx, ty) || 1;
@@ -236,7 +236,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
                   style={{ animationDelay: `${delay}ms` }}
                   fill="none" stroke={colour} strokeWidth={size === 'big' ? 4 : 2.5} strokeLinecap="round"
                 />
-                {/* Arrowhead where she lands. */}
+                {/* Arrowhead where they land. */}
                 <path
                   d={`M ${wing(0.5)} L ${x2} ${L - 4} L ${wing(-0.5)}`}
                   className={isNew ? 'ma-fade' : undefined}

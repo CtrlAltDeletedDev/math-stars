@@ -24,9 +24,9 @@ export type QuestionType =
  *
  * The generators already choose distractors that are specific mistakes -- `a+b`
  * on a subtraction question is "added instead of subtracting", not noise. That
- * meaning was written down in comments and then thrown away the moment she
+ * meaning was written down in comments and then thrown away the moment they
  * tapped one. These tags carry it as far as the parent screen, so "72%" can
- * become "8 of her last 10 subtraction mistakes were adding instead".
+ * become "8 of their last 10 subtraction mistakes were adding instead".
  *
  * Each one has to map to something a grown-up can actually do about it, which
  * is why the list is short and stays short.
@@ -36,7 +36,7 @@ export type ErrorTag =
   | 'off-by-one'
   /** Added when the sign said subtract, or the reverse. */
   | 'wrong-operation'
-  /** Answered with a number the question had already shown her. */
+  /** Answered with a number the question had already shown them. */
   | 'answered-a-given-number'
   /** Gave the whole when asked for a part. */
   | 'answered-the-whole'
@@ -68,7 +68,7 @@ export type QuestionVisual =
   | { kind: 'coins'; coins: number[] } // cent values, e.g. [25, 10, 1]
   | { kind: 'clock'; hour: number; minute: number }
   /**
-   * A blank 0..max number line she can hop along, the way the class worksheet
+   * A blank 0..max number line they can hop along, the way the class worksheet
    * says "show your work". Deliberately blank: marking the start would be fine,
    * but marking the hops would be the answer.
    */
@@ -101,7 +101,7 @@ export interface Question {
    *
    * Keyed by value and not by index on purpose: every question passes through
    * `shuffleChoices` at least once between being built and being shown, so an
-   * index would point at the wrong option by the time she taps it.
+   * index would point at the wrong option by the time they tap it.
    */
   distractorMeaning?: Record<string, ErrorTag>;
 }

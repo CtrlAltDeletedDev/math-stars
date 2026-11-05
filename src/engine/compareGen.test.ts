@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Question } from '@/types';
 import { generateCompareQuestion, compareFromId, COMPARE_ID_PATTERN } from '@/data/compareGen';
 
-// Every check re-derives the answer from the numbers she sees, never from
+// Every check re-derives the answer from the numbers they see, never from
 // `correctAnswer`.
 
 const SAMPLE = 4000;
@@ -34,7 +34,7 @@ function solve(q: Question): Solved {
 }
 
 /**
- * Which way she would lean if she lost track of a ten, worked out here
+ * Which way they would lean if they lost track of a ten, worked out here
  * independently: comparing only the ones (12 vs 9 → "2 < 9") when the tens
  * differ, or reading a ten as a one (15 vs 3 → "1 < 3") when only one number
  * has a ten.
@@ -147,7 +147,7 @@ describe.each(RUNGS.map((r, i) => [r.label, r, SAMPLES[i]] as const))('%s', (_la
       const s = solve(q);
       expect(says(q.speakText!, s.a) && says(q.speakText!, s.b), `${q.id}: ${q.speakText}`).toBe(true);
       if (s.shape === 'sign') {
-        // She taps a symbol, so she hears what each symbol means.
+        // They tap a symbol, so they hear what each symbol means.
         for (const words of ['greater than', 'less than', 'equal to']) expect(q.speakText, q.id).toContain(words);
         expect(q.speakText!.indexOf(String(s.a)), q.id).toBeLessThan(q.speakText!.lastIndexOf(String(s.b)));
       } else {

@@ -9,8 +9,8 @@ import { AskStep, Choice, DoStep, Item, ModelState, ShowStep } from '../types';
 //     itself are dropped from the wrong ones, so a unit can propose its
 //     plausible mistakes freely.
 //   - Names. Stories pick names (and things) from their numbers, so the same
-//     item id always rebuilds to the same words, and nobody is ever "he" or
-//     "she": the name is simply said again.
+//     item id always rebuilds to the same words, and no one is ever called by a pronoun:
+//     the name is simply said again.
 
 export { randomInt, shuffle };
 

@@ -10,13 +10,13 @@ import {
   GRADE_NAMES, GradeRow, LessonRow, UnitRow, courseReport, shortDate, suggestNextGrade, unitInCourse,
 } from './report';
 
-// "Her course": today's lesson (and a grown-up's pick of another), then every
-// unit she is taught, grade by grade, with how far through each she is.
+// "Their course": today's lesson (and a grown-up's pick of another), then every
+// unit they are taught, grade by grade, with how far through each they are.
 
 const PLACE_WORDS: Record<GradeRow['place'], string> = {
-  hers: 'Her grade',
+  current: 'Their grade',
   earlier: 'Earlier: comes back as review',
-  ahead: 'Next, when she finishes hers',
+  ahead: 'Next, when they finish theirs',
 };
 
 function statusText(r: LessonRow): string {
@@ -24,7 +24,7 @@ function statusText(r: LessonRow): string {
   const score = r.best !== null ? ` · best ${r.best}% · ${tries}` : '';
   switch (r.status.kind) {
     case 'passed': return `Passed ${shortDate(r.status.on)}${score}`;
-    case 'placed': return 'Already knew this (from her path)';
+    case 'placed': return 'Already knew this (from their path)';
     case 'started': return r.best !== null ? `Not passed yet${score}` : 'Started, not reached the check yet';
     default: return 'Not yet';
   }
@@ -72,8 +72,8 @@ function Today({ learner }: { learner: Learner }) {
         </>
       ) : (
         <p>
-          <b>She has done every lesson written so far.</b> New ones appear here as they are added; until then her
-          walks keep her facts sharp.
+          <b>They have done every lesson written so far.</b> New ones appear here as they are added; until then their
+          walks keep their facts sharp.
         </p>
       )}
 
@@ -81,7 +81,7 @@ function Today({ learner }: { learner: Learner }) {
         <div className="gu-focus" style={{ marginTop: 12 }}>
           <div className="pick">
             <label htmlFor="gu-pin-lesson" className="small" style={{ width: '100%', fontWeight: 700 }}>
-              Offer this lesson first, until she passes it
+              Offer this lesson first, until they pass it
             </label>
             <select id="gu-pin-lesson" value={choice} onChange={(e) => setChoice(e.target.value)}>
               {report.flatMap((g) => g.units.map((u) => (
@@ -101,7 +101,7 @@ function Today({ learner }: { learner: Learner }) {
       )}
 
       <p className="small muted" style={{ marginTop: 12 }}>
-        Her path still lets her tap any lesson. This only picks the one she is offered first.
+        Their path still lets them tap any lesson. This only picks the one they are offered first.
       </p>
     </div>
   );
@@ -175,8 +175,8 @@ export default function Course({ learner }: { learner: Learner }) {
     <div>
       <Today learner={learner} />
       <p className="small muted" style={{ margin: '14px 0 4px' }}>
-        She is set to <b style={{ color: 'inherit' }}>{GRADE_NAMES[grade]}</b>. Today&rsquo;s lesson starts there and carries
-        on into the next grade when she finishes. Changing the grade (in Settings) moves where it starts; earlier lessons
+        They are set to <b style={{ color: 'inherit' }}>{GRADE_NAMES[grade]}</b>. Today&rsquo;s lesson starts there and carries
+        on into the next grade when they finish. Changing the grade (in Settings) moves where it starts; earlier lessons
         still come back as review.
       </p>
       {grades.map((g) => (
@@ -186,11 +186,11 @@ export default function Course({ learner }: { learner: Learner }) {
             <span className={`place ${g.place}`}>{PLACE_WORDS[g.place]}</span>
             {g.total > 0 && <span className="cnt">{g.done} of {g.total} lessons done</span>}
           </div>
-          {g.place === 'hers' && next && (
+          {g.place === 'current' && next && (
             <div className="gu-ready" style={{ margin: '0 0 12px' }}>
-              <span>She has done most of {GRADE_NAMES[grade]}. Her lessons will carry on into {GRADE_NAMES[next]} by themselves.</span>
+              <span>They have done most of {GRADE_NAMES[grade]}. Their lessons will carry on into {GRADE_NAMES[next]} by themselves.</span>
               <button type="button" className="gu-btn" onClick={() => setLearner((l) => ({ ...l, profile: { ...l.profile, grade: next } }))}>
-                Move her to {GRADE_NAMES[next]}
+                Move them to {GRADE_NAMES[next]}
               </button>
             </div>
           )}

@@ -4,12 +4,12 @@ import { WalkItem } from '@/core/walk';
 // When the ten-frame picture is on the screen, and when it waits behind
 // "Show me".
 //
-// A picture she can count is how a new fact is learned and the reason an old
+// A picture they can count is how a new fact is learned and the reason an old
 // one never becomes a fact. So, with picture help on Auto:
-//   - on the stone she stands on, it is drawn until her recent answers there
+//   - on the stone they stand on, it is drawn until their recent answers there
 //     are mostly right, then waits behind the button
-//   - a look-back (a review, a warm-up) is ground she has covered: behind the button
-//   - anything else (a grown-up's pick above her) is new ground: drawn
+//   - a look-back (a review, a warm-up) is ground they have covered: behind the button
+//   - anything else (a grown-up's pick above them) is new ground: drawn
 // A wrong first try always brings it back. A grown-up can set Always or Off.
 
 export type PictureMode = 'show' | 'tap' | 'none';

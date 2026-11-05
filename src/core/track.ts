@@ -1,15 +1,15 @@
-// Moving along a track: when she goes up a stone, or back one.
+// Moving along a track: when they go up a stone, or back one.
 //
 // The same deliberately boring rule as the old ladder, because a parent has to
-// be able to predict it. A window of her recent answers at the stone she is on:
+// be able to predict it. A window of their recent answers at the stone they are on:
 //
 //   up    6 of the last 8 right
 //   back  3 or fewer of the last 8 right
-//   fast  while the track has never moved her back, her first 4 at a stone
-//         all right moves her up -- placement without a test
+//   fast  while the track has never moved them back, their first 4 at a stone
+//         all right moves them up -- placement without a test
 //
 // The window clears on every move. Answers from any other stone (warm-ups,
-// reviews, a grown-up's "this week" pick) count toward her totals and her fact
+// reviews, a grown-up's "this week" pick) count toward their totals and their fact
 // records but never toward the window: they say nothing about *this* stone.
 
 export const WINDOW = 8;
@@ -21,14 +21,14 @@ export interface TrackState {
   stage: number;
   recent: boolean[];
   /**
-   * Times this track has moved her back. Zero keeps the fast lane open.
+   * Times this track has moved them back. Zero keeps the fast lane open.
    * Absent on a save that never counted, which keeps the ordinary rule: no
-   * count is no evidence she was never moved back.
+   * count is no evidence they were never moved back.
    */
   demotions?: number;
-  /** Times she earned a move up that her grade's ceiling would not give. */
+  /** Times they earned a move up that their grade's ceiling would not give. */
   ceilingHits: number;
-  /** Stones she has moved up from, and the day she first did. */
+  /** Stones they have moved up from, and the day they first did. */
   passed: Record<number, string>;
 }
 
@@ -48,7 +48,7 @@ export interface StepInput {
   day: string;
 }
 
-/** The stone she is actually standing on: her saved one, held to her grade. */
+/** The stone they are actually standing on: their saved one, held to their grade. */
 export function standing(t: TrackState, ceiling: number): number {
   return Math.min(t.stage, ceiling);
 }
@@ -76,7 +76,7 @@ export function stepTrack(prev: TrackState, a: StepInput): { state: TrackState; 
   const hits = recent.filter(Boolean).length;
   if (hits >= UP_AT && here < a.ceiling) return up({ ...prev, recent });
   if (hits >= UP_AT) {
-    // At the top of her grade and acing it: keep going, and tell the grown-ups.
+    // At the top of their grade and acing it: keep going, and tell the grown-ups.
     const blocked = a.ceiling < a.top ? 1 : 0;
     return { state: { ...prev, recent: [], ceilingHits: prev.ceilingHits + blocked }, move: null };
   }

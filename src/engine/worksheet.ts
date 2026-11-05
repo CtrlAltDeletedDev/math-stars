@@ -10,7 +10,7 @@ import { shuffleChoices } from './choices';
 // rendered `q.choices` in bank order. Banks may list choices however they like
 // and overwhelmingly list the correct one first — 354 of the 460 bank questions
 // put the answer in slot 0 — so the printed answer was the left-hand box 77% of
-// the time. On paper, where she has all the time in the world to spot the
+// the time. On paper, where they have all the time in the world to spot the
 // pattern, and in front of a parent who would reasonably assume the sheet was
 // sound.
 

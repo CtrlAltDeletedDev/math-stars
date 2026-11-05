@@ -16,7 +16,7 @@ interface Props {
    * drawn, as it always was.
    */
   aid?: AidMode;
-  /** Draw the picture now whatever `aid` says: she has just tapped a wrong answer. */
+  /** Draw the picture now whatever `aid` says: they have just tapped a wrong answer. */
   revealAid?: boolean;
 }
 
@@ -51,7 +51,7 @@ function speak(text: string) {
 
 /**
  * Sums past ten get the 0–20 hop line instead of dots, which stop at ten: the
- * line is how her class works "14 − 6", and 14 dots with 6 crossed out is a
+ * line is how their class works "14 − 6", and 14 dots with 6 crossed out is a
  * counting exercise rather than a strategy.
  */
 function hopLineMax(q: Question): number | null {
@@ -78,7 +78,7 @@ function glyphCount(text: string): number {
 // A one-line sum wants to be huge; a three-sentence story at that size runs off
 // a phone screen and pushes the answers out of reach.
 function promptFontSize(prompt: string): number | string {
-  // A bare fact ("8 + 5 = ?") is the thing she is looking at: as big as the
+  // A bare fact ("8 + 5 = ?") is the thing they are looking at: as big as the
   // screen allows. On a phone that is about 40px, on an iPad 64.
   if (prompt.length <= 14 && !prompt.includes('\n')) return 'clamp(40px, 11vw, 64px)';
   if (prompt.length > 110) return 20;
@@ -126,7 +126,7 @@ export default function QuestionCard({ question, aid = 'show', revealAid = false
           fontSize: isLong ? 32 : 44, lineHeight: 1.2, textAlign: 'center', letterSpacing: 4,
           // A picture wide enough to reach the corner starts below the read-aloud
           // button: counting questions draw objects in full rows of five, and one
-          // hidden under the button is a wrong answer she was set up to give.
+          // hidden under the button is a wrong answer they were set up to give.
           marginTop: wideEmoji ? 40 : 0,
         }}>
           {question.promptEmoji}
@@ -148,7 +148,7 @@ export default function QuestionCard({ question, aid = 'show', revealAid = false
         {question.prompt}
       </div>
 
-      {/* After the prompt: she should read (or hear) the question, then look. */}
+      {/* After the prompt: they should read (or hear) the question, then look. */}
       {/* Keyed by question so scratch work never carries over to the next one. */}
       {question.visual && <QuestionVisual key={question.id} visual={question.visual} />}
 

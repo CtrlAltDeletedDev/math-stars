@@ -26,7 +26,7 @@ export const cents = (n: number) => `${n}¢`;
 const centsSaid = (n: number) => (n === 1 ? '1 cent' : `${n} cents`);
 const many = (n: number, v: number): number[] => Array.from({ length: n }, () => v);
 
-/** Biggest coins first, as she should count them. */
+/** Biggest coins first, as they should count them. */
 const sorted = (tray: number[]) => [...tray].sort((a, b) => b - a);
 
 /** The fewest coins for an amount, from the coins given. */

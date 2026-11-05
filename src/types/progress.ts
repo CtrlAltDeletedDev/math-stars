@@ -11,16 +11,16 @@ export interface SRSCard {
 }
 
 /**
- * What happened on one level. Note what is NOT here: nothing about whether she
- * is *allowed* to play it.
+ * What happened on one level. Note what is NOT here: nothing about whether they
+ * are *allowed* to play it.
  *
  * `status` used to live here as locked/unlocked/completed. It was a second copy
  * of information `bestScore` already carries, the two could disagree, and its
  * absence meant "locked" — so any level added to an existing category rendered
  * as a padlock forever. Availability is now read from the catalogue alone;
- * whether she has passed is derived with `passedLevel()` in engine/scoring.ts.
+ * whether they have passed is derived with `passedLevel()` in engine/scoring.ts.
  *
- * These records are sparse: an entry exists only for a level she has attempted.
+ * These records are sparse: an entry exists only for a level they have attempted.
  */
 export interface LevelState {
   levelId: string;
@@ -46,26 +46,26 @@ export interface SkillState {
   attempts: number;
   correct: number;
   /**
-   * How long her recent right answers at this rung took, in milliseconds.
+   * How long their recent right answers at this rung took, in milliseconds.
    *
    * The ladder only ever knew right from wrong, but for facts "right after
-   * counting on her fingers for twelve seconds" and "just knows it" are
+   * counting on their fingers for twelve seconds" and "just knows it" are
    * different places to be. Same rules as `recent`: only answers from the rung
-   * she is standing on, cleared on every move. Misses are left out — how long a
-   * wrong answer took says nothing about fluency. Nothing moves her on this
+   * they are standing on, cleared on every move. Misses are left out — how long a
+   * wrong answer took says nothing about fluency. Nothing moves them on this
    * yet; it is recorded so that something can.
    */
   times?: number[];
   /**
-   * How many times this topic has moved her down. Zero means it is still
-   * placing her, and the fast lane applies (see skillLadder.ts). Absent on a
+   * How many times this topic has moved them down. Zero means it is still
+   * placing them, and the fast lane applies (see skillLadder.ts). Absent on a
    * save from before it was counted, which keeps the ordinary rule.
    */
   demotions?: number;
   /**
    * How many times the sliding window said "promote" and the grade ceiling said
-   * no. Two or more means she has outgrown the band — the Parent screen uses it
-   * to suggest moving her up a year.
+   * no. Two or more means they have outgrown the band — the Parent screen uses it
+   * to suggest moving them up a year.
    */
   ceilingHits?: number;
 }
@@ -100,7 +100,7 @@ export interface UserProgress {
   dailyChallengeHistory: string[];
   dailyQuestionsDate: string;
   dailyQuestionsCount: number;
-  /** Adaptive practice: one entry per skill she has actually met. */
+  /** Adaptive practice: one entry per skill they have actually met. */
   skills: Record<string, SkillState>;
   practiceQuestionsAnswered: number;
   /**
@@ -122,8 +122,8 @@ export interface UserProgress {
    */
   errorPatterns: Record<string, Partial<Record<ErrorTag, number>>>;
   /**
-   * Lessons she has played to the end: lesson id -> local date (todayString).
-   * Only ever used to suggest a lesson she hasn't seen and to show a tick; a
+   * Lessons they have played to the end: lesson id -> local date (todayString).
+   * Only ever used to suggest a lesson they haven't seen and to show a tick; a
    * lesson is never locked behind another, and nothing is scored in one.
    */
   lessonsDone: Record<string, string>;

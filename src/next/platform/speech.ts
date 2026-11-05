@@ -26,7 +26,7 @@ function pickVoice() {
 if (synth()) {
   pickVoice();
   synth()!.addEventListener?.('voiceschanged', pickVoice);
-  // Stop talking when she leaves the app, not halfway through the next thing.
+  // Stop talking when they leave the app, not halfway through the next thing.
   document.addEventListener('visibilitychange', () => { if (document.hidden) synth()?.cancel(); });
 }
 

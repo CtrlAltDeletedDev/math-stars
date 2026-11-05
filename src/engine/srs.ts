@@ -60,7 +60,7 @@ export function updateSRSCard(card: SRSCard, correct: boolean): SRSCard {
  * a single session. The session used to derive both answers from the same
  * pre-session card and then merge them last-write-wins, so the second
  * (correct) card overwrote the first: `intervalDays: 1` and the ease penalty
- * both vanished, and a fact she got wrong was scheduled as if she had simply
+ * both vanished, and a fact they got wrong was scheduled as if they had simply
  * got it right. Exactly backwards -- that is the fact most worth seeing again
  * tomorrow.
  *
@@ -90,7 +90,7 @@ function msFromDays(days: number): number {
  *
  * Generated questions mint a new card per distinct question, forever, and
  * nothing ever removed them — a year of daily play would push thousands of
- * entries into localStorage, which has a hard quota. Cards she has clearly
+ * entries into localStorage, which has a hard quota. Cards they have clearly
  * mastered (several correct repetitions, not due for a long time) carry almost
  * no information, so they are the ones to drop.
  */

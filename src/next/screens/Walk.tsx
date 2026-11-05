@@ -23,14 +23,14 @@ import '../walk/walk.css';
 // One walk: ten plain sums, typed on the number pad.
 //
 // Two different questions are answered differently, as the old app learned:
-//   "did she find it?"  -- what she sees. A footprint fills for every sum,
-//                          because on a wrong try she is shown the way and
+//   "did they find it?"  -- what they see. A footprint fills for every sum,
+//                          because on a wrong try they are shown the way and
 //                          finds it.
-//   "did she know it?"  -- what is recorded. Only her first answer, right or
-//                          wrong, goes to her fact record and her track.
+//   "did they know it?"  -- what is recorded. Only their first answer, right or
+//                          wrong, goes to their fact record and their track.
 //
 // A wrong first answer gets no red and no buzzer: the box wobbles amber, the
-// sign glows, the picture comes up and her friend says one short line. A
+// sign glows, the picture comes up and their friend says one short line. A
 // second wrong answer shows the answer, says it, and walks on.
 
 type Phase = 'ask' | 'right' | 'wobble' | 'retry' | 'reveal';
@@ -41,7 +41,7 @@ function parts(prompt: string): { a: number; op: '+' | '-'; b: number } {
 }
 
 /**
- * What her friend says after a wrong first try: the strategy for this kind of
+ * What their friend says after a wrong first try: the strategy for this kind of
  * fact ("9 is one away from 10…", "Go back to 10 first…"). Every sum's hint
  * is written to name a strategy and never the answer (factStrategies.test.ts).
  */
@@ -92,8 +92,8 @@ function Walk({ onAgain }: { onAgain: () => void }) {
 
   useEffect(() => () => { timers.current.forEach(clearTimeout); stopSpeaking(); }, []);
 
-  // Decided when the sum appears, from her answers before it, so the picture
-  // never vanishes mid-sum because her own answer moved the window.
+  // Decided when the sum appears, from their answers before it, so the picture
+  // never vanishes mid-sum because their own answer moved the window.
   const mode = useMemo(() => (item ? pictureMode(getLearner(), item) : 'none'), [item]);
 
   useEffect(() => {
@@ -172,7 +172,7 @@ function Walk({ onAgain }: { onAgain: () => void }) {
   if (done) return <WalkDone moves={moves} onAgain={onAgain} onHome={() => navigate(ROUTES.home)} />;
   if (!item) {
     // A walk always has a sum to ask; this is only ever reached by a bug, and
-    // she must never be left on a blank screen.
+    // they must never be left on a blank screen.
     return (
       <Page style={{ alignItems: 'center', justifyContent: 'center', gap: 20 }}>
         <div style={{ fontSize: 80 }}>{characterEmoji(learner.profile.characterId)}</div>
@@ -337,8 +337,8 @@ function BigButton({ onClick, label, icon, quiet = false }: { onClick: () => voi
 }
 
 /**
- * The end of a walk. Every footprint is filled -- she found every one -- and
- * any stone she moved up shows its new friend. When today's sun is full the
+ * The end of a walk. Every footprint is filled -- they found every one -- and
+ * any stone they moved up shows its new friend. When today's sun is full the
  * big button is Home: the walk ended, and so can today. Again is still there.
  */
 function WalkDone({ moves, onAgain, onHome }: { moves: AnswerEvent[]; onAgain: () => void; onHome: () => void }) {

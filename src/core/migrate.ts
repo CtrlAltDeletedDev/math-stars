@@ -4,16 +4,16 @@ import { LEARNER_SCHEMA, Learner, newLearner } from './learner';
 import { Grade, TrackId, topStage } from './stages';
 import { TrackState } from './track';
 
-// Bringing her over from the old app.
+// Bringing them over from the old app.
 //
 // The old save is read with the old normaliser (any version 2-7 arrives as
-// v7), and only what means something here is carried: where she stands on
-// adding and taking away, the facts she has been practising, her streak, her
+// v7), and only what means something here is carried: where they stand on
+// adding and taking away, the facts they have been practising, their streak, their
 // character and grade and settings. Stars, badges, stickers, levels and the
 // other topics stay in the old save, which is never written or deleted -- so
 // switching back loses nothing.
 //
-// Stages are the old rungs, index for index (core.test.ts guards it), so her
+// Stages are the old rungs, index for index (core.test.ts guards it), so their
 // place moves straight across.
 
 const OLD_SKILL: Record<TrackId, string> = { plus: 'adding', minus: 'taking-away' };
@@ -43,10 +43,10 @@ export function migrateLegacy(old: UserProgress | null, now = Date.now()): Learn
       stage,
       recent: Array.isArray(s.recent) ? s.recent.filter((r) => typeof r === 'boolean').slice(-8) : [],
       ceilingHits: s.ceilingHits ?? 0,
-      // No dates for stones she passed in the old app: we don't know when, and
-      // stamping today made the grown-ups screen say she moved up four steps
-      // today. The path still shows them passed -- everything below where she
-      // stands is (passedStones).
+      // No dates for stones they passed in the old app: we don't know when, and
+      // stamping today made the grown-ups screen say they moved up four steps
+      // today. The path still shows them passed -- everything below where they
+      // stand is (passedStones).
       passed: {},
     };
     // Kept absent when the old save never counted: see TrackState.demotions.
@@ -59,8 +59,8 @@ export function migrateLegacy(old: UserProgress | null, now = Date.now()): Learn
     if (!id || l.facts[id]) continue;
     const reps = Math.max(0, Math.floor(card.repetitions ?? 0));
     const f: FactRecord = {
-      // An old card is a fact she has met; repetitions is how many times in a
-      // row she got it, which is the nearest thing it has to a box.
+      // An old card is a fact they have met; repetitions is how many times in a
+      // row they got it, which is the nearest thing it has to a box.
       seen: Math.max(1, reps),
       right: reps,
       box: Math.min(TOP_BOX, reps),

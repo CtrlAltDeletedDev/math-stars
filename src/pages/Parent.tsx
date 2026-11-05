@@ -29,7 +29,7 @@ export default function Parent() {
 
   // Three quick taps on the title is exactly what an excited six-year-old does,
   // and this screen holds Import (which replaces everything) and the switches
-  // that reshape her whole practice diet. A small multiplication is enough:
+  // that reshape their whole practice diet. A small multiplication is enough:
   // it stops a first grader without being a nuisance to a parent.
   const [gate] = useState(() => ({ a: 3 + Math.floor(Math.random() * 7), b: 4 + Math.floor(Math.random() * 6) }));
   const [gateInput, setGateInput] = useState('');
@@ -160,7 +160,7 @@ export default function Parent() {
         <div style={{ background: '#FBF6EC', borderRadius: 20, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#22252B' }}>Switch back to the new Math Stars</div>
           <div style={{ fontFamily: 'Nunito', fontSize: 14, color: '#5B6270' }}>
-            This device was set to open the old version. The new one has her path of plus and minus steps, one Go button, and sums she types on a number pad. Nothing here is changed or deleted by switching.
+            This device was set to open the old version. The new one has their path of plus and minus steps, one Go button, and sums they type on a number pad. Nothing here is changed or deleted by switching.
           </div>
           <button
             onClick={() => { setUsesNewApp(true); navigate('/next'); }}
@@ -214,7 +214,7 @@ export default function Parent() {
                       {m.skillTitle}: {m.label}
                     </div>
                     <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
-                      {m.count} times · {Math.round(m.share * 100)}% of her mistakes here
+                      {m.count} times · {Math.round(m.share * 100)}% of their mistakes here
                     </div>
                     <div style={{ fontFamily: 'Nunito', fontSize: 13.5, color: 'rgba(255,255,255,0.88)', marginTop: 4, lineHeight: 1.4 }}>
                       <Lightbulb size={15} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> {m.suggestion}
@@ -310,7 +310,7 @@ export default function Parent() {
         </div>
         <PlayCalendar playHistory={progress.playHistory ?? []} />
 
-        {/* Persistence trouble is worth interrupting for — it means her stars
+        {/* Persistence trouble is worth interrupting for — it means their stars
             are not actually being kept. */}
         {storageIssue && (
           <div style={{ background: 'rgba(211,47,47,0.35)', border: '2px solid rgba(255,255,255,0.5)', borderRadius: 16, padding: '14px 18px' }}>
@@ -319,21 +319,21 @@ export default function Parent() {
             </div>
             <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4, lineHeight: 1.4 }}>
               {storageIssue === 'cannot-save'
-                ? 'This browser is refusing to store data — usually private browsing, or a full device. She can still play, but stars will disappear when the app closes.'
+                ? 'This browser is refusing to store data — usually private browsing, or a full device. They can still play, but stars will disappear when the app closes.'
                 : storageIssue === 'unreadable-backed-up'
-                  ? 'The old save was damaged. We kept a copy rather than deleting it, so nothing is lost for good. She has started a fresh profile.'
-                  : 'The old save was damaged and could not be recovered. She has started a fresh profile.'}
+                  ? 'The old save was damaged. We kept a copy rather than deleting it, so nothing is lost for good. They have started a fresh profile.'
+                  : 'The old save was damaged and could not be recovered. They have started a fresh profile.'}
             </div>
           </div>
         )}
 
-        {/* Grade — the one setting that decides what she meets */}
+        {/* Grade — the one setting that decides what they meet */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
           Grade
         </div>
         <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
           Sets which topics appear and how far each one goes. How hard the questions get inside
-          that is still decided by how she answers.
+          that is still decided by how they answer.
         </div>
         <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px' }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -377,13 +377,13 @@ export default function Parent() {
           )}
         </div>
 
-        {/* Focus Mode — pin practice to what she's working on this week */}
+        {/* Focus Mode — pin practice to what they're working on this week */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
           Focus Mode
         </div>
         <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
           Working on something specific this week? Pick it here and Practice will ask about
-          nothing else. Leave everything off to let her range over whatever she has unlocked.
+          nothing else. Leave everything off to let them range over whatever they have unlocked.
         </div>
         <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -424,16 +424,16 @@ export default function Parent() {
           <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 10 }}>
             {focused.length > 0
               ? 'Focus is on — practice is only asking about the green ones.'
-              : <><Lock size={12} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> means she hasn't unlocked it yet. You can still switch it on here.</>}
+              : <><Lock size={12} strokeWidth={ICON_STROKE} style={{ verticalAlign: '-2px' }} aria-hidden /> means they haven't unlocked it yet. You can still switch it on here.</>}
           </div>
         </div>
 
-        {/* Where she is on each skill ladder */}
+        {/* Where they are on each skill ladder */}
         <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
           Practice Levels
         </div>
         <div style={{ fontFamily: 'Nunito', fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: -8 }}>
-          These move on their own — up after 6 of the last 8 right, down after 3 or fewer. On a skill she is new to, getting her first 4 at a step all right moves her straight up, so she reaches her level quickly; that stops the first time the skill moves her down. Skills she hasn't practised yet aren't shown.
+          These move on their own — up after 6 of the last 8 right, down after 3 or fewer. On a skill they are new to, getting their first 4 at a step all right moves them straight up, so they reach their level quickly; that stops the first time the skill moves them down. Skills they haven't practised yet aren't shown.
         </div>
         {SKILLS.filter((sk) => progress.skills?.[sk.id]).length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: '14px 18px', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.75)' }}>
@@ -573,9 +573,9 @@ const actionBtn = (on: boolean): React.CSSProperties => ({
 });
 
 /**
- * Where Plus & Minus has her, in a parent's words: the step she is on in each,
+ * Where Plus & Minus has them, in a parent's words: the step they are on in each,
  * what comes next, and how it is going. The same two ladders every other mode
- * reads, so this is true whichever way she got there.
+ * reads, so this is true whichever way they got there.
  */
 function PlusMinusCard({ progress }: { progress: UserProgress }) {
   const today = progress.dailyQuestionsDate === todayString() ? progress.dailyQuestionsCount : 0;
@@ -605,7 +605,7 @@ function PlusMinusCard({ progress }: { progress: UserProgress }) {
             {!st
               ? 'Not started yet.'
               : [
-                  acc !== null ? `${Math.round(acc * 100)}% right on her last ${st.recent.length}` : 'Just moved up, fresh start here',
+                  acc !== null ? `${Math.round(acc * 100)}% right on their last ${st.recent.length}` : 'Just moved up, fresh start here',
                   ms !== null ? `about ${(ms / 1000).toFixed(1)}s per right answer` : null,
                 ].filter(Boolean).join(' · ')}
           </div>
@@ -613,13 +613,13 @@ function PlusMinusCard({ progress }: { progress: UserProgress }) {
             {next
               ? `Next: ${next}`
               : (st?.ceilingHits ?? 0) >= 2
-                ? 'Top of her grade, and acing it: she may be ready for the next grade.'
-                : 'Top of her grade. It keeps mixing these so they stay fresh.'}
+                ? 'Top of their grade, and acing it: they may be ready for the next grade.'
+                : 'Top of their grade. It keeps mixing these so they stay fresh.'}
           </div>
         </div>
       ))}
       <div style={{ fontFamily: 'Nunito', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-        Plus &amp; Minus on the home screen moves her up and down by itself. Every fourth question is a warm-up from a step she has already passed.
+        Plus &amp; Minus on the home screen moves them up and down by itself. Every fourth question is a warm-up from a step they have already passed.
       </div>
     </div>
   );

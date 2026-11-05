@@ -7,7 +7,7 @@ import { newBadgesFor, newStickersFor } from './rewards';
 
 // Play is the big button on Home and passes no levels. Every reward that used
 // to need a passed level has to be reachable from there too, or the path the
-// app steers her down is the one that never pays.
+// app steers them down is the one that never pays.
 
 function child(grade: GradeLevel, rungs: Record<string, number>, attempts = 40): UserProgress {
   const skills: Record<string, SkillState> = {};
@@ -22,30 +22,30 @@ const badgeIds = (prev: UserProgress, next: UserProgress) => newBadgesFor(prev, 
 const stickerIds = (prev: UserProgress, next: UserProgress) => newStickersFor(prev, next, 0, 0);
 
 describe('what the ladders count', () => {
-  it('sums the rungs she stands on and the answers she has given', () => {
+  it('sums the rungs they stand on and the answers they have given', () => {
     const p = child('1', { adding: 3, 'taking-away': 2, clocks: 0 }, 10);
     expect(ladderProgress(p)).toMatchObject({ rungsClimbed: 5, questionsAnswered: 30 });
   });
 
-  it('counts a topic as climbed once she stands on her grade\'s top rung', () => {
+  it('counts a topic as climbed once they stand on their grade\'s top rung', () => {
     // Clocks stops at "half past" (rung 1) in first grade.
     expect(ladderProgress(child('1', { clocks: 1 })).topicsAtTop).toBe(1);
     expect(ladderProgress(child('1', { clocks: 0 })).topicsAtTop).toBe(0);
   });
 
   it('does not count a topic whose grade stops at its first rung', () => {
-    // Money is "naming coins" only in first grade: she would be at the top of
+    // Money is "naming coins" only in first grade: they would be at the top of
     // it before answering anything.
     expect(ladderProgress(child('1', { money: 0 })).topicsAtTop).toBe(0);
   });
 });
 
 describe('a child who only ever presses Play', () => {
-  it('gets the first-game sticker on her first answer', () => {
+  it('gets the first-game sticker on their first answer', () => {
     expect(stickerIds(fresh(), child('1', { adding: 0 }, 1))).toContain('sk-sun');
   });
 
-  it('gets "Level Up!" for her first rung', () => {
+  it('gets "Level Up!" for their first rung', () => {
     expect(badgeIds(fresh(), child('1', { adding: 1 }))).toContain('first_level');
   });
 
@@ -62,7 +62,7 @@ describe('a child who only ever presses Play', () => {
     expect(stickerIds(fresh(), next)).toContain('sk-rainbow');
   });
 
-  it('earns nothing for climbing she has not done', () => {
+  it('earns nothing for climbing they have not done', () => {
     const next = child('1', { adding: 0, money: 0 }, 5);
     expect(badgeIds(fresh(), next)).not.toContain('first_level');
     expect(badgeIds(fresh(), next)).not.toContain('category_complete');

@@ -16,7 +16,7 @@ export interface BadgeCheckContext {
   /**
    * The same progress measured on the ladders (see `ladderProgress`). Anything
    * that rewards passing levels also accepts these, so the reward does not
-   * depend on which button she pressed to make the progress.
+   * depend on which button they pressed to make the progress.
    */
   rungsClimbed: number;
   topicsAtTop: number;

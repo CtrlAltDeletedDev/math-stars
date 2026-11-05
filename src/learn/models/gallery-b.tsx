@@ -1,7 +1,7 @@
 import { GalleryEntry } from './gallery';
 
 // Entries for Blocks, Clock, Coins, Fraction, Shapes, Measure, Graph: every
-// model, its key teaching states, and the ones she plays with.
+// model, its key teaching states, and the ones they play with.
 export const GALLERY_B: GalleryEntry[] = [
   // Blocks
   { title: 'Blocks · 3 tens 4 ones (34)', state: { model: 'blocks', tens: 3, ones: 4 } },

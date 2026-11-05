@@ -10,7 +10,7 @@ interface Props {
   onKeepPlaying: () => void;
 }
 
-// Offered between questions when Play sees her struggling: moved down a rung,
+// Offered between questions when Play sees them struggling: moved down a rung,
 // or the same mistake twice in a round. Never forced — "Keep playing" is right
 // there — and never a second time for the same topic in one sitting.
 export default function LessonOffer({ lesson, characterEmoji, onShowMe, onKeepPlaying }: Props) {

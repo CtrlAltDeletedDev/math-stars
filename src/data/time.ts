@@ -4,8 +4,8 @@ import { Question } from '@/types';
 //
 // This used to show a Unicode clock emoji (🕒). That was tiny, rendered
 // differently on every device, and — because the emoji already names the hour —
-// let her answer without reading hands at all. Now every question draws a real
-// face, and the hint tells her *how to look* instead of announcing the answer.
+// let them answer without reading hands at all. Now every question draws a real
+// face, and the hint tells them *how to look* instead of announcing the answer.
 //
 // Choice order doesn't matter here: buildSession shuffles per session.
 

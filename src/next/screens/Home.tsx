@@ -17,7 +17,7 @@ import Sun from '../home/Sun';
 import GrownUpsDoor from '../home/GrownUpsDoor';
 import { HOME_CSS } from '../home/styles';
 
-// Her path: the course, one road of lesson stones grouped by unit, her
+// Their path: the course, one road of lesson stones grouped by unit, their
 // character on today's. Go opens today's lesson; the small square beside it is
 // the quick plus-and-minus walk. Nothing on it needs reading, and nothing is
 // locked: every stone opens its lesson.
@@ -31,7 +31,7 @@ export default function Home() {
   const learner = useLearner();
   const navigate = useNavigate();
   const view = useMemo(() => courseView(learner), [learner]);
-  const layout = useMemo(() => layoutPath(view.nodes.map((n) => n.kind), view.hers), [view]);
+  const layout = useMemo(() => layoutPath(view.nodes.map((n) => n.kind), view.current), [view]);
   const pinned = view.today && learner.pinnedLesson === view.today.id ? view.today : null;
   const walksToday = learner.days[todayString()]?.walks ?? 0;
 
@@ -54,16 +54,16 @@ export default function Home() {
   const pad = width > 0 ? Math.max(0, (width / (pathPx / PATH_W) - PATH_W) / 2) : 0;
 
   // Keep today's stone in view: a little below the middle, so the stones
-  // ahead of her and the fog show above.
+  // ahead of them and the fog show above.
   const scrollToHer = useCallback(() => {
     const sc = scroller.current;
     const el = svg.current;
-    const spot = layout.spots[view.hers];
+    const spot = layout.spots[view.current];
     if (!sc || !el || !spot) return;
     const scale = el.getBoundingClientRect().width / (PATH_W + 2 * pad);
     const svgTop = el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
     sc.scrollTop = Math.max(0, svgTop + spot.y * scale - sc.clientHeight * 0.55);
-  }, [layout, view.hers, pad]);
+  }, [layout, view.current, pad]);
 
   useLayoutEffect(() => {
     scrollToHer();
@@ -76,7 +76,14 @@ export default function Home() {
   const openLesson = (id: string) => { unlock(); navigate(ROUTES.lesson(id)); };
   const sums = () => { unlock(); navigate(ROUTES.walk); };
   // Nothing to learn yet (or all of it learned): Go is the sums walk.
-  const go = () => (view.today ? openLesson(view.today.id) : sums());
+  // The first Go on a device that has never found its level runs placement,
+  // so a child who knows the early lessons starts where learning begins. A
+  // course already under way is left alone (a grown-up can re-run it).
+  const neverPlaced = learner.placedOn === null && !Object.values(learner.lessons).some((r) => r.done || r.tries > 0);
+  const go = () => {
+    if (neverPlaced && view.today) { unlock(); navigate(ROUTES.placement); return; }
+    return view.today ? openLesson(view.today.id) : sums();
+  };
   const sayUnit = (sign: UnitSign) => { unlock(); speak(sign.title); };
 
   return (

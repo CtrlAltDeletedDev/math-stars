@@ -5,9 +5,9 @@ import { any, choiceItem, doStep, mix, modelItem, numberItem, randomInt, show, s
 //
 // A picture graph is counting, organised: one picture for each thing, one row
 // for each kind, every row starting at the same edge so the rows can be
-// compared by eye. She reads one first, then answers most and fewest, then
-// "how many more", which she does by making the short row as long as the
-// long one -- and then makes graphs of her own from a few spoken counts.
+// compared by eye. They read one first, then answer most and fewest, then
+// "how many more", which they do by making the short row as long as the
+// long one -- and then makes graphs of their own from a few spoken counts.
 
 type Graph = Extract<ModelState, { model: 'graph' }>;
 type Row = Graph['rows'][number];

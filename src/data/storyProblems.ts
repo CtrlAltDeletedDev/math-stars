@@ -3,7 +3,7 @@ import { buildTaggedChoices, randomInt, shuffle } from '@/engine/choices';
 
 // Story problems within 20, in every shape a first-grade classroom uses.
 //
-// The older word problems (wordProblems.ts) only ever asked "she had some, then
+// The older word problems (wordProblems.ts) only ever asked "they had some, then
 // got more / gave some away — how many now?", with numbers under ten. That is
 // the easiest kind of story there is, and it is not what comes home in the
 // backpack. A first-grade unit on adding and subtracting within 20 asks:
@@ -13,7 +13,7 @@ import { buildTaggedChoices, randomInt, shuffle } from '@/engine/choices';
 //             the rest are basketballs. How many basketballs? 6 + ? = 14
 //   compare   11 gold coins and 7 silver. How many more gold?  7 + ? = 11
 //   fewer     Talan has 7 fewer gems than Gordan, who has 19.  19 − 7 = ?
-//   change    Nick needs 10 eggs. He has 6. How many more?     6 + ? = 10
+//   change    Nick needs 10 eggs. Nick has 6. How many more?     6 + ? = 10
 //
 // Every one of those except "result" is a subtraction in disguise, and the
 // mistake they are built to catch is adding the two numbers in the story
@@ -147,7 +147,7 @@ const BUILDERS: Record<Kind, (x: number, y: number, v: number) => Story> = {
     };
   },
 
-  // whole x, known part y, asks for the rest. The one she added on her sheet.
+  // whole x, known part y, asks for the rest. The one they added on their sheet.
   part: (x, y, v) => {
     const [n] = names(x, y, v);
     const s = pick(SPLITS, x * 3 + y + v);
@@ -248,7 +248,7 @@ const BUILDERS: Record<Kind, (x: number, y: number, v: number) => Story> = {
     };
   },
 
-  // needs x, has y; how many more? "Nick needs 10 eggs. He gets 6 from the fridge."
+  // needs x, has y; how many more? "Nick needs 10 eggs. Nick gets 6 from the fridge."
   change: (x, y, v) => {
     const [n] = names(x, y, v);
     const t = pick(NEEDS, x + y + v);
@@ -411,7 +411,7 @@ function equationQuestion(kind: Kind, x: number, y: number, v: number, addOnly: 
 
   // One question, not the story's own question followed by a second one —
   // the way the unit test words it: "Which addition problem shows how many
-  // eggs he still needs?"
+  // eggs Nick still needs?"
   const question = asksForAdding
     ? `Which adding problem shows ${s.clause}?`
     : `Which number sentence shows ${s.clause}?`;

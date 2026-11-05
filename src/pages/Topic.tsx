@@ -19,8 +19,8 @@ import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 // One topic, ordered by how much a child wants it.
 //
 // The big Play button is the answer to "what do I do here" — it asks questions
-// at whatever rung she is standing on, so it works even for a topic with no
-// hand-built levels at all. Everything below it is optional: the levels she can
+// at whatever rung they are standing on, so it works even for a topic with no
+// hand-built levels at all. Everything below it is optional: the levels they can
 // replay, a lesson, a story, a quick drill.
 //
 // Replaces the old Category screen, which opened on a vertical chain of
@@ -51,9 +51,9 @@ export default function Topic() {
     return progress.categories[level.categoryId]?.levels[levelId];
   }
 
-  // Lessons in this topic up to her grade, and the one worth her time today:
-  // one that teaches against the mistake she keeps making here, else the
-  // nearest to her rung she hasn't done.
+  // Lessons in this topic up to their grade, and the one worth their time today:
+  // one that teaches against the mistake they keep making here, else the
+  // nearest to their rung they haven't done.
   const ceiling = ceilingFor(topic.id, progress.gradeLevel);
   const lessons = lessonsFor(topic.id, ceiling);
   const done = progress.lessonsDone ?? {};
@@ -174,7 +174,7 @@ export default function Topic() {
               </button>
             )}
             {/* Both are built from this topic's own ladder, so they work for a
-                topic with no hand-built levels and never reach past her grade. */}
+                topic with no hand-built levels and never reach past their grade. */}
             <button
               onClick={() => navigate(`/flashcard/${topic.id}`)}
               style={{ ...secondaryStyle, flex: 1, minWidth: 140, marginBottom: 0 }}

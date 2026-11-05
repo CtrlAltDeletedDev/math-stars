@@ -39,7 +39,7 @@ export const GALLERY_A: GalleryEntry[] = [
   { title: 'Number line · 8 + 3: start on 8, three hops forward', state: { model: 'numberLine', min: 0, max: 20, start: 8, path: [9, 10, 11] } },
   { title: 'Number line · 14 − 6: six hops back', state: { model: 'numberLine', min: 0, max: 20, start: 14, path: range(13, 8) } },
   {
-    title: 'Number line · her turn: tap a start, then tap to hop',
+    title: 'Number line · their turn: tap a start, then tap to hop',
     state: { model: 'numberLine', min: 0, max: 20, start: null, path: [] },
     interactive: true,
   },

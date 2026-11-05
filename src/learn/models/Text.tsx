@@ -4,7 +4,7 @@ import { MotionStyles } from './a-shared';
 import { textLabel, textPieces } from './logic-a';
 
 // A big written thing for the guide to point at: "8 + 5 = 13", "=". Plus
-// signs are teal and minus signs orange, as everywhere on her screens; a
+// signs are teal and minus signs orange, as everywhere on their screens; a
 // `tone` of 'plus' or 'minus' colours only that sign, 'plain' none. A hyphen
 // used as a minus is drawn as a true minus sign. When the text changes, the
 // new text rises in.

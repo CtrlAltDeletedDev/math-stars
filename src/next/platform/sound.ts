@@ -1,6 +1,6 @@
 // Small sounds. One AudioContext, resumed from a tap (see useSoundEffects for
 // why). A soft "tok" for right, a low hum for try again -- no buzzer -- and a
-// rising run when she moves up a stone.
+// rising run when they move up a stone.
 
 let ctx: AudioContext | null = null;
 

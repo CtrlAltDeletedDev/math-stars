@@ -10,7 +10,7 @@ import { bondSplit, countObject, moveSplit, tapNumberLine, tapTenFrameCell, tenF
 
 // The arithmetic units, checked harder than the course harness does: every
 // answer is worked out again from the question alone, every "do" solution must
-// be reachable by her taps from the starting state, and every spoken line is
+// be reachable by their taps from the starting state, and every spoken line is
 // short enough to follow by ear.
 
 const UNITS = [numbers, add10, sub10, within20];
@@ -114,7 +114,7 @@ function rightChoice(item: Item): string | null {
 }
 
 /**
- * Replay her taps through the models' own logic (models/logic-a.ts) and check
+ * Replay their taps through the models' own logic (models/logic-a.ts) and check
  * they land exactly on the solution: removals, then placements (the tray gives
  * its first colour first), crosses, hops, counting taps, bond moves.
  */
@@ -192,7 +192,7 @@ describe('arithmetic units', () => {
           }
         });
 
-        it('has do solutions she can reach by tapping, and hints for where she is', () => {
+        it('has do solutions they can reach by tapping, and hints for where they are', () => {
           for (const s of lesson.teach) {
             if (s.type !== 'do') continue;
             expect(reachable(s.model, s.solution), s.say).toBeNull();

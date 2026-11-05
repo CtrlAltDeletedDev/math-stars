@@ -261,7 +261,7 @@ describe('answer position carries no information', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Targeted fact practice ("she's working on +2 this week")
+// Targeted fact practice ("they're working on +2 this week")
 // ---------------------------------------------------------------------------
 
 describe('targeted facts', () => {
@@ -291,7 +291,7 @@ describe('targeted facts', () => {
 
   // The whole point. Before this existed, a ten-question round on "adding to 10"
   // contained about three +2 questions, because both numbers were random.
-  it('fills a whole session with the fact she is working on', () => {
+  it('fills a whole session with the fact they are working on', () => {
     const level = CATEGORIES.flatMap((c) => c.levels).find((l) => l.id === 'steps-add-2')!;
     const session = buildSession(level, {}, 'Friend');
     expect(session.length).toBe(10);
@@ -300,7 +300,7 @@ describe('targeted facts', () => {
     }
   });
 
-  it('varies the number she starts from rather than repeating one sum', () => {
+  it('varies the number they start from rather than repeating one sum', () => {
     const level = CATEGORIES.flatMap((c) => c.levels).find((l) => l.id === 'steps-sub-1')!;
     const starts = new Set(buildSession(level, {}, 'Friend').map((q) => q.prompt.match(/^(\d+)/)![1]));
     expect(starts.size).toBe(10);
@@ -322,7 +322,7 @@ describe('targeted facts', () => {
   });
 
   // A targeted drill has a small answer space, so the guard that matters is
-  // that the answer's position tells her nothing. Adjacent options are fine and
+  // that the answer's position tells them nothing. Adjacent options are fine and
   // sometimes unavoidable for "-1" (the real mistakes on 6 - 1 are 4, 6 and 7);
   // a predictable *rank* is not.
   it('does not park the answer at a predictable rank', () => {

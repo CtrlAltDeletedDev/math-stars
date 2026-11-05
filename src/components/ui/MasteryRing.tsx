@@ -5,7 +5,7 @@ interface Props {
   thickness?: number;
   /** Drawn in the middle — usually the topic emoji. */
   children: React.ReactNode;
-  /** The rank glyph, badged bottom-right. Omitted before she has played. */
+  /** The rank glyph, badged bottom-right. Omitted before they have played. */
   rank?: string;
   color?: string;
 }

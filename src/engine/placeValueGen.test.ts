@@ -10,7 +10,7 @@ import { PLACE_VALUE_L1_QUESTIONS } from '@/data/placeValue';
 import { ErrorTag, Question } from '@/types';
 
 // The generated Tens & Ones ladder. Every check here works the question out
-// again from what she is shown — the prompt, and the blocks in the picture —
+// again from what they are shown — the prompt, and the blocks in the picture —
 // and never trusts `correctAnswer`. Failures are collected and asserted once,
 // so a broken rule lists every question it broke on.
 
@@ -40,7 +40,7 @@ const everything = [...samples.values()].flat();
 interface Solved {
   form: Form;
   answer: number;
-  /** Every number the prompt shows her. */
+  /** Every number the prompt shows them. */
   given: number[];
   /** The two-digit number the question is about (the one to build, or the one to read). */
   tens?: number;
@@ -55,7 +55,7 @@ function solve(q: Question): Solved {
   const p = q.prompt;
   let m = p.match(/^What is the (tens|ones) digit of (\d+)\?$/);
   if (m) {
-    // Read the digit off the written numeral, the way she would.
+    // Read the digit off the written numeral, the way they would.
     const written = m[2];
     if (written.length !== 2) throw new Error(`${q.id}: ${written} is not two digits`);
     const n = Number(written);
@@ -177,7 +177,7 @@ describe.each(RUNGS)('place value rung: $label', (rung) => {
     expect(bad).toEqual([]);
   });
 
-  it('can be answered by ear: every number she is shown is said, and "= ?" is put into words', () => {
+  it('can be answered by ear: every number they are shown is said, and "= ?" is put into words', () => {
     const bad: string[] = [];
     for (const q of qs) {
       const s = solve(q);
@@ -221,7 +221,7 @@ describe.each(RUNGS)('place value rung: $label', (rung) => {
 
   it('only uses a tag where it describes that wrong answer', () => {
     // Parents read these as sentences: "losing track of a ten", "answering
-    // with a number the question already showed her". Each one is checked
+    // with a number the question already showed them". Each one is checked
     // against what the wrong value actually is.
     const bad: string[] = [];
     for (const q of qs) {
@@ -412,7 +412,7 @@ describe('the options give nothing away', () => {
 
   it('asks tens-first and ones-first equally, so writing the digits in the order heard is a coin toss', () => {
     // "4 tens and 7 ones" and "40 + 7" reward writing 4 then 7; "7 ones and
-    // 4 tens" and "7 + 40" punish it. She has to read which is which.
+    // 4 tens" and "7 + 40" punish it. They have to read which is which.
     const qs = build.filter((q) => BUILD_FORMS.includes(solve(q).form));
     let inOrder = 0;
     for (const q of qs) {

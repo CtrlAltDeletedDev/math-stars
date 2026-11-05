@@ -37,7 +37,7 @@ export default function Gallery() {
             <div><div style={{ fontSize: 12, color: C.inkSoft }}>picture · small</div><Model state={e.state} size="small" /></div>
             <div><div style={{ fontSize: 12, color: C.inkSoft }}>picture · big</div><Model state={e.state} /></div>
           </div>
-          {e.interactive && <div><div style={{ fontSize: 12, color: C.inkSoft }}>her turn (tap / drag)</div><Live entry={e} /></div>}
+          {e.interactive && <div><div style={{ fontSize: 12, color: C.inkSoft }}>their turn (tap / drag)</div><Live entry={e} /></div>}
         </section>
       ))}
     </div>

@@ -7,7 +7,7 @@ import { togglePick } from './logic-b';
 
 // Flat shapes in pattern-block colours with a crisp outline; solid shapes
 // shaded light-to-dark with their hidden edges dashed, the way a first-grade
-// book draws them. In "do" she taps shapes to pick them (to sort, or to find
+// book draws them. In "do" they tap shapes to pick them (to sort, or to find
 // all the triangles); a picked shape gets a navy ring.
 
 const INK = '#3A3F4B';

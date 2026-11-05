@@ -16,7 +16,7 @@ const COLOUR: Record<TrackId, { on: string; soft: string; sign: string; name: st
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
-/** One track: where she stands, how it's going, what comes next, and this week's pick. */
+/** One track: where they stand, how it's going, what comes next, and this week's pick. */
 export default function TrackBlock({ learner, track, today }: { learner: Learner; track: TrackId; today: string }) {
   const r = trackReport(learner, track, today);
   const col = COLOUR[track];
@@ -30,7 +30,7 @@ export default function TrackBlock({ learner, track, today }: { learner: Learner
   const movedOn = r.stage > 0 ? learner.tracks[track].passed[r.stage - 1] : undefined;
   const recentMoved = movedOn && movedOn >= addDays(today, -6) ? `Moved up ${whenSaid(movedOn, today)}. ` : '';
   const accuracy = r.recentCount > 0
-    ? `${r.recentRight} of her last ${r.recentCount} right first try${r.typicalMs !== null ? `, ${r.typicalMs < 1000 ? '' : 'about '}${secondsText(r.typicalMs)} each` : ''}.`
+    ? `${r.recentRight} of their last ${r.recentCount} right first try${r.typicalMs !== null ? `, ${r.typicalMs < 1000 ? '' : 'about '}${secondsText(r.typicalMs)} each` : ''}.`
     : 'No answers at this step yet.';
   const atTop = r.stage >= ceiling;
   const nextGrade = NEXT_GRADE[grade];
@@ -75,7 +75,7 @@ export default function TrackBlock({ learner, track, today }: { learner: Learner
 
       {r.ready && nextGrade && (
         <div className="gu-ready">
-          <span>Top of {GRADE_NAMES[grade]}, and acing it. She may be ready for the next grade.</span>
+          <span>Top of {GRADE_NAMES[grade]}, and acing it. They may be ready for the next grade.</span>
           <button
             type="button" className="gu-btn"
             onClick={() => setLearner((l) => ({ ...l, profile: { ...l.profile, grade: nextGrade } }))}
@@ -104,7 +104,7 @@ export default function TrackBlock({ learner, track, today }: { learner: Learner
             <select id={`gu-focus-${track}`} value={choice} onChange={(e) => setChoice(Number(e.target.value))}>
               {STAGES[track].map((s, i) => (
                 <option key={i} value={i}>
-                  {i + 1}. {s.label} ({s.example}){i === r.stage ? ' · now' : i > ceiling ? ' · above her grade' : ''}
+                  {i + 1}. {s.label} ({s.example}){i === r.stage ? ' · now' : i > ceiling ? ' · above their grade' : ''}
                 </option>
               ))}
             </select>

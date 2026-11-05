@@ -6,8 +6,8 @@ import { Question } from '@/types';
 //
 //   "pick the fact"  — shows one fact, asks which other one is also true.
 //   "which member"   — shows the three numbers, asks for a specific one. The
-//                      answer is in the trio, but so are the distractors, so she
-//                      has to work out *which* member, not just spot a number.
+//                      answer is in the trio, but so are the distractors, so they
+//                      have to work out *which* member, not just spot a number.
 //
 // The old version asked "a + b = sum, so sum − a = ?" and printed the answer in
 // the prompt, and built distractors as correct±1 plus "the other addend" — which

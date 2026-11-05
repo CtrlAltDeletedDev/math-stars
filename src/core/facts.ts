@@ -1,8 +1,8 @@
 import { ErrorTag } from '@/types';
 
-// Every fact she meets, one record each.
+// Every fact they meet, one record each.
 //
-// The old app knew how she was doing on a *rung* ("Adding within 10", about 36
+// The old app knew how they were doing on a *rung* ("Adding within 10", about 36
 // facts in one bucket) and could not say that 4 + 4 is fine while 6 + 7 is not.
 // A fact record can. It drives two things:
 //
@@ -11,9 +11,9 @@ import { ErrorTag } from '@/types';
 //            as reviews in later walks.
 //   the grid what the grown-ups see: not met, learning, getting there, knows it.
 //
-// Speed is used silently. She never sees a clock. "Knows it" means right and
-// quick -- quick for *her*, measured against how long she takes on the facts
-// she certainly knows (+1, +0) -- on more than one day. A slow right answer is
+// Speed is used silently. They never see a clock. "Knows it" means right and
+// quick -- quick for *them*, measured against how long they take on the facts
+// they certainly know (+1, +0) -- on more than one day. A slow right answer is
 // never wrong; it just keeps the fact in rotation.
 
 export interface FactRecord {
@@ -23,9 +23,9 @@ export interface FactRecord {
   box: number;
   /** When it is next due for review, epoch ms. */
   due: number;
-  /** Her last few right first-try answers: the day and how long it took. */
+  /** Their last few right first-try answers: the day and how long it took. */
   recent: { day: string; ms: number }[];
-  /** What she typed the last time she got it wrong, for the grown-ups. */
+  /** What they typed the last time they got it wrong, for the grown-ups. */
   said?: string;
   tag?: ErrorTag;
 }
@@ -68,7 +68,7 @@ export function recordFact(prev: FactRecord | undefined, a: FactAnswer): FactRec
   };
 }
 
-/** Is a fact one she certainly knows, whose time measures only how fast she taps? */
+/** Is a fact one they certainly know, whose time measures only how fast they tap? */
 function isBaselineFact(id: string): boolean {
   const m = id.match(/^(add|sub)-(\d+)[+-](\d+)$/);
   if (!m) return false;
@@ -84,8 +84,8 @@ const median = (xs: number[]) => {
 };
 
 /**
- * How long counts as quick, for her. Her typical time on +0/+1 facts is how
- * long it takes her to read and tap; two seconds on top of that is recall,
+ * How long counts as quick, for them. Their typical time on +0/+1 facts is how
+ * long it takes them to read and tap; two seconds on top of that is recall,
  * not counting. Clamped, and a sensible default until there are a few.
  */
 export function quickMs(facts: Record<string, FactRecord>): number {

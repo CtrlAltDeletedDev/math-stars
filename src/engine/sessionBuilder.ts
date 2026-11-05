@@ -131,16 +131,16 @@ const MIXED_SESSION_REVIEWS = 3;
 const DAILY_SESSION_SIZE = 10;
 
 /**
- * The rung she is actually served on a skill: her saved rung, held at her
+ * The rung they are actually served on a skill: their saved rung, held at their
  * grade's ceiling. The same clamp Practice applies, so every mode agrees on
- * where she stands.
+ * where they stand.
  */
 function servingRung(progress: UserProgress, skillId: string): number {
   return Math.min(progress.skills?.[skillId]?.rung ?? 0, ceilingFor(skillId, progress.gradeLevel));
 }
 
 /**
- * What a question looks like to her, as opposed to its id. A rung that mixes a
+ * What a question looks like to them, as opposed to its id. A rung that mixes a
  * hand-written bank with a generator can draw the bank's "time-6-0" and the
  * generator's "gclock-read-6-00": two ids, one clock showing six o'clock.
  */
@@ -209,18 +209,18 @@ function dueQuestions(
 }
 
 /**
- * Today's ten mixed questions, drawn from where she actually stands.
+ * Today's ten mixed questions, drawn from where they actually stand.
  *
- * This used to be built from the categories she had played *levels* in. Play —
- * the big button on Home, and the way the app now steers her — writes no level
+ * This used to be built from the categories they had played *levels* in. Play —
+ * the big button on Home, and the way the app now steers them — writes no level
  * history, so a child who only ever pressed Play fell through to "the first
  * level of the first category" and was asked ten `n + 1` questions every day,
- * whatever she could really do.
+ * whatever they could really do.
  *
- * Now: a few reviews that are due, then fresh questions at her current rung on
- * every topic she has started, dealt one topic at a time. Level play, Practice
+ * Now: a few reviews that are due, then fresh questions at their current rung on
+ * every topic they have started, dealt one topic at a time. Level play, Practice
  * and every other mode feed the same ladders, so "started" means the same thing
- * whichever button she uses.
+ * whichever button they use.
  */
 export function buildDailyChallengeSession(progress: UserProgress, characterName = 'You'): Question[] {
   const reviews = dueQuestions(progress, MIXED_SESSION_REVIEWS, characterName);
@@ -228,7 +228,7 @@ export function buildDailyChallengeSession(progress: UserProgress, characterName
 
   const available = unlockedSkillIds(progress.skills, progress.gradeLevel);
   const started = available.filter((id) => (progress.skills?.[id]?.attempts ?? 0) > 0);
-  // Nothing played yet: the first topic of her grade only, so the first daily
+  // Nothing played yet: the first topic of their grade only, so the first daily
   // challenge is a gentle start rather than a tour of the whole app.
   const pool = started.length > 0 ? shuffle(started) : available.slice(0, 1);
 
@@ -263,7 +263,7 @@ export function countDueReviews(progress: UserProgress): number {
 }
 
 /**
- * Master Mode for one topic: everything she has climbed through, mixed.
+ * Master Mode for one topic: everything they have climbed through, mixed.
  *
  * It used to take a whole *category*, found through the topic's first level.
  * Categories and topics do not line up, so Taking Away's Master Mode was the
@@ -271,9 +271,9 @@ export function countDueReviews(progress: UserProgress): number {
  * eleven-level Addition & Subtraction category, and Skip Counting's served the
  * times tables to a first grader whose grade stops before them.
  *
- * Now it deals from every rung of this topic from the one she stands on down to
- * the first, her own rung first — so it reaches no higher than she has climbed
- * and no further than her grade — plus a few of this topic's due reviews.
+ * Now it deals from every rung of this topic from the one they stand on down to
+ * the first, their own rung first — so it reaches no higher than they have climbed
+ * and no further than their grade — plus a few of this topic's due reviews.
  */
 export function buildMasterSession(
   progress: UserProgress,
@@ -295,10 +295,10 @@ export function buildMasterSession(
 }
 
 /**
- * Quick Review for one topic: a short run at the rung she is standing on.
+ * Quick Review for one topic: a short run at the rung they are standing on.
  *
  * It used to replay the topic's first level, so Quick Review on Adding was
- * "+1" for ever, however far up the ladder she had climbed.
+ * "+1" for ever, however far up the ladder they had climbed.
  */
 export function buildRungSession(progress: UserProgress, skillId: string, n = 10): Question[] {
   return presentAll(questionsAtRung(skillId, servingRung(progress, skillId), n, new Set()));

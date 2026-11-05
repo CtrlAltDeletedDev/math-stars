@@ -38,7 +38,7 @@ export function parseFact(prompt: string, type: string): [number, number] | null
 /**
  * Does this question get ten frames? Facts whose parts are both ten or less
  * and whose total fits in two frames. Bigger numbers get the hop line instead
- * (see QuestionCard), which is how her class works "14 − 6".
+ * (see QuestionCard), which is how their class works "14 − 6".
  */
 export function hasTenFrames(prompt: string, type: string): boolean {
   const f = parseFact(prompt, type);

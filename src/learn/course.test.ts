@@ -3,11 +3,11 @@ import { UNITS, LESSONS } from './course';
 import { Item, Lesson, TeachStep } from './types';
 
 // Every lesson in the course, checked the same way. Whoever writes a lesson
-// gets these for free: a "do" task she cannot finish, a question with two
+// gets these for free: a "do" task they cannot finish, a question with two
 // right answers, or a hint that gives the answer away fails here.
 
 const SAMPLES = 40;
-const PRONOUN = /\b(he|she|him|his|hers|herself|himself)\b/i;
+const PRONOUN = /\b(he|she|him|his|her|hers|herself|himself)\b/i;
 
 function itemsOf(lesson: Lesson): Item[] {
   const gens = [lesson.practice, lesson.check, lesson.review].filter(Boolean) as (() => Item)[];
@@ -48,7 +48,7 @@ for (const unit of UNITS) {
       expect(unit.lessons.length).toBeGreaterThanOrEqual(3);
       for (const l of unit.lessons) {
         expect(l.teach.some((s) => s.type === 'show'), `${l.id}: nothing shown`).toBe(true);
-        expect(l.teach.some((s) => s.type === 'do'), `${l.id}: nothing for her to do`).toBe(true);
+        expect(l.teach.some((s) => s.type === 'do'), `${l.id}: nothing for them to do`).toBe(true);
         expect(l.goal.length, `${l.id}: no goal for the grown-ups`).toBeGreaterThan(10);
       }
     });
@@ -58,7 +58,7 @@ for (const unit of UNITS) {
         it('has do tasks that need doing and can be done', () => {
           for (const [i, s] of lesson.teach.entries()) {
             if (s.type !== 'do') continue;
-            expect(s.goal(s.model), `step ${i}: already done before she starts`).toBe(false);
+            expect(s.goal(s.model), `step ${i}: already done before they start`).toBe(false);
             expect(s.solution.model, `step ${i}: solution is a different model`).toBe(s.model.model);
             expect(s.goal(s.solution), `step ${i}: the solution does not meet the goal`).toBe(true);
             if (typeof s.hint === 'function') expect(s.hint(s.model).length).toBeGreaterThan(0);
@@ -114,7 +114,7 @@ for (const unit of UNITS) {
           }
         });
 
-        it('names its characters every time, never "he" or "she"', () => {
+        it('names its characters every time, never a pronoun', () => {
           for (const text of [...spoken(lesson), ...itemsOf(lesson).map((i) => i.say)]) {
             expect(text, text).not.toMatch(PRONOUN);
           }

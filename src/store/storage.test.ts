@@ -5,10 +5,10 @@ import { buildInitialProgress, normalizeProgress } from './storage';
 import { recordSkillAnswer } from '@/engine/skillLadder';
 import { rungAccuracy } from '@/engine/skillLadder';
 
-// This layer holds the only copy of a year of her work, and until now it had no
+// This layer holds the only copy of a year of their work, and until now it had no
 // tests at all. `looksLikeProgress` validates the *shape* of the containers and
 // stops there, so a damaged value inside one reached the ladder and the Parent
-// screen intact — and crashed behind the screen that says her stars are safe.
+// screen intact — and crashed behind the screen that says their stars are safe.
 //
 // Import takes an arbitrary parent-chosen file, so none of this needs a disk
 // fault to happen.
@@ -24,7 +24,7 @@ describe('a damaged skill state cannot reach the ladder', () => {
 
     expect(p).not.toBeNull();
     expect(p.skills.adding.recent).toEqual([]);
-    expect(p.skills.adding.rung, 'her place is the part worth keeping').toBe(3);
+    expect(p.skills.adding.rung, 'their place is the part worth keeping').toBe(3);
     // The two call sites that used to throw.
     expect(() => recordSkillAnswer(p.skills.adding, true)).not.toThrow();
     expect(() => rungAccuracy(p.skills.adding)).not.toThrow();
@@ -97,7 +97,7 @@ describe('a damaged SRS card cannot reach the scheduler', () => {
   });
 });
 
-describe('what her mistakes meant', () => {
+describe('what their mistakes meant', () => {
   it('starts empty and additive for a save from before v6', () => {
     const old = { ...buildInitialProgress(), version: 5 } as UserProgress;
     delete (old as Partial<UserProgress>).errorPatterns;

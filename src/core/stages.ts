@@ -8,10 +8,10 @@ import {
 // The path.
 //
 // Two tracks, plus and minus, each a fixed sequence of named steps. This is the
-// curriculum a parent can point at: "she's on 10+ for plus, counting back for
+// curriculum a parent can point at: "they're on 10+ for plus, counting back for
 // minus". The steps are exactly the v7 adding / taking-away rungs, in the same
 // order with the same labels, so a saved rung index *is* a stage index and
-// migrating her needs no remap (core.test.ts holds the two lists together).
+// migrating their needs no remap (core.test.ts holds the two lists together).
 //
 // Appending a stage is free. Inserting one moves every saved stage above it:
 // write a migration in migrate.ts if you ever have to.
@@ -25,7 +25,7 @@ export interface Stage {
   /** Parent words, the same as the old rung label. */
   label: string;
   /**
-   * What the stone on her path says. Numbers and symbols only, because she
+   * What the stone on their path says. Numbers and symbols only, because they
    * cannot read the label. Shared by the same step on both tracks.
    */
   stone: string;
@@ -73,8 +73,8 @@ export function topStage(track: TrackId): number {
 }
 
 /**
- * How far a grade's path goes. A soft edge: at the top she keeps practising,
- * and earning a promotion there twice tells the grown-ups she may be ready for
+ * How far a grade's path goes. A soft edge: at the top they keep practising,
+ * and earning a promotion there twice tells the grown-ups they may be ready for
  * the next grade (`ceilingHits`). The same ceilings as the old grade bands.
  */
 const CEILINGS: Record<Grade, Record<TrackId, number>> = {

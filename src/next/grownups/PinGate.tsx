@@ -7,10 +7,10 @@ import { ROUTES } from '../routes';
 
 // The door to the grown-ups screen.
 //
-// Four digits she has not seen typed. The unlocked state lives only in the
+// Four digits they have not seen typed. The unlocked state lives only in the
 // screen's React state, so leaving the screen locks it again. Resetting a
 // forgotten PIN asks for the word RESET: easy for a grown-up, hard for a
-// six-year-old, and it changes nothing about her progress.
+// six-year-old, and it changes nothing about their progress.
 
 const LEN = 4;
 const TRIES = 5;
@@ -127,7 +127,7 @@ export default function PinGate({ onUnlock }: { onUnlock: () => void }) {
 
   const back = (
     <div style={{ alignSelf: 'flex-start' }}>
-      <Link to={ROUTES.home} className="gu-back"><ArrowLeft size={20} strokeWidth={ICON_STROKE} />Back to her path</Link>
+      <Link to={ROUTES.home} className="gu-back"><ArrowLeft size={20} strokeWidth={ICON_STROKE} />Back to their path</Link>
     </div>
   );
 
@@ -138,7 +138,7 @@ export default function PinGate({ onUnlock }: { onUnlock: () => void }) {
         {back}
         <h1 style={{ textAlign: 'left' }}>Forgot the PIN?</h1>
         <p className="muted" style={{ marginBottom: 14 }}>
-          Type the word <b>RESET</b> below, then choose a new PIN. Her progress stays exactly as it is.
+          Type the word <b>RESET</b> below, then choose a new PIN. Their progress stays exactly as it is.
         </p>
         <label htmlFor="gu-reset" className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Type RESET</label>
         <input
@@ -155,7 +155,7 @@ export default function PinGate({ onUnlock }: { onUnlock: () => void }) {
           <button type="button" className="gu-btn quiet" onClick={() => { setWord(''); setMode('enter'); }}>Cancel</button>
         </div>
         <p className="small muted" style={{ marginTop: 18 }}>
-          Clearing this site&rsquo;s data in your browser settings also removes the PIN, but it removes her progress too,
+          Clearing this site&rsquo;s data in your browser settings also removes the PIN, but it removes their progress too,
           unless you have a backup to import afterwards.
         </p>
       </div>
@@ -166,9 +166,9 @@ export default function PinGate({ onUnlock }: { onUnlock: () => void }) {
     ? 'Grown-ups only'
     : mode === 'choose' ? 'Choose a 4-digit grown-ups PIN' : 'Type the same PIN again';
   const help = mode === 'enter'
-    ? 'Type your PIN to see how she is doing.'
+    ? 'Type your PIN to see how they are doing.'
     : mode === 'choose'
-      ? 'You will need it each time you open this screen. Pick one she won’t guess.'
+      ? 'You will need it each time you open this screen. Pick one that is hard to guess.'
       : 'Just to be sure.';
   const left = Math.ceil((coolUntil - now) / 1000);
 

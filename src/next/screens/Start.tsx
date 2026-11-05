@@ -10,7 +10,7 @@ import { speak, unlockSpeech } from '../platform/speech';
 import { sound } from '../platform/sound';
 import { HOME_CSS } from '../home/styles';
 
-// First run: she picks who walks the path with her. The title speaks when
+// First run: they pick who walks the path with them. The title speaks when
 // tapped (never on its own: iPad Safari only speaks from a tap).
 
 const TITLE = 'Pick your friend!';

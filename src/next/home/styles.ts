@@ -1,4 +1,4 @@
-// The few animations her screens use, in one style block. Everything that
+// The few animations their screens use, in one style block. Everything that
 // moves only idles gently, and nothing moves at all under reduced motion.
 
 export const HOME_CSS = `

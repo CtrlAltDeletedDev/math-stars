@@ -3,11 +3,11 @@ import { Item, Lesson, TeachStep } from '@/learn/types';
 // The order a lesson is played in, as a flat list of cards.
 //
 //   intro      the lesson's title, and a Start tap (which also unlocks speech)
-//   warm-up    up to three questions from lessons she did before
+//   warm-up    up to three questions from lessons they did before
 //   teach      the lesson's show / do / ask steps, in its own order
 //   practice   "you do": the picture is there for the first half, then waits
 //              behind "Show me"
-//   check      no picture and no hints; how she does here decides the stone
+//   check      no picture and no hints; how they do here decides the stone
 //   result
 //
 // Pure, so the shape of every lesson is testable without a screen.

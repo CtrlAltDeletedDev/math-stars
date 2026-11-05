@@ -8,7 +8,7 @@ import BigButton from '@/components/ui/BigButton';
 import { ArrowLeft, FileText, Printer } from 'lucide-react';
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
-/** The school sheet's 0–20 line, printed blank for her to draw hops on. */
+/** The school sheet's 0–20 line, printed blank for them to draw hops on. */
 function PrintedNumberLine({ max }: { max: number }) {
   const pad = 14, unit = 22, w = pad * 2 + unit * max;
   return (

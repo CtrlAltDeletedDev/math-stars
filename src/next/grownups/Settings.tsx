@@ -15,7 +15,7 @@ export default function Settings({ learner }: { learner: Learner }) {
   return (
     <div className="gu-settings">
       <div className="gu-set">
-        <label htmlFor="gu-name">Her name</label>
+        <label htmlFor="gu-name">Child&rsquo;s name</label>
         <input
           id="gu-name" className="gu-input" value={p.name} maxLength={40} placeholder="Optional"
           autoComplete="off" onChange={(e) => set('name', e.target.value)}

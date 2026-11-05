@@ -4,18 +4,18 @@ import { FactRecord, recordFact } from './facts';
 import { Grade, TRACKS, TrackId, ceilingFor, topStage, trackOfFact } from './stages';
 import { Move, TrackState, newTrack, standing, stepTrack } from './track';
 
-// Everything the app knows about her, in one place.
+// Everything the app knows about them, in one place.
 //
 // The old save kept three overlapping records of the same maths (levels,
 // ladders, SRS cards) and a dozen fields for a reward economy. This is one:
-// where she stands on each track, how well she knows each fact, what she did
-// each day, and her settings. Pure functions only -- no React, no storage --
+// where they stand on each track, how well they know each fact, what they did
+// each day, and their settings. Pure functions only -- no React, no storage --
 // so all of it is testable and the screens just render it.
 
 export const LEARNER_SCHEMA = 1;
 
 export interface Profile {
-  /** Her name, for the grown-ups screen. Empty until a grown-up sets it. */
+  /** Their name, for the grown-ups screen. Empty until a grown-up sets it. */
   name: string;
   characterId: string | null;
   grade: Grade;
@@ -23,7 +23,7 @@ export interface Profile {
   sound: boolean;
   /** Sums in one walk. */
   walkLength: 10 | 20;
-  /** The ten-frame picture: fades as she gets steady, always on, or never. */
+  /** The ten-frame picture: fades as they get steady, always on, or never. */
   pictures: 'auto' | 'always' | 'off';
   /** Four digits, set by a grown-up the first time they open the grown-ups screen. */
   pin: string | null;
@@ -44,31 +44,35 @@ export interface Focus {
   until: string;
 }
 
-/** How a lesson went. Sparse: an entry exists once she has started it. */
+/** How a lesson went. Sparse: an entry exists once they have started it. */
 export interface LessonRecord {
-  /** Times she has reached the check. */
+  /** Times they have reached the check. */
   tries: number;
-  /** Her best check score, 0..1. */
+  /** Their best check score, 0..1. */
   best: number;
-  /** The day she first passed the check; null until then. */
+  /** The day they first passed the check; null until then. */
   done: string | null;
-  /** The last day she worked on it. */
+  /** The last day they worked on it. */
   last: string;
+  /** Found known by placement, not passed by its own check. */
+  placed?: boolean;
 }
 
 export interface Learner {
   schema: typeof LEARNER_SCHEMA;
   profile: Profile;
-  /** The course: how each lesson she has started went. See src/learn/progress.ts. */
+  /** The course: how each lesson they have started went. See src/learn/progress.ts. */
   lessons: Record<string, LessonRecord>;
-  /** A grown-up's pick for today's lesson, until she passes it. */
+  /** A grown-up's pick for today's lesson, until they pass it. */
   pinnedLesson: string | null;
+  /** The day placement last found the child's level; null until it has run. */
+  placedOn: string | null;
   tracks: Record<TrackId, TrackState>;
   facts: Record<string, FactRecord>;
   days: Record<string, DayRecord>;
   focus: Focus | null;
   streak: { current: number; best: number; last: string };
-  /** The old save's version, if she came from one. For support, not logic. */
+  /** The old save's version, if they came from one. For support, not logic. */
   migratedFrom: number | null;
 }
 
@@ -81,6 +85,7 @@ export function newLearner(): Learner {
     },
     lessons: {},
     pinnedLesson: null,
+    placedOn: null,
     tracks: { plus: newTrack(), minus: newTrack() },
     facts: {},
     days: {},
@@ -106,7 +111,7 @@ export interface Outcome {
   /** The stone it came from; null for a review. */
   stage: number | null;
   factId: string;
-  /** Right on the first try. What is recorded, whatever she saw. */
+  /** Right on the first try. What is recorded, whatever they saw. */
   correct: boolean;
   typed?: string;
   tag?: ErrorTag;
@@ -171,12 +176,12 @@ export function sunToday(l: Learner, today = todayString()): number {
   return Math.min(1, walks / Math.max(1, l.profile.dailyWalks));
 }
 
-/** Both tracks' stones, for the path: which she has moved up from. */
+/** Both tracks' stones, for the path: which they have moved up from. */
 export function passedStones(l: Learner): Record<TrackId, Set<number>> {
   const out = {} as Record<TrackId, Set<number>>;
   for (const t of TRACKS) {
     const here = standingOn(l, t);
-    // Everything below where she stands counts as passed, even a stone she was
+    // Everything below where they stand counts as passed, even a stone they were
     // placed above by migration and so never "moved up from" here.
     out[t] = new Set([...Object.keys(l.tracks[t].passed).map(Number), ...Array.from({ length: here }, (_, i) => i)]);
   }

@@ -29,7 +29,7 @@ describe('lesson progress', () => {
     expect(l.lessons.fx).toMatchObject({ tries: 3, best: 1, done: todayString() });
   });
 
-  it('counts a lesson done when her plus/minus path is already past it', () => {
+  it('counts a lesson done when their plus/minus path is already past it', () => {
     const l: Learner = { ...newLearner(), tracks: { plus: { ...newTrack(), stage: 4 }, minus: newTrack() } };
     expect(lessonDone(l, fixture({ placedBy: { track: 'plus', stage: 2 } }))).toBe(true);
     expect(lessonDone(l, fixture({ placedBy: { track: 'plus', stage: 4 } }))).toBe(false);
@@ -40,14 +40,14 @@ describe('lesson progress', () => {
     expect(touchLesson(newLearner(), 'fx').lessons.fx).toMatchObject({ tries: 0, done: null });
   });
 
-  it('records a fact item to the fact record, without moving her track', () => {
+  it('records a fact item to the fact record, without moving their track', () => {
     const l = recordItem(newLearner(), fixture().practice(), false, '6', undefined);
     expect(l.facts['add-2+3']).toMatchObject({ seen: 1, right: 0, said: '6', tag: 'off-by-one' });
     expect(l.tracks.plus.recent).toEqual([]);
     expect(l.days[todayString()]).toMatchObject({ answered: 1, right: 0 });
   });
 
-  it('records any other item toward today and her streak', () => {
+  it('records any other item toward today and their streak', () => {
     const l = recordItem(newLearner(), { id: 'clock-3-00', say: 's', prompt: 'What time?', answer: '3', input: 'number' }, true);
     expect(Object.keys(l.facts)).toEqual([]);
     expect(l.days[todayString()]).toMatchObject({ answered: 1, right: 1 });
@@ -62,7 +62,7 @@ describe('lesson progress', () => {
     expect(todaysLesson(pinned)?.id).toBe(LESSONS[1].id);
   });
 
-  it('warms up only from lessons she has done', () => {
+  it('warms up only from lessons they have done', () => {
     expect(warmupItems(newLearner())).toEqual([]);
     if (LESSONS.length === 0) return;
     const l = recordLesson(newLearner(), LESSONS[0].id, 4, 4);
@@ -70,15 +70,15 @@ describe('lesson progress', () => {
   });
 });
 
-describe('growing with her', () => {
-  it('starts today\'s lesson at her grade, and carries on into the next grade', async () => {
+describe('growing with them', () => {
+  it('starts today\'s lesson at their grade, and carries on into the next grade', async () => {
     const { COURSE } = await import('./course');
     const first = COURSE.find((g) => g.grade === '1')!.units.flatMap((u) => u.lessons);
     const second = COURSE.find((g) => g.grade === '2')!.units.flatMap((u) => u.lessons);
     if (first.length === 0 || second.length === 0) return; // still being written
     const inSecond = { ...newLearner(), profile: { ...newLearner().profile, grade: '2' as const } };
     expect(second.map((x) => x.id)).toContain(todaysLesson(inSecond)!.id);
-    // Every first-grade lesson done: she carries on into second grade.
+    // Every first-grade lesson done: they carry on into second grade.
     let l = newLearner();
     for (const lesson of first) l = recordLesson(l, lesson.id, 4, 4);
     expect(second.map((x) => x.id)).toContain(todaysLesson(l)!.id);

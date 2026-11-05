@@ -3,39 +3,39 @@ import { RANKS } from '@/data/skills';
 import { GradeLevel, ceilingFor } from '@/data/grades';
 import { LADDER, inFastLane } from './skillLadder';
 
-// One number for "how is she doing on this topic", for the ring on a tile.
+// One number for "how are they doing on this topic", for the ring on a tile.
 //
 // The point of the ring is that it is never finished. A padlock chain says
 // "you may not"; a full bar says "you are done here" — and a child who has
 // finished a topic then has no reason to practise it again, which is exactly
-// backwards for maths facts. So at the top of her grade the last segment
+// backwards for maths facts. So at the top of their grade the last segment
 // refills every window instead of sticking at full: there is always a little
 // more to earn, and the topic never closes.
 
 export interface TopicMastery {
   skillId: string;
-  /** Where she is standing. */
+  /** Where they are standing. */
   rung: number;
-  /** The highest rung her grade allows. */
+  /** The highest rung their grade allows. */
   ceiling: number;
   /** 0..1 across the whole in-scope span, for drawing the arc. */
   fill: number;
   /** Index into RANKS — the glyph a child reads instead of a number. */
   stage: number;
-  /** False before she has answered anything here, so the tile can look untouched. */
+  /** False before they have answered anything here, so the tile can look untouched. */
   everPlayed: boolean;
-  /** At the top of her grade: the ring keeps cycling rather than completing. */
+  /** At the top of their grade: the ring keeps cycling rather than completing. */
   atCeiling: boolean;
 }
 
 /**
- * How far through the current rung her sliding window has got.
+ * How far through the current rung their sliding window has got.
  *
  * What a promotion costs is the honest denominator — `LADDER.promoteAt` right
  * answers normally, `LADDER.fastLane` while the fast lane is open — so the
- * segment fills at the rate she is actually earning it.
+ * segment fills at the rate they are actually earning it.
  *
- * At the ceiling there is no promotion to earn. The ladder empties her window
+ * At the ceiling there is no promotion to earn. The ladder empties their window
  * once a whole one is good enough (skillLadder.ts), so the segment counts
  * towards a whole window and stops one short: on the way to that reset it
  * used to reach a full ring a question or two early, the finished state the
@@ -60,7 +60,7 @@ export function masteryFor(
   // At the ceiling there is no promotion to earn, fast or otherwise.
   const partial = windowFraction(state?.recent ?? [], !!state && !atCeiling && inFastLane(state), atCeiling);
 
-  // `ceiling + 1` segments: one per rung, plus the one she is working through.
+  // `ceiling + 1` segments: one per rung, plus the one they are working through.
   // At the ceiling the arc shows only the current window, so it climbs, resets
   // and climbs again — visible progress with no terminal state.
   const fill = atCeiling
@@ -78,21 +78,21 @@ export function masteryFor(
   };
 }
 
-/** Has she outgrown the grade? Two blocked promotions is the parent's cue. */
+/** Have they outgrown the grade? Two blocked promotions is the parent's cue. */
 export function hasOutgrown(skillId: string, progress: UserProgress): boolean {
   return (progress.skills?.[skillId]?.ceilingHits ?? 0) >= 2;
 }
 
-/** What the ladders say she has done, summed across topics — the rewards read this. */
+/** What the ladders say they have done, summed across topics — the rewards read this. */
 export interface LadderProgress {
   /**
-   * How far up her ladders she stands, rungs above the first, summed. A demotion
+   * How far up their ladders they stand, rungs above the first, summed. A demotion
    * and the climb back count once, which is the honest measure of ground gained.
    */
   rungsClimbed: number;
   /**
-   * Topics where she stands on the highest rung her grade allows. A topic whose
-   * grade stops at its first rung (money in first grade) is left out: she would
+   * Topics where they stand on the highest rung their grade allows. A topic whose
+   * grade stops at its first rung (money in first grade) is left out: they would
    * be "at the top" of it before answering a single question.
    */
   topicsAtTop: number;

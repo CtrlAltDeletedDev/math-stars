@@ -7,19 +7,19 @@ export const HER_R = 42;
 /** A unit's sign: a rounded board on the trail. */
 export const SIGN = { w: 112, h: 62 } as const;
 
-/** The pill of progress dots beside her stone. */
+/** The pill of progress dots beside their stone. */
 export const PEBBLE = { r: 6.5, step: 17, chip: 26, pad: 10, h: 34 } as const;
 
 export function pebblePillWidth(slots: number): number {
   return PEBBLE.pad + PEBBLE.chip + slots * PEBBLE.step + PEBBLE.pad - 4;
 }
 
-// A winding line up the page. Never dead centre, so her pebbles always have a
+// A winding line up the page. Never dead centre, so their pebbles always have a
 // side with room, and never so close to an edge that a friend falls off.
 const XS = [0.3, 0.62, 0.76, 0.55, 0.27, 0.43, 0.72, 0.58, 0.3, 0.64, 0.75, 0.46, 0.26];
 
 const GAP = 96; // between two ordinary stones
-const GAP_ABOVE_HERS = 152; // room for her character to stand
+const GAP_ABOVE_HERS = 152; // room for their character to stand
 const GAP_BELOW_HERS = 106;
 const FOG = 170; // trail running on into the cloud above the last stone
 const BOTTOM = 78; // grass below the first stone
@@ -43,13 +43,13 @@ export interface PathLayout {
   trail: [number, number][];
 }
 
-export function layoutPath(kinds: SpotKind[], hers: number): PathLayout {
+export function layoutPath(kinds: SpotKind[], current: number): PathLayout {
   const count = kinds.length;
   // Walk up from the first node, then shift everything so the top is y = 0.
   const raw: number[] = [];
   let y = 0;
   for (let i = 0; i < count; i++) {
-    if (i > 0) y -= i - 1 === hers ? GAP_ABOVE_HERS : i === hers ? GAP_BELOW_HERS : GAP;
+    if (i > 0) y -= i - 1 === current ? GAP_ABOVE_HERS : i === current ? GAP_BELOW_HERS : GAP;
     raw.push(y);
   }
   const top = (raw[count - 1] ?? 0) - FOG;
@@ -57,7 +57,7 @@ export function layoutPath(kinds: SpotKind[], hers: number): PathLayout {
   const spots = raw.map((ry, i): StoneSpot => ({
     x: Math.round(XS[i % XS.length] * PATH_W),
     y: ry - top,
-    r: kinds[i] === 'unit' ? SIGN.h / 2 : i === hers ? HER_R : STONE_R,
+    r: kinds[i] === 'unit' ? SIGN.h / 2 : i === current ? HER_R : STONE_R,
     kind: kinds[i],
   }));
   const lastSpot = spots[count - 1] ?? { x: PATH_W / 2, y: height - BOTTOM, r: STONE_R, kind: 'start' };

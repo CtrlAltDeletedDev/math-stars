@@ -20,14 +20,14 @@ import { Section } from '../grownups/ui';
 import { css } from '../grownups/styles';
 import { GRADE_NAMES, addDays, lastPlayed, trickyFacts, whenSaid } from '../grownups/report';
 
-// The grown-ups screen: how her week went, where she is on each track, which
-// facts she knows, and the few settings worth changing. Plain words, one
+// The grown-ups screen: how their week went, where they are on each track, which
+// facts they know, and the few settings worth changing. Plain words, one
 // font, readable in twenty seconds. Behind a PIN that is asked for on every
 // visit: unlocking lives in this component's state and nowhere else.
 
 const ISSUE_TEXT = {
-  'cannot-save': 'This browser is not keeping her progress. It may be a private window, or storage may be full. Export a backup below, and open the app in a normal browser window.',
-  'unreadable-backed-up': 'Her saved progress on this device could not be read, so it was set aside and she carried on from the old version’s save. If you have a backup, import it below.',
+  'cannot-save': 'This browser is not keeping their progress. It may be a private window, or storage may be full. Export a backup below, and open the app in a normal browser window.',
+  'unreadable-backed-up': 'Their saved progress on this device could not be read, so it was set aside and they carried on from the old version’s save. If you have a backup, import it below.',
 } as const;
 
 function Report({ onPrint }: { onPrint: () => void }) {
@@ -42,7 +42,7 @@ function Report({ onPrint }: { onPrint: () => void }) {
   return (
     <>
       <div>
-        <Link to={ROUTES.home} className="gu-back"><ArrowLeft size={20} strokeWidth={ICON_STROKE} />Back to her path</Link>
+        <Link to={ROUTES.home} className="gu-back"><ArrowLeft size={20} strokeWidth={ICON_STROKE} />Back to their path</Link>
       </div>
       {issue && (
         <div className="gu-warn" role="alert">
@@ -64,22 +64,22 @@ function Report({ onPrint }: { onPrint: () => void }) {
         <Week learner={learner} today={today} />
       </section>
 
-      <h2 className="gu-group" id="gu-course">Her course</h2>
+      <h2 className="gu-group" id="gu-course">Course</h2>
       <p className="gu-groupsub">Lessons that teach: show, do it together, practise, then a short check.</p>
       <section className="gu-sec" aria-labelledby="gu-course" style={{ borderTop: 0, paddingTop: 12 }}>
         <Course learner={learner} />
       </section>
 
       <h2 className="gu-group" id="gu-practice">Facts practice</h2>
-      <p className="gu-groupsub">Her walks on the plus and minus path, and the facts she meets there.</p>
+      <p className="gu-groupsub">Their walks on the plus and minus path, and the facts they meet there.</p>
 
-      <Section title="Where she is on plus and minus" id="gu-where">
+      <Section title="Where they are on plus and minus" id="gu-where">
         <div className="gu-two">
           {TRACKS.map((t) => <TrackBlock key={t} learner={learner} track={t} today={today} />)}
         </div>
       </Section>
 
-      <Section title="Facts she knows" id="gu-facts">
+      <Section title="Facts they know" id="gu-facts">
         <Legend />
         <div className="gu-grids">
           <FactGrid kind="add" facts={learner.facts} quick={quick} />
@@ -106,10 +106,10 @@ function Report({ onPrint }: { onPrint: () => void }) {
             ))}
           </div>
         ) : (
-          <p className="muted">Nothing tricky right now. When she misses a fact more than once it will show here.</p>
+          <p className="muted">Nothing tricky right now. When they miss a fact more than once it will show here.</p>
         )}
         <button type="button" className="gu-btn wide" style={{ marginTop: 14 }} onClick={onPrint}>
-          <Printer size={18} strokeWidth={ICON_STROKE} />Print a worksheet of her tricky ones
+          <Printer size={18} strokeWidth={ICON_STROKE} />Print a worksheet of their tricky ones
         </button>
       </Section>
 

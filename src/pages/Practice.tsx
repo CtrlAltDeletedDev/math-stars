@@ -30,7 +30,7 @@ const PRACTICE_COLORS: [string, string] = ['#7E57C2', '#4527A0'];
 
 interface Props {
   /**
-   * 'mix' is Play across every topic in her grade (or one topic, from a topic
+   * 'mix' is Play across every topic in their grade (or one topic, from a topic
    * screen). 'sums' is Plus & Minus: adding and taking away only, in longer
    * rounds, with no topic names on screen -- just sums.
    */
@@ -55,7 +55,7 @@ export default function Practice({ mode = 'mix' }: Props) {
   const sessionSkill = sums ? null : searchParams.get('skill');
   // The queue and its first question come from one initializer, so a render
   // React repeats in development cannot draw a question twice and put the
-  // round's plan out of step. Back from a lesson Play offered, she carries on
+  // round's plan out of step. Back from a lesson Play offered, they carry on
   // the same sitting, led by the topic the lesson was about.
   const [start] = useState(() => {
     const back = returnFromLesson();
@@ -64,8 +64,8 @@ export default function Practice({ mode = 'mix' }: Props) {
   });
   const queue = start.queue;
   const [pick, setPick] = useState<PracticePick | null>(start.first);
-  // Decided when the question appears, from her answers before it, so the
-  // picture never vanishes mid-question as her own answer updates the window.
+  // Decided when the question appears, from their answers before it, so the
+  // picture never vanishes mid-question as their own answer updates the window.
   const aidMode = useMemo(
     () => (pick ? aidModeFor(progress, pick.skillId, pick.rung) : 'show'),
     [pick], // eslint-disable-line react-hooks/exhaustive-deps
@@ -97,7 +97,7 @@ export default function Practice({ mode = 'mix' }: Props) {
     asked: [] as string[],
   });
 
-  // A lesson offered between questions when she is struggling (see
+  // A lesson offered between questions when they are struggling (see
   // engine/lessonOffer.ts): at most once per topic per sitting.
   const [offer, setOffer] = useState<{ lesson: Lesson; skillId: string } | null>(null);
   const pendingOffer = useRef<{ lesson: Lesson; skillId: string } | null>(null);
@@ -158,9 +158,9 @@ export default function Practice({ mode = 'mix' }: Props) {
     setAnswered((n) => n + 1);
     setStreak((s) => (correct ? s + 1 : 0));
     // Two different questions, deliberately answered differently:
-    //   "did she find it?"  -> what she sees and hears. Finding it on the second
+    //   "did they find it?"  -> what they see and hear. Finding it on the second
     //                          try still deserves the happy sound.
-    //   "did she know it?"  -> what gets scored, requeued and fed to the ladder.
+    //   "did they know it?"  -> what gets scored, requeued and fed to the ladder.
     if (foundIt) {
       if (correct) setCorrectCount((n) => n + 1);
       sounds.playCorrect();
@@ -170,9 +170,9 @@ export default function Practice({ mode = 'mix' }: Props) {
     }
     if (!correct) queue.missed(question, pick.skillId, pick.rung);
 
-    // The option she reached for first is what was scored, so it is the one
-    // whose meaning is worth keeping — not whatever she landed on after the
-    // retry told her it was wrong.
+    // The option they reached for first is what was scored, so it is the one
+    // whose meaning is worth keeping — not whatever they landed on after the
+    // retry told them it was wrong.
     const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
     const { move, skill, newBadges, newStickers, streakBonus, starsAwarded } = recordPracticeAnswer(
       pick.skillId, question.id, correct, pick.rung, { question, chosen: answeredChoice, ms },
@@ -255,9 +255,9 @@ export default function Practice({ mode = 'mix' }: Props) {
 
   function showLesson() {
     if (!offer) return;
-    // "Done" in the lesson comes back to Play, on the same topic if she was on one.
+    // "Done" in the lesson comes back to Play, on the same topic if they were on one.
     // Replacing this screen in history, as the lesson does on the way back,
-    // keeps Back from walking her through Play, the lesson and Play again.
+    // keeps Back from walking them through Play, the lesson and Play again.
     const back = sums ? '/sums' : sessionSkill ? `/practice?skill=${sessionSkill}` : '/practice';
     leaveForLesson(offeredFor.current, offer.skillId);
     navigate(`/learn/${offer.lesson.id}?topic=${offer.skillId}&return=${encodeURIComponent(back)}`, { replace: true });
@@ -408,7 +408,7 @@ export default function Practice({ mode = 'mix' }: Props) {
         </div>
 
         {/* Which skill this question came from. Plus & Minus is just sums:
-            the sign on the question is all she needs to read. */}
+            the sign on the question is all they need to read. */}
         {!sums && (
           <div style={{ textAlign: 'center', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
             {skill

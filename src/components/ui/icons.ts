@@ -3,7 +3,7 @@
 // phone, and some (↶, ✕) were too thin to read at a glance.
 //
 // Thicker strokes than Lucide's default 2: these are read by a six-year-old,
-// often at arm's length. Content stays emoji on purpose — her character, topic
+// often at arm's length. Content stays emoji on purpose — their character, topic
 // pictures and the apples in a story are things to look at, not controls.
 export const ICON_STROKE = 2.75;
 

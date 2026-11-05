@@ -329,7 +329,7 @@ function search<S>(from: S, to: S, moves: (s: S) => S[], limit = 5000): boolean 
   return frontier.some((s) => stable(s) === want);
 }
 
-/** null when her taps can turn `from` into exactly `to`; otherwise why not. */
+/** null when their taps can turn `from` into exactly `to`; otherwise why not. */
 function reach(from: ModelState, to: ModelState): string | null {
   if (from.model !== to.model) return 'model changed';
   switch (from.model) {
@@ -385,7 +385,7 @@ function reach(from: ModelState, to: ModelState): string | null {
       return stable(s) === stable(to) ? null : `got ${stable(s)}`;
     }
     default:
-      return `she cannot change a ${from.model}`;
+      return `they cannot change a ${from.model}`;
   }
 }
 

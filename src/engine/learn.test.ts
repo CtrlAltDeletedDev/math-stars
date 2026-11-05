@@ -99,7 +99,7 @@ describe('"try" steps', () => {
 
   it('exist in every interactive lesson', () => {
     for (const l of INTERACTIVE_LESSONS) {
-      expect(l.steps.some((s) => s.kind === 'try'), `${l.id} never lets her try`).toBe(true);
+      expect(l.steps.some((s) => s.kind === 'try'), `${l.id} never lets them try`).toBe(true);
     }
   });
 
@@ -188,17 +188,17 @@ describe('finding a lesson', () => {
     }
   });
 
-  it('keeps lessons above her grade out of her topic', () => {
+  it('keeps lessons above their grade out of their topic', () => {
     // Kindergarten's taking-away ceiling is rung 3; "hop back" teaches rung 4.
     expect(lessonsFor('taking-away', ceilingFor('taking-away', 'K')).map((l) => l.id)).not.toContain('hop-back');
   });
 
-  it('puts the lesson for her commonest mistake first', () => {
+  it('puts the lesson for their commonest mistake first', () => {
     const l = recommendedLesson('stories', 9, 9, {}, 'added-story-numbers');
     expect(l?.helpsWith).toContain('added-story-numbers');
   });
 
-  it('otherwise suggests one she has not done yet', () => {
+  it('otherwise suggests one they have not done yet', () => {
     const first = recommendedLesson('stories', 9, 4, {});
     const next = recommendedLesson('stories', 9, 4, { [first!.id]: '2026-10-12' });
     expect(next!.id).not.toBe(first!.id);
@@ -235,7 +235,7 @@ describe('Number Tricks lessons', () => {
   });
 
   it('only claims to help with mistakes the topic\'s questions can actually show', () => {
-    // A tag no question in the topic carries could never be her commonest
+    // A tag no question in the topic carries could never be their commonest
     // mistake there, so a lesson claiming it would never be suggested.
     const bad: string[] = [];
     for (const l of ALL_LESSONS) {

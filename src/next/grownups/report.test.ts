@@ -103,8 +103,8 @@ describe('weekSummary', () => {
   });
 });
 
-describe('where she is', () => {
-  it('counts steps within her grade, recent accuracy and typical speed', () => {
+describe('where they are', () => {
+  it('counts steps within their grade, recent accuracy and typical speed', () => {
     const l = learner((x) => {
       x.tracks.plus = { stage: 4, recent: [true, true, false, true, true, true, false, true, true, true], ceilingHits: 0, passed: {} };
       x.facts['add-6+3'] = fact(3, 3, { recent: [{ day: ago(1), ms: 3000 }, { day: ago(0), ms: 2000 }] });
@@ -123,7 +123,7 @@ describe('where she is', () => {
     expect(r.next).toEqual({ label: 'Ten and some more', example: '10 + 4' });
   });
 
-  it('says she may be ready for the next grade only at the top, twice', () => {
+  it('says they may be ready for the next grade only at the top, twice', () => {
     const l = learner((x) => { x.tracks.minus = { stage: 9, recent: [], ceilingHits: 2, passed: {} }; });
     expect(trackReport(l, 'minus', TODAY).ready).toBe(true);
     l.tracks.minus.ceilingHits = 1;
@@ -157,7 +157,7 @@ describe('the fact grids', () => {
     expect(ids.size).toBe(121);
   });
 
-  it('describes a cell for the popover, and hides an old wrong answer once she knows it', () => {
+  it('describes a cell for the popover, and hides an old wrong answer once they know it', () => {
     const facts = {
       'sub-9-3': fact(4, 2, { said: '12', tag: 'wrong-operation' as const, recent: [{ day: TODAY, ms: 4000 }, { day: TODAY, ms: 6000 }] }),
       'add-2+2': { ...fact(5, 4, { said: '5' }), box: 3 },
@@ -193,7 +193,7 @@ describe('trickyFacts', () => {
     expect(trickyFacts(newLearner(), 6)).toEqual([]);
   });
 
-  it('says what she said and an idea from the kind of mistake', () => {
+  it('says what they said and an idea from the kind of mistake', () => {
     const [first, , third, fourth, fifth] = trickyFacts(l, 6);
     expect(first).toMatchObject({ text: '9 − 3', said: '12', idea: 'Point at the sign together first' });
     expect(third.idea).toBe('Count back from 7 on fingers: 6, 5, 4');
@@ -203,7 +203,7 @@ describe('trickyFacts', () => {
 });
 
 describe('the worksheet', () => {
-  it('has 20 different sums, her tricky ones among them, each with the right answer', () => {
+  it('has 20 different sums, their tricky ones among them, each with the right answer', () => {
     const l = learner((x) => {
       x.tracks.plus.stage = 4;
       x.tracks.minus.stage = 3;
@@ -248,8 +248,8 @@ const FIXTURE: GradeCourse[] = [
 ];
 const rec = (done: string | null, best = 1, tries = 1) => ({ tries, best, done, last: done ?? TODAY });
 
-describe('her course', () => {
-  it('marks each lesson passed, already known from her path, started or not yet', () => {
+describe('their course', () => {
+  it('marks each lesson passed, already known from their path, started or not yet', () => {
     const l = learner((x) => {
       x.tracks.plus.stage = 3;
       x.lessons['fx-make-ten'] = rec(ago(2), 0.75, 2);
@@ -264,27 +264,27 @@ describe('her course', () => {
     expect(lessonRow(l, both.lesson).status).toEqual({ kind: 'placed' });
   });
 
-  it('calls a passed lesson passed even when her path would also cover it', () => {
+  it('calls a passed lesson passed even when their path would also cover it', () => {
     const l = learner((x) => { x.tracks.plus.stage = 5; x.lessons['fx-plus-one'] = rec(ago(1)); });
     expect(lessonRow(l, FIXTURE[0].units[0].lessons[0]).status).toEqual({ kind: 'passed', on: ago(1) });
   });
 
-  it('shows no best score before her first check', () => {
+  it('shows no best score before their first check', () => {
     const l = learner((x) => { x.lessons['fx-clock'] = { tries: 0, best: 0, done: null, last: TODAY }; });
     expect(lessonRow(l, FIXTURE[0].units[2].lessons[0])).toMatchObject({ status: { kind: 'started' }, best: null, tries: 0 });
   });
 
-  it('counts done per unit and grade, leaves out units with no lessons, and knows her grade', () => {
+  it('counts done per unit and grade, leaves out units with no lessons, and knows their grade', () => {
     const l = learner((x) => { x.tracks.plus.stage = 1; x.lessons['fx-make-ten'] = rec(ago(0)); });
     const [first, second] = courseReport(l, FIXTURE);
     expect(first.units.map((u) => [u.unit.id, u.done, u.total])).toEqual([['u-add', 2, 4], ['u-clock', 0, 1]]);
-    expect([first.done, first.total, first.place]).toEqual([2, 5, 'hers']);
+    expect([first.done, first.total, first.place]).toEqual([2, 5, 'current']);
     expect([second.units.length, second.total, second.place]).toEqual([0, 0, 'ahead']);
     l.profile.grade = '2';
-    expect(courseReport(l, FIXTURE).map((g) => g.place)).toEqual(['earlier', 'hers']);
+    expect(courseReport(l, FIXTURE).map((g) => g.place)).toEqual(['earlier', 'current']);
   });
 
-  it('suggests the next grade once four in five of her grade are done', () => {
+  it('suggests the next grade once four in five of their grade are done', () => {
     const l = learner((x) => {
       x.tracks.plus.stage = 2;
       x.tracks.minus.stage = 2;

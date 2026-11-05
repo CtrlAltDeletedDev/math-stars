@@ -5,7 +5,7 @@ import { forgetLessonVisit, leaveForLesson, lessonToOffer, REPEATS_TO_OFFER, ret
 import { daysAgoString, todayString } from './dates';
 
 // When Play stops to offer a lesson. A demotion used to happen in silence, and
-// the lesson for the mistake she kept making sat two taps away on a screen a
+// the lesson for the mistake they kept making sat two taps away on a screen a
 // child mid-round never opens.
 
 const grade1 = (lessonsDone: Record<string, string> = {}): UserProgress => ({
@@ -14,12 +14,12 @@ const grade1 = (lessonsDone: Record<string, string> = {}): UserProgress => ({
 const none = new Set<string>();
 
 describe('offering a lesson in Play', () => {
-  it('offers one when a topic moves her down', () => {
+  it('offers one when a topic moves them down', () => {
     const lesson = lessonToOffer(grade1(), { skillId: 'stories', move: 'demoted', rung: 4, tagCountThisRound: 0 }, none);
     expect(lesson?.id).toBe('some-and-the-rest');
   });
 
-  it('picks the lesson for the mistake she kept making, if there is one', () => {
+  it('picks the lesson for the mistake they kept making, if there is one', () => {
     const lesson = lessonToOffer(grade1(), {
       skillId: 'taking-away', move: 'demoted', rung: 3, tagCountThisRound: 0, topTagThisRound: 'off-by-one',
     }, none);
@@ -49,18 +49,18 @@ describe('offering a lesson in Play', () => {
     expect(lessonToOffer(grade1(), struggle, new Set(['adding']))).not.toBeNull();
   });
 
-  it('never offers a lesson above her grade', () => {
+  it('never offers a lesson above their grade', () => {
     // Kindergarten's taking-away tops out at rung 3; "hop back" teaches rung 4.
     const k = { ...grade1(), gradeLevel: 'K' as const };
     const lesson = lessonToOffer(k, { skillId: 'taking-away', move: 'demoted', rung: 3, tagCountThisRound: 0, topTagThisRound: 'off-by-one' }, none);
     expect(lesson?.id).not.toBe('hop-back');
   });
 
-  it('does not stop her for a promotion', () => {
+  it('does not stop them for a promotion', () => {
     expect(lessonToOffer(grade1(), { skillId: 'stories', move: 'promoted', rung: 5, tagCountThisRound: 0 }, none)).toBeNull();
   });
 
-  it('does not offer a lesson she has already watched today', () => {
+  it('does not offer a lesson they have already watched today', () => {
     const struggle = { skillId: 'taking-away', move: 'demoted' as const, rung: 3, tagCountThisRound: 0, topTagThisRound: 'off-by-one' as const };
     expect(lessonToOffer(grade1({ 'hop-back': todayString() }), struggle, none)?.id).not.toBe('hop-back');
     expect(lessonToOffer(grade1({ 'hop-back': daysAgoString(3) }), struggle, none)?.id).toBe('hop-back');

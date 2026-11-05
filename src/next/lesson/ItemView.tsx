@@ -14,8 +14,8 @@ import '../walk/walk.css';
 // choice, or by doing something with a model (set the clock, build 34).
 //
 // The same two rules as the walk:
-//   - her FIRST answer is what is recorded, right or wrong (onFirst)
-//   - she always gets to find it: a wrong first answer is amber, the hint is
+//   - their FIRST answer is what is recorded, right or wrong (onFirst)
+//   - they always get to find it: a wrong first answer is amber, the hint is
 //     said and the picture comes up; a second wrong answer shows the answer.
 // In the check there is no picture and no hint, and a wrong answer shows the
 // right one straight away.
@@ -27,11 +27,16 @@ interface Props {
   support: Support;
   /** No hints, no second try: the check. */
   strict?: boolean;
+  /**
+   * No right or wrong at all: every answer gets the same friendly "Okay!" and
+   * moves on. For finding the child's level, which must not feel like failing.
+   */
+  neutral?: boolean;
   readAloud: boolean;
   sounds: boolean;
-  /** Her first answer: what is recorded. */
+  /** Their first answer: what is recorded. */
   onFirst: (correct: boolean, typed: string | undefined, ms: number) => void;
-  /** She has found it (or been shown it): move on. */
+  /** They have found it (or been shown it): move on. */
   onDone: () => void;
 }
 
@@ -39,13 +44,14 @@ const RIGHT_MS = 900;
 const WOBBLE_MS = 1300;
 const REVEAL_MS = 2400;
 
-export default function ItemView({ item, support, strict = false, readAloud, sounds, onFirst, onDone }: Props) {
+export default function ItemView({ item, support, strict = false, neutral = false, readAloud, sounds, onFirst, onDone }: Props) {
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('ask');
   const [picked, setPicked] = useState<string | null>(null);
   const [tried, setTried] = useState<string[]>([]);
   const [model, setModel] = useState<ModelState | null>(typeof item.input === 'object' && 'model' in item.input ? item.input.model : null);
   const [showPicture, setShowPicture] = useState(support === 'picture');
+  const [neutralDone, setNeutralDone] = useState(false);
   const tries = useRef(0);
   const shownAt = useRef(performance.now());
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -63,6 +69,13 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
     const first = tries.current === 0;
     tries.current += 1;
     if (first) onFirst(correct, answerText, performance.now() - shownAt.current);
+    if (neutral) {
+      setPhase('reveal');
+      setNeutralDone(true);
+      if (sounds) sound.key();
+      after(650, onDone);
+      return;
+    }
     if (correct) {
       setPhase('right');
       if (sounds) sound.right();
@@ -95,7 +108,7 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
             className={phase === 'wobble' ? 'nx-wobble' : undefined}
             style={{ fontFamily: KID_FONT, fontWeight: 700, fontSize: promptSize(item.prompt), textAlign: 'center', lineHeight: 1.15 }}
           >
-            {input === 'number' ? <NumberPrompt prompt={item.prompt} typed={phase === 'reveal' ? item.answer : typed} phase={phase} /> : item.prompt}
+            {input === 'number' ? <NumberPrompt prompt={item.prompt} typed={phase === 'reveal' && !neutralDone ? item.answer : typed} phase={neutralDone ? 'ask' : phase} /> : item.prompt}
           </div>
           <button aria-label="Hear it again" onClick={() => speak(item.say)} style={roundBtn}>
             <Volume2 size={24} strokeWidth={ICON_STROKE} color={C.inkSoft} />
@@ -117,9 +130,10 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
         {(phase === 'wobble' || phase === 'retry') && item.hint && !strict && (
           <div className="nx-rise" style={bubble}>{item.hint}</div>
         )}
-        {phase === 'reveal' && (
+        {phase === 'reveal' && !neutralDone && (
           <div className="nx-rise" style={{ ...bubble, color: C.goDark }}>{revealLine(item)}</div>
         )}
+        {neutralDone && <div className="nx-rise" style={bubble}>Okay!</div>}
       </div>
 
       {input === 'number' && (
@@ -138,7 +152,8 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
         <div style={{ display: 'grid', gridTemplateColumns: input.choices.length === 3 ? 'repeat(3, 1fr)' : '1fr 1fr', gap: 12, width: '100%', maxWidth: 560, margin: '0 auto' }}>
           {input.choices.map((c) => {
             const isRight = c.value === item.answer;
-            const state = phase === 'reveal' || phase === 'right' ? (isRight ? 'right' : c.value === picked ? 'wrong' : 'idle')
+            const state = neutralDone ? 'idle'
+              : phase === 'reveal' || phase === 'right' ? (isRight ? 'right' : c.value === picked ? 'wrong' : 'idle')
               : tried.includes(c.value) ? 'tried' : 'idle';
             return (
               <button
@@ -198,7 +213,7 @@ function revealLine(item: Item): string {
   return 'Like this!';
 }
 
-/** "8 + 5 = ?" draws the ? as her answer box; other prompts show the box below. */
+/** "8 + 5 = ?" draws the ? as the answer box; other prompts show the box below. */
 function NumberPrompt({ prompt, typed, phase }: { prompt: string; typed: string; phase: Phase }) {
   const box = (
     <span

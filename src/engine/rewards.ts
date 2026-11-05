@@ -5,20 +5,20 @@ import { STICKERS } from '@/data/stickers';
 import { passedLevel } from './scoring';
 import { ladderProgress } from './mastery';
 
-// What she has earned, decided from progress alone so it can be tested.
+// What they have earned, decided from progress alone so it can be tested.
 //
 // Badges and stickers used to read only level and category completion. Play —
-// the big button on Home, and the path the app steers her down — passes no
+// the big button on Home, and the path the app steers them down — passes no
 // levels, so a child who lived there could level up every topic and never see
 // "Level Up!", "Category Champ!" or even the "Play your first game" sticker.
 // Each of those now also counts the same progress measured on the ladders.
 
 /**
- * How much of the catalogue she has passed, counted against the CATALOGUE.
+ * How much of the catalogue they have passed, counted against the CATALOGUE.
  *
  * This used to count `every(l => l.status === 'completed')` over the *saved*
  * levels, so a category whose saved record was missing a level counted as
- * complete — awarding "Category Champ!" for a category she could not finish.
+ * complete — awarding "Category Champ!" for a category they could not finish.
  * Counting against CATEGORIES means a level added later correctly makes the
  * category incomplete again.
  */

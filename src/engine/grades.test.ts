@@ -81,7 +81,7 @@ describe('grade bands', () => {
       const dropped = lower.filter((id) => !higher.includes(id));
       expect(dropped, `${ORDER[i]} topics missing from ${ORDER[i + 1]}`).toEqual([]);
 
-      // And a ceiling must never fall when she moves up a year.
+      // And a ceiling must never fall when they move up a year.
       const lowered = lower.filter((id) => ceilingFor(id, ORDER[i + 1]) < ceilingFor(id, ORDER[i]));
       expect(lowered, `ceiling drops going ${ORDER[i]} -> ${ORDER[i + 1]}`).toEqual([]);
     }

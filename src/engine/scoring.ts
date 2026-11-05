@@ -34,7 +34,7 @@ export function updateStreak(progress: UserProgress): UserProgress {
 
 
 /**
- * Has she passed this level?
+ * Have they passed this level?
  *
  * Derived from `bestScore` rather than stored, so it cannot drift from the score
  * that produced it, and a level with no saved state simply reads as not-yet-passed

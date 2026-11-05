@@ -368,7 +368,7 @@ function tenMoreLess(pictured: boolean) {
 const tenMoreTenLess: Lesson = {
   id: 'tens-ten-more-ten-less',
   title: '10 more, 10 less',
-  goal: 'Find 10 more and 10 less than a two-digit number in her head, without counting by ones.',
+  goal: 'Find 10 more and 10 less than a two-digit number in their head, without counting by ones.',
   standard: '1.NBT.5',
   emoji: '🔟',
   teach: [

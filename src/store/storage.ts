@@ -19,7 +19,7 @@ const LADDER_RUNGS_INSERTED_IN_V4 = 2;
 /**
  * v7 inserted the fact-strategy rungs (count on, +10, doubles, +9, make ten and
  * their take-away mirrors) into the middle of the adding and taking-away
- * ladders. Index = her saved v6 rung, value = the same rung in v7. Every rung
+ * ladders. Index = their saved v6 rung, value = the same rung in v7. Every rung
  * that existed before keeps its meaning; only its index moves.
  */
 export const RUNG_REMAP_V7: Record<string, readonly number[]> = {
@@ -37,7 +37,7 @@ const OLDEST_MIGRATABLE = 2;
 //
 // Anything from OLDEST_MIGRATABLE upward is *migrated*, not rejected. This used
 // to hard-reject any version !== 2, which meant the first schema change would
-// have silently wiped every star she had earned.
+// have silently wiped every star they had earned.
 
 /** A save has to be shaped roughly right before we trust any of it. */
 function looksLikeProgress(p: UserProgress): boolean {
@@ -68,9 +68,9 @@ function looksLikeProgress(p: UserProgress): boolean {
  * (`[...prev.recent, wasCorrect]`) and on the Parent screen (`recent.length`).
  * The import path takes an arbitrary parent-chosen file, so that was reachable
  * without any disk corruption -- and it crashed *behind* the screen that says
- * her stars are safe.
+ * their stars are safe.
  *
- * Repair what can be repaired, because her rung is the valuable part and a
+ * Repair what can be repaired, because their rung is the valuable part and a
  * damaged window is not worth losing it over. Drop a skill the catalogue does
  * not have: a renamed or removed id could never promote (its ladder top reads
  * as 0) and never recorded a ceiling hit, so it sat frozen and silent forever.
@@ -117,7 +117,7 @@ function sanitizeSkills(skills: Record<string, SkillState>): Record<string, Skil
  * Counts only, for skills that exist, for tags that exist.
  *
  * An imported file could otherwise put anything in here, and this feeds a
- * sentence a parent is meant to act on -- "8 of her last 10 subtraction
+ * sentence a parent is meant to act on -- "8 of their last 10 subtraction
  * mistakes were adding instead". A wrong number there is worse than no
  * sentence at all.
  */
@@ -176,9 +176,9 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   if (!parsed.dailyQuestionsDate) parsed.dailyQuestionsDate = '';
   if (parsed.dailyQuestionsCount === undefined) parsed.dailyQuestionsCount = 0;
 
-  // v2 → v3: adaptive practice. Nothing to convert; she simply starts at the
-  // bottom of each ladder and climbs, which happens quickly for anything she
-  // already knows.
+  // v2 → v3: adaptive practice. Nothing to convert; they simply start at the
+  // bottom of each ladder and climbs, which happens quickly for anything they
+  // already know.
   if (!parsed.skills) parsed.skills = {};
   if (parsed.practiceQuestionsAnswered === undefined) parsed.practiceQuestionsAnswered = 0;
 
@@ -217,13 +217,13 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
   }
   if (parsed.gradeLevel === undefined) parsed.gradeLevel = null;
 
-  // v5 → v6: what her wrong answers meant. Purely additive -- there is nothing
-  // to convert, she simply starts accumulating from here.
+  // v5 → v6: what their wrong answers meant. Purely additive -- there is nothing
+  // to convert, they simply start accumulating from here.
   if (!parsed.errorPatterns || typeof parsed.errorPatterns !== 'object') {
     parsed.errorPatterns = {};
   }
 
-  // Lessons she has finished. Additive, like errorPatterns: an older save just
+  // Lessons they have finished. Additive, like errorPatterns: an older save just
   // hasn't finished any yet.
   if (!parsed.lessonsDone || typeof parsed.lessonsDone !== 'object' || Array.isArray(parsed.lessonsDone)) {
     parsed.lessonsDone = {};
@@ -249,11 +249,11 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
  *    any level added to an existing category showed a padlock forever. What
  *    exists is now read from the catalogue; saved state only records what
  *    happened.
- * 2. The record goes sparse: entries for levels she never attempted carried no
+ * 2. The record goes sparse: entries for levels they never attempted carried no
  *    information beyond that vestigial status, so they are dropped.
- * 3. The ladder is seeded from her level history. This is the one-time repair
+ * 3. The ladder is seeded from their level history. This is the one-time repair
  *    of the split that let a child three-star every level in a category and
- *    still be handed rung 0 the moment she opened Practice.
+ *    still be handed rung 0 the moment they opened Practice.
  */
 function migrateToV5(parsed: UserProgress): void {
   const legacy = parsed as UserProgress & {
@@ -265,7 +265,7 @@ function migrateToV5(parsed: UserProgress): void {
     for (const [levelId, state] of Object.entries(cat.levels)) {
       if (!state || typeof state !== 'object') { delete cat.levels[levelId]; continue; }
 
-      // Keep "she passed this" alive now that it is derived from the score.
+      // Keep "they passed this" alive now that it is derived from the score.
       if (state.status === 'completed' && (state.bestScore ?? 0) < GAME_CONFIG.passThreshold) {
         state.bestScore = GAME_CONFIG.passThreshold;
       }
@@ -285,15 +285,15 @@ function migrateToV5(parsed: UserProgress): void {
 }
 
 /**
- * Give each ladder the credit her level play already earned.
+ * Give each ladder the credit their level play already earned.
  *
- * Takes the highest rung she has demonstrably passed in each topic and lifts the
+ * Takes the highest rung they have demonstrably passed in each topic and lifts the
  * skill to it. Never demotes: a ladder that is already higher stays where it is.
  *
- * A lucky three-star can over-promote her. That is deliberate and safe — the
- * window is cleared, so the very next eight answers can walk her back down under
+ * A lucky three-star can over-promote them. That is deliberate and safe — the
+ * window is cleared, so the very next eight answers can walk them back down under
  * the ordinary 3-of-8 demotion rule. Seeding high and letting evidence correct it
- * is much kinder than making her re-climb ground she has already covered.
+ * is much kinder than making them re-climb ground they have already covered.
  */
 function seedLaddersFromLevels(parsed: UserProgress): void {
   const passed = (levelId: string): boolean => {
@@ -324,7 +324,7 @@ function seedLaddersFromLevels(parsed: UserProgress): void {
  *
  * Returns the progress, or a reason it could not be read. An unreadable save is
  * NEVER silently dropped: it is copied to a backup key first, because the caller
- * will otherwise start from a blank profile and overwrite the original on her
+ * will otherwise start from a blank profile and overwrite the original on their
  * very next answer — turning a recoverable glitch into every star gone.
  */
 export type LoadResult =
@@ -400,7 +400,7 @@ export function buildInitialProgress(): UserProgress {
     longestStreak: 0,
     lastPlayedDate: '',
     // Empty on purpose. A CategoryProgress is created on first play; nothing
-    // reads this map to decide what she is allowed to open.
+    // reads this map to decide what they are allowed to open.
     categories: {} as Record<string, CategoryProgress>,
     srsCards: {},
     characterId: null,

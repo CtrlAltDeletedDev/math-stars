@@ -17,7 +17,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const SUM = /^(\d+) ([+-]) (\d+) = \?$/;
 
 describe('the path', () => {
-  it('is the old ladder, stone for stone, so her place moves straight across', () => {
+  it('is the old ladder, stone for stone, so their place moves straight across', () => {
     for (const t of TRACKS) {
       expect(STAGES[t].map((s) => s.label)).toEqual(SKILLS_BY_ID.get(OLD[t])!.rungs.map((r) => r.label));
     }
@@ -65,13 +65,13 @@ describe('moving along a track', () => {
     expect(r.passed[0]).toBe('2026-11-05');
   });
 
-  it('needs 6 of 8 once a track has moved her back', () => {
+  it('needs 6 of 8 once a track has moved them back', () => {
     const placed: TrackState = { ...newTrack(), stage: 3, demotions: 1 };
     expect(feed(placed, Array(FAST_LANE).fill(true)).stage).toBe(3);
     expect(feed(placed, [true, true, false, true, true, false, true, true]).stage).toBe(4);
   });
 
-  it('moves her back after 3 or fewer of 8, and closes the fast lane', () => {
+  it('moves them back after 3 or fewer of 8, and closes the fast lane', () => {
     const r = feed({ ...newTrack(), stage: 3 }, [false, true, false, false, true, false, true, false]);
     expect(r.stage).toBe(2);
     expect(r.demotions).toBe(1);
@@ -84,7 +84,7 @@ describe('moving along a track', () => {
     expect(step(s, true, null as unknown as number).state).toBe(s);
   });
 
-  it('holds her at her grade, and counts it only when the grade is what stopped her', () => {
+  it('holds them at their grade, and counts it only when the grade is what stopped them', () => {
     const top: TrackState = { ...newTrack(), stage: 9, demotions: 1 };
     const blocked = feed(top, Array(WINDOW).fill(true), 9);
     expect(blocked.stage).toBe(9);
@@ -121,7 +121,7 @@ describe('fact records', () => {
     expect(recordFact(undefined, { correct: true, ms: 120_000, now, day: 'd' }).recent).toEqual([]);
   });
 
-  it('measures quick against her own +1 facts', () => {
+  it('measures quick against their own +1 facts', () => {
     expect(quickMs({})).toBe(4500);
     const slowTapper = Object.fromEntries(['add-3+1', 'add-5+1', 'sub-7-1'].map((id) => [id,
       { seen: 1, right: 1, box: 1, due: 0, recent: [{ day: 'd', ms: 4000 }] }]));
@@ -153,7 +153,7 @@ function learnerAt(plus: number, minus: number, extra: Partial<Learner> = {}): L
 }
 
 describe('applying an answer', () => {
-  it('moves the window only for a sum from the stone she stands on', () => {
+  it('moves the window only for a sum from the stone they stand on', () => {
     const l = learnerAt(3, 3);
     const fresh = applyAnswer(l, { track: 'plus', stage: 3, factId: 'add-9+2', correct: true }).learner;
     expect(fresh.tracks.plus.recent).toEqual([true]);
@@ -190,7 +190,7 @@ describe('a walk', () => {
     }
   });
 
-  it('is plain sums, mostly from where she stands, with a look back every fourth', () => {
+  it('is plain sums, mostly from where they stand, with a look back every fourth', () => {
     const w = new Walk(learnerAt(6, 6), 20);
     const items = Array.from({ length: 20 }, () => w.next()!);
     expect(w.next()).toBeNull();
@@ -241,9 +241,9 @@ describe('a walk', () => {
 });
 
 describe('a child the path has to find', () => {
-  // She knows everything up to a stone and mostly not beyond it. Starting from
-  // the first stone, the path should find her level fast and then stay there,
-  // rather than racing past it or leaving her below it.
+  // They know everything up to a stone and mostly not beyond it. Starting from
+  // the first stone, the path should find their level fast and then stay there,
+  // rather than racing past it or leaving their below it.
   function simulate(knowsUpTo: number, walks: number) {
     let l = newLearner();
     let firstReached = -1;
@@ -264,7 +264,7 @@ describe('a child the path has to find', () => {
     return { l, firstReached };
   }
 
-  it('reaches her level within a few walks and settles there', () => {
+  it('reaches their level within a few walks and settles there', () => {
     // Seeded, so the same ten children are simulated every run: a random
     // test that fails one run in fifty is worse than none.
     let seed = 20261105;
@@ -279,7 +279,7 @@ describe('a child the path has to find', () => {
     const reached: number[] = [];
     for (let run = 0; run < 10; run++) {
       const { l, firstReached } = simulate(5, 15);
-      expect(firstReached, 'found her level').toBeGreaterThan(0);
+      expect(firstReached, 'found their level').toBeGreaterThan(0);
       reached.push(firstReached);
       // No child, however unlucky, is left climbing for most of two weeks.
       expect(firstReached).toBeLessThanOrEqual(120);
@@ -299,7 +299,7 @@ describe('a child the path has to find', () => {
   });
 });
 
-describe('bringing her over from the old app', () => {
+describe('bringing them over from the old app', () => {
   const old = () => {
     const p = buildInitialProgress();
     p.version = 7;
@@ -317,7 +317,7 @@ describe('bringing her over from the old app', () => {
     return p;
   };
 
-  it('keeps her place on both tracks, by meaning', () => {
+  it('keeps their place on both tracks, by meaning', () => {
     const l = migrateLegacy(old());
     expect(STAGES.plus[l.tracks.plus.stage].label).toBe('Adding within 10');
     expect(STAGES.minus[l.tracks.minus.stage].label).toBe('Counting back 1, 2 or 3');
@@ -328,7 +328,7 @@ describe('bringing her over from the old app', () => {
     expect([...passedStones(l).plus].sort()).toEqual([0, 1, 2, 3]);
   });
 
-  it('carries the facts she has been practising, and nothing that is not a sum', () => {
+  it('carries the facts they have been practising, and nothing that is not a sum', () => {
     const l = migrateLegacy(old());
     expect(Object.keys(l.facts).sort()).toEqual(['add-12+3', 'add-3+4', 'add-6+6', 'sub-9-4']);
     expect(l.facts['add-6+6'].box).toBe(5);
@@ -336,7 +336,7 @@ describe('bringing her over from the old app', () => {
     expect(factIdFromLegacy('sub-3-9')).toBeNull();
   });
 
-  it('carries her character, grade, streak and the days she played', () => {
+  it('carries their character, grade, streak and the days they played', () => {
     const l = migrateLegacy(old());
     expect(l.profile).toMatchObject({ characterId: 'cat', grade: '1', readAloud: true });
     expect(l.streak).toEqual({ current: 3, best: 8, last: '2026-11-04' });

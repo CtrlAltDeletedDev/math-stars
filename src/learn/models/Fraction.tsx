@@ -5,7 +5,7 @@ import { partWeights, shadedCount, shadedOf, toggleShade } from './logic-b';
 
 // A circle cut like a pizza, or a bar cut into columns. Equal parts are
 // exactly equal; `unequal` cuts are clearly not, so "is this cut in halves?"
-// is something she can see. Shaded parts fill warm orange.
+// is something they can see. Shaded parts fill warm orange.
 
 const SHADE = '#F6A43C';
 const SHADE_EDGE = '#C9781A';

@@ -1,8 +1,8 @@
 import { Check } from 'lucide-react';
 import { C } from '../theme';
 
-// Today's sun: fills a slice with each walk, full at her daily goal. A small
-// row of dots beside it counts the walks, so "one more" is something she can see.
+// Today's sun: fills a slice with each walk, full at their daily goal. A small
+// row of dots beside it counts the walks, so "one more" is something they can see.
 
 const SIZE = 48;
 

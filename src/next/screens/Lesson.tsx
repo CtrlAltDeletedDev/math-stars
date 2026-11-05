@@ -19,11 +19,11 @@ import '../walk/walk.css';
 
 // One lesson, card by card: warm-up, show, do, practice, check.
 //
-// Teaching cards wait for her: a "show" card moves on when she taps the arrow
-// (the guide has said its line); a "do" card moves on once she has done the
-// thing. If she is stuck, the bulb says a hint for what she has made so far,
-// and after two hints "Show me how" does it for her -- she should never be
-// stuck on a screen she cannot read her way out of.
+// Teaching cards wait for them: a "show" card moves on when they tap the arrow
+// (the guide has said its line); a "do" card moves on once they have done the
+// thing. If they are stuck, the bulb says a hint for what they have made so far,
+// and after two hints "Show me how" does it for them -- they should never be
+// stuck on a screen they cannot read their way out of.
 
 const STUCK_MS = 25_000;
 
@@ -87,7 +87,7 @@ function LessonRun({ lessonId }: { lessonId: string }) {
             setAt(1);
           }}
         />
-        {/* Testing out: what she already knows should never hold her back.
+        {/* Testing out: what they already know should never hold them back.
             Straight to the check; pass it and the stone fills like any other. */}
         <BigButton
           label="I know this!"
@@ -208,7 +208,7 @@ function DoCard({ step, accent, readAloud, sounds, onNext }: { step: DoStep; acc
 
   useEffect(() => { if (readAloud) speak(step.say); }, [step, readAloud]);
 
-  // Stuck for a while: offer the hint without her asking.
+  // Stuck for a while: offer the hint without their asking.
   useEffect(() => {
     if (won) return;
     const id = setInterval(() => {

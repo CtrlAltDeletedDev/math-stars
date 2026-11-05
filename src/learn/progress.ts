@@ -5,12 +5,12 @@ import { classifyTyped } from '@/core/mistakes';
 import { LESSONS, LESSON_BY_ID, gradeAtLeast, gradeOfUnit, unitOf } from './course';
 import { Item, Lesson } from './types';
 
-// Where she is in the course, and recording what she does in a lesson.
+// Where they are in the course, and recording what they do in a lesson.
 //
-// Nothing is locked: any lesson can be opened from her path. "Today's lesson"
-// is just the first one, in course order, that she has not done yet -- done
-// meaning she passed its check, or her plus/minus path already puts her past
-// it (`placedBy`), so she is not re-taught "+1" from scratch.
+// Nothing is locked: any lesson can be opened from their path. "Today's lesson"
+// is just the first one, in course order, that they have not done yet -- done
+// meaning they passed its check, or their plus/minus path already puts them past
+// it (`placedBy`), so they are not re-taught "+1" from scratch.
 
 export const PASS = 0.75;
 
@@ -23,10 +23,10 @@ export function lessonDone(l: Learner, lesson: Lesson): boolean {
 
 /**
  * Today's lesson: a grown-up's pin, else the first lesson not yet done from
- * her grade onward. Grades below hers are behind her (still tappable, and
- * back as review once done); grades above are ahead, and she carries on into
- * them by herself when her own grade's lessons are done -- the course grows
- * with her instead of stopping.
+ * their grade onward. Grades below theirs are behind them (still tappable, and
+ * back as review once done); grades above are ahead, and they carry on into
+ * them by themselves when their own grade's lessons are done -- the course grows
+ * with them instead of stopping.
  */
 export function todaysLesson(l: Learner): Lesson | null {
   const pinned = l.pinnedLesson ? LESSON_BY_ID.get(l.pinnedLesson) : undefined;
@@ -61,7 +61,7 @@ export function recordLesson(l: Learner, lessonId: string, right: number, total:
   };
 }
 
-/** She opened a lesson: it is started, even before the check. */
+/** They opened a lesson: it is started, even before the check. */
 export function touchLesson(l: Learner, lessonId: string, now = Date.now()): Learner {
   const day = todayString(new Date(now));
   const prev = l.lessons[lessonId];
@@ -70,9 +70,9 @@ export function touchLesson(l: Learner, lessonId: string, now = Date.now()): Lea
 
 /**
  * One answer to one item, recorded the way the walk records sums: first try
- * only. A fact (add-7+5) goes to her fact record so the grown-ups grid sees
- * it, served with no stone so it never moves her plus/minus track. Anything
- * else still counts toward today's sums and her streak.
+ * only. A fact (add-7+5) goes to their fact record so the grown-ups grid sees
+ * it, served with no stone so it never moves their plus/minus track. Anything
+ * else still counts toward today's sums and their streak.
  */
 export function recordItem(l: Learner, item: Item, correct: boolean, typed?: string, ms?: number, now = Date.now()): Learner {
   const track = trackOfFact(item.id);
@@ -91,8 +91,8 @@ export function recordItem(l: Learner, item: Item, correct: boolean, typed?: str
 }
 
 /**
- * Warm-up: a few questions from lessons she has done, the ones done longest
- * ago or least well most likely -- so what she learned last month comes back.
+ * Warm-up: a few questions from lessons they have done, the ones done longest
+ * ago or least well most likely -- so what they learned last month comes back.
  */
 export function warmupItems(l: Learner, n = 3, rng: () => number = Math.random, today = todayString()): Item[] {
   const done = Object.entries(l.lessons)

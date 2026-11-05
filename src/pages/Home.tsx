@@ -50,7 +50,7 @@ export default function Home() {
   if (usesNewApp()) return <Navigate to="/next" replace />;
   if (!progress.characterId) return <Navigate to="/character-select" replace />;
   // A grown-up picks the grade before anything else, so the topic grid below is
-  // already the right size the first time she sees it.
+  // already the right size the first time they see it.
   if (progress.gradeLevel === null) return <Navigate to="/grade" replace />;
 
   const theme = getTheme(progress.activeTheme);
@@ -89,7 +89,7 @@ export default function Home() {
 
           {/* The one answer to "what should I do?": plain sums, adding and
               taking away mixed, getting harder by itself. Drawn as "+ −" so
-              she can find it without reading. */}
+              they can find it without reading. */}
           <button
             onClick={() => navigate('/sums')}
             aria-label="Plus and Minus"
@@ -115,7 +115,7 @@ export default function Home() {
             <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 30, color: '#fff' }}>Plus &amp; Minus</span>
           </button>
 
-          {/* The old Play: two topics she can climb and one for variety each round. */}
+          {/* The old Play: two topics they can climb and one for variety each round. */}
           <button
             onClick={() => navigate('/practice')}
             aria-label="Mix"
@@ -150,9 +150,9 @@ export default function Home() {
             </button>
           )}
 
-          {/* Every topic in her grade, always visible, always tappable, in a
+          {/* Every topic in their grade, always visible, always tappable, in a
               fixed order. Position is how a child who cannot read finds the one
-              she wants, so this must never be sorted by recency. */}
+              they want, so this must never be sorted by recency. */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, paddingTop: 2 }}>
             {topics.map((topic) => (
               <TopicTile

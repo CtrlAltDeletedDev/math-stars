@@ -18,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Her progress lives only in this browser. Without asking, Safari may clear a
+// Their progress lives only in this browser. Without asking, Safari may clear a
 // site's storage after a week unopened; a granted persist() exempts it. Asking
 // is silent where it is granted and harmless where it is not.
 if (navigator.storage?.persist) {

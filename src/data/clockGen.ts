@@ -3,7 +3,7 @@ import { buildTaggedChoices, randomInt } from '@/engine/choices';
 
 // Telling time, generated rather than hand-listed, so the Clocks ladder never
 // runs dry: the hand-written bank in time.ts has twelve o'clock questions, and a
-// child at the top of her grade saw the same twelve faces forever. The bank and
+// child at the top of their grade saw the same twelve faces forever. The bank and
 // the levels built on it stay exactly as they are; this is what the practice
 // ladder draws on.
 //
@@ -67,7 +67,7 @@ function minutesFor(...times: number[]): number[] {
 // ---------------------------------------------------------------------------
 //
 // Only three tags genuinely fit a clock: reading or counting one hour too far or
-// too short ('off-by-one'), giving back the time she was told
+// too short ('off-by-one'), giving back the time they were told
 // ('answered-a-given-number'), and going back when asked to go on
 // ('wrong-operation'). Every other option is a real misreading with no tag of its
 // own, and says 'unknown' rather than borrow a sentence that would tell a parent
@@ -85,7 +85,7 @@ function tagFor(form: ClockForm, shown: number, v: number): ErrorTag {
     if (fromStart === -60) return 'wrong-operation'; // went back an hour instead of on
     return 'unknown';
   }
-  // Half an hour back from 3:00 is 2:30: she went the wrong way. Half an hour
+  // Half an hour back from 3:00 is 2:30: they went the wrong way. Half an hour
   // back from 3:30 is 3:00, which is also what moving the long hand on without
   // moving the hour gives — two stories for one button, so neither is claimed.
   if (fromStart === -30 && minuteOf(start) < 30) return 'wrong-operation';
@@ -110,7 +110,7 @@ function tagFor(form: ClockForm, shown: number, v: number): ErrorTag {
 // its hour with one button and its minute with two others. Picking that "middle"
 // option scored 58% when sets were drawn that way.
 
-/** The minute she mixes this one up with: the 12 with the 6, the 3 with the 9. */
+/** The minute they mix this one up with: the 12 with the 6, the 3 with the 9. */
 const pairedMinute = (m: number) => (m + 30) % 60;
 
 /**
@@ -137,13 +137,13 @@ function lineMistakes(form: 'read' | 'hour', shown: number): number[] {
   const h = hourOf(answer), m = minuteOf(answer);
   if (form === 'hour') {
     const start = shown;
-    // The time she was told; two hours on; an hour back instead of on.
+    // The time they were told; two hours on; an hour back instead of on.
     return [start, start + 120, start - 60, ...FILLERS.map((d) => answer + d)];
   }
   const c = [answer + 60, answer - 60]; // the short hand read as the next number, or the one before
   // The long hand read as the hour: at 3:00 it points at 12, so "12 o'clock".
   // Half the time only. It is one time offered against eleven answers, and
-  // offered every time it was so rarely right that she could learn to skip it.
+  // offered every time it was so rarely right that they could learn to skip it.
   const longHand = m === 0 ? 12 : m / 5;
   if (longHand !== h && Math.random() < 0.5) c.push(at(longHand, m));
   // The face read the wrong way round, the same mix-up as swapping :15 and
