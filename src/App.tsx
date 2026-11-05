@@ -19,11 +19,14 @@ import ReviewGame from './pages/ReviewGame';
 import Lesson from './pages/Lesson';
 import Learn from './pages/Learn';
 import Practice from './pages/Practice';
+import NextApp from './next/NextApp';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      {/* The new app, behind a per-device switch until it replaces this one. */}
+      <Route path="/next/*" element={<NextApp />} />
       <Route path="/character-select" element={<CharacterSelect />} />
       <Route path="/topic/:skillId" element={<Topic />} />
       {/* Old category links (a bookmark, a back-stack entry) still resolve. */}
