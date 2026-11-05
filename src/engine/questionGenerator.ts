@@ -16,6 +16,53 @@ import { buildTaggedChoices, randomInt, shuffle } from './choices';
 // counted one too far, added when the sign said subtract, or landed on the wrong
 // multiple. See src/engine/choices.ts for why this matters.
 
+// --- Strategy hints -------------------------------------------------------
+//
+// Every sum used to arrive with no hint at all, so a wrong first tap on "8 + 5"
+// got "Almost! Try again!" and nothing to try *with*. A hint here names the
+// strategy a first-grade class teaches for that kind of fact -- count on from
+// the bigger number, use a double, make a ten -- because the point of a retry
+// is to try a better way, not the same guess twice.
+//
+// A hint never states the answer: the first tap is already scored, and a hint
+// that gives it away turns the retry into copying. `questions.test.ts` checks.
+
+export function additionHint(a: number, b: number): string {
+  const big = Math.max(a, b);
+  const small = Math.min(a, b);
+  if (small === 0) return 'Adding zero means adding nothing at all.';
+  if (a === b) return `It's a double: ${a} and another ${a}.`;
+  if (small <= 3) {
+    return a < b
+      ? `Turn it around! Start on the bigger number, ${big}, and count on ${small}.`
+      : `Start on ${big} and count on ${small} more.`;
+  }
+  if (big === 10) return `A ten and ${small} more ones. What teen number is that?`;
+  if (big - small === 1) return `Almost a double! Think ${small} + ${small}, then 1 more.`;
+  if (big === 9 && a + b > 10) return `9 is one away from 10. Move 1 over to make it 10 + ${small - 1}.`;
+  if (a + b > 10) {
+    const need = 10 - big;
+    return `Make a ten! ${big} needs ${need} more to make 10. Then add the ${small - need} left over.`;
+  }
+  return `Start on ${big} and count on ${small}.`;
+}
+
+export function subtractionHint(a: number, b: number): string {
+  const left = a - b;
+  if (b === 0) return 'Taking away zero means nothing goes away.';
+  if (b === a) return 'You take them all away. How many are left?';
+  if (b <= 3) return `Start on ${a} and count back ${b}.`;
+  if (b === 10) return 'Take away the ten. Look at the ones that are left.';
+  if (a > 10 && b === a - 10) return `Take away all ${b} ones. What is left?`;
+  if (left <= 3) return `${b} and ${a} are close. Count up from ${b} to ${a}.`;
+  if (a === b * 2) return `Think of a double. What number plus itself makes ${a}?`;
+  if (a > 10 && b > a - 10) {
+    const ones = a - 10;
+    return `Go back to 10 first: take away ${ones}, then take away ${b - ones} more.`;
+  }
+  return `Think adding: ${b} + ? = ${a}.`;
+}
+
 function additionQuestion(a: number, b: number, maxSum: number): Question {
   const correct = a + b;
   return {
@@ -31,11 +78,26 @@ function additionQuestion(a: number, b: number, maxSum: number): Question {
         [Math.abs(a - b), 'wrong-operation'], // subtracted instead of adding
         [a, 'answered-a-given-number'], // forgot to add the second number
         [b, 'answered-a-given-number'],
-        [correct + 10, 'place-value'], // dropped a ten
+        // A wrong tens digit (13 -> 23, 18 + 1 -> 29). Only a mistake when the
+        // answer has a ten to get wrong: "12" for 1 + 1 tells us nothing.
+        [correct >= 10 ? correct + 10 : -1, 'place-value'],
+        // Make-a-ten done halfway: 8 + 5 -> fill the ten, then add all 5
+        // again (15). The slip the make-ten strategy is prone to.
+        [a < 10 && b < 10 && correct > 10 ? 10 + Math.min(a, b) : -1, 'counted-the-wrong-thing'],
+        // Small sums have no ten to misplace. Doubling the bigger number
+        // (4 + 5 -> "5 + 5") is the near-doubles slip, and it keeps the four
+        // options from being a giveaway run like 6, 7, 8, 9.
+        correct < 10 && a !== b && a > 0 && b > 0 ? 2 * Math.max(a, b) : -1,
+        // The tiniest sums have no room for four options that are not a run
+        // (0, 1, 2, 3 for 1 + 1). Writing the two numbers side by side, "12"
+        // for 1 + 2, is a real early misreading of "+" as "and", and the one
+        // far-off option that means something here.
+        correct <= 5 && a > 0 && b > 0 ? Number(`${a}${b}`) : -1,
       ],
       { step: 1 },
     ),
     difficulty: Math.max(1, Math.ceil(maxSum / 5)),
+    hint: additionHint(a, b),
   };
 }
 
@@ -71,6 +133,7 @@ function subtractionQuestion(a: number, b: number, maxMinuend: number): Question
       { step: 1, isValid: (n) => n >= 0 && n <= Math.max(maxMinuend, a + b) },
     ),
     difficulty: Math.max(1, Math.ceil(maxMinuend / 5)),
+    hint: subtractionHint(a, b),
   };
 }
 
@@ -113,6 +176,91 @@ export function generateTargetedSubtractionQuestion(subtrahend: number, maxMinue
   // it is kept on purpose: "2 - 2 = 0" is a real fact she is taught.
   const a = randomInt(subtrahend, Math.max(subtrahend, maxMinuend));
   return subtractionQuestion(a, subtrahend, maxMinuend);
+}
+
+// --- The facts in teaching order -----------------------------------------
+//
+// "+2" to "every sum within 20" was one step, and it is the biggest step in
+// first-grade arithmetic: within 20 is mostly facts that cross ten (8 + 5,
+// 14 - 6), which need a strategy counting cannot replace. Schools climb it
+// one family of facts at a time, each built on the one before:
+//
+//   count on 1-3   the counting facts, mixed, and turned around (2 + 9)
+//   + 10           ten and some more -- the teen numbers are a ten and ones
+//   doubles        6 + 6, and near doubles 6 + 7 "a double and one more"
+//   + 9            one away from ten: 9 + 6 is 10 + 5
+//   crossing ten   8 + 5 -> 8 + 2 + 3: make a ten, then the rest
+//
+// and the take-away facts mirror them. Each pattern builds its numbers and
+// hands them to additionQuestion / subtractionQuestion, so "9 + 6" here is the
+// same question, the same id and the same SRS card as anywhere else.
+
+export type AddPattern = 'countOn' | 'plusTen' | 'nearDoubles' | 'plusNine' | 'bridge';
+export type SubPattern = 'countBack' | 'teenMinusTen' | 'halves' | 'minusNine' | 'bridge';
+
+const coin = () => Math.random() < 0.5;
+const eitherWay = (x: number, y: number): [number, number] => (coin() ? [x, y] : [y, x]);
+
+export function generateAdditionPattern(pattern: AddPattern): Question {
+  switch (pattern) {
+    case 'countOn': {
+      // Mostly the big number first, which is how counting on is taught; about
+      // one in three turned around, because seeing 2 + 9 *as* 9 + 2 is the skill.
+      const small = randomInt(1, 3);
+      const big = randomInt(3, 20 - small);
+      return Math.random() < 0.35 ? additionQuestion(small, big, 20) : additionQuestion(big, small, 20);
+    }
+    case 'plusTen':
+      return additionQuestion(...eitherWay(10, randomInt(1, 10)), 20);
+    case 'nearDoubles': {
+      if (coin()) {
+        const n = randomInt(2, 10);
+        return additionQuestion(n, n, 20);
+      }
+      const n = randomInt(2, 9);
+      return additionQuestion(...eitherWay(n, n + 1), 20);
+    }
+    case 'plusNine':
+      return additionQuestion(...eitherWay(9, randomInt(2, 9)), 20);
+    case 'bridge': {
+      // Both parts single digits, the total past ten: exactly the facts that
+      // need "make a ten".
+      const a = randomInt(2, 9);
+      return additionQuestion(a, randomInt(11 - a, 9), 20);
+    }
+  }
+}
+
+export function generateSubtractionPattern(pattern: SubPattern): Question {
+  switch (pattern) {
+    case 'countBack': {
+      const b = randomInt(1, 3);
+      return subtractionQuestion(randomInt(b, 20), b, 20);
+    }
+    case 'teenMinusTen': {
+      // 14 - 10 and 14 - 4: take the ten away, or take the ones away.
+      const ones = randomInt(0, 9);
+      const a = 10 + ones;
+      return subtractionQuestion(a, ones > 0 && coin() ? ones : 10, 20);
+    }
+    case 'halves': {
+      // 12 - 6 from 6 + 6, and the near doubles: 13 - 6 from 6 + 7.
+      if (coin()) {
+        const n = randomInt(2, 10);
+        return subtractionQuestion(n * 2, n, 20);
+      }
+      const n = randomInt(2, 9);
+      return subtractionQuestion(n * 2 + 1, coin() ? n : n + 1, 20);
+    }
+    case 'minusNine':
+      return subtractionQuestion(randomInt(11, 18), coin() ? 9 : 8, 20);
+    case 'bridge': {
+      // 13 - 5: more taken away than there are ones, so she has to go back
+      // through ten.
+      const a = randomInt(11, 18);
+      return subtractionQuestion(a, randomInt(a - 9, 9), 20);
+    }
+  }
 }
 
 function missingAddQuestion(a: number, sum: number, maxSum: number): Question {
@@ -544,12 +692,14 @@ export function questionFromId(id: string, characterName = 'You'): Question | nu
 export function generateFromParams(params: Record<string, number | string>, characterName = 'You'): Question {
   const op = params.operation as string;
   if (op === 'addition') {
+    if (params.pattern !== undefined) return generateAdditionPattern(String(params.pattern) as AddPattern);
     if (params.fixedAddend !== undefined) {
       return generateTargetedAdditionQuestion(Number(params.fixedAddend), Number(params.maxSum));
     }
     return generateAdditionQuestion(Number(params.maxSum));
   }
   if (op === 'subtraction') {
+    if (params.pattern !== undefined) return generateSubtractionPattern(String(params.pattern) as SubPattern);
     if (params.fixedSubtrahend !== undefined) {
       return generateTargetedSubtractionQuestion(Number(params.fixedSubtrahend), Number(params.maxMinuend));
     }

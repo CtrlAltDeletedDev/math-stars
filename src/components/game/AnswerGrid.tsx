@@ -14,7 +14,8 @@ interface Props {
 // phrases ("12 − 8 = 4", "0, 2, 4, 6, or 8") and have to step down to fit.
 function fontSizeFor(choices: string[]): number {
   const longest = choices.reduce((n, c) => Math.max(n, c.length), 0);
-  if (longest <= 3) return 30;
+  if (longest <= 2) return 40;
+  if (longest <= 3) return 34;
   if (longest <= 6) return 24;
   if (longest <= 10) return 19;
   return 15;

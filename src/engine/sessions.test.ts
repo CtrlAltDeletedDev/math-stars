@@ -126,7 +126,7 @@ describe('Master Mode', () => {
 describe('Quick Review', () => {
   it('is at her rung, not the topic\'s first level', () => {
     // It used to replay the first level, so Quick Review on Adding was "+ 1" for ever.
-    const qs = buildRungSession(child('1', { adding: 3 }), 'adding');
+    const qs = buildRungSession(child('1', { adding: 4 }), 'adding'); // within 10
     expect(qs).toHaveLength(10);
     const pairs = qs.map(addends);
     expect(pairs.every((p) => p !== null && p[0] + p[1] <= 10)).toBe(true);
@@ -178,7 +178,8 @@ describe('"Next" after a level', () => {
   it('stays in the topic', () => {
     // Category order offered "Taking Away (to 5)" after "Adding to 20".
     expect(nextLevelInTopic('addition-3', '1')?.id).toBe('mixed-1');
-    expect(nextLevelInTopic('subtraction-2', '1')?.id).toBe('subtraction-3');
+    expect(nextLevelInTopic('subtraction-2', '1')?.id).toBe('steps-teen-take');
+    expect(nextLevelInTopic('steps-back-ten', '1')?.id).toBe('subtraction-3');
   });
 
   it('stops at the edge of her grade', () => {

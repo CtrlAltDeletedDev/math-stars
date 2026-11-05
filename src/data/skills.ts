@@ -69,7 +69,15 @@ export const SKILLS: Skill[] = [
       { label: 'Adding 1 more', source: { kind: 'generated', params: { operation: 'addition', fixedAddend: 1, maxSum: 20 } } },
       { label: 'Adding 2 more', source: { kind: 'generated', params: { operation: 'addition', fixedAddend: 2, maxSum: 20 } } },
       { label: 'Adding within 5', source: { kind: 'generated', params: { operation: 'addition', maxSum: 5 } } },
+      // v7: the fact strategies between "within 10" and "within 20" -- see the
+      // note above generateAdditionPattern. Inserted, so storage.ts remaps
+      // every saved rung above them (ADDING_V6_TO_V7).
+      { label: 'Counting on 1, 2 or 3', source: { kind: 'generated', params: { operation: 'addition', pattern: 'countOn' } } },
       { label: 'Adding within 10', source: { kind: 'generated', params: { operation: 'addition', maxSum: 10 } } },
+      { label: 'Ten and some more', source: { kind: 'generated', params: { operation: 'addition', pattern: 'plusTen' } } },
+      { label: 'Doubles and near doubles', source: { kind: 'generated', params: { operation: 'addition', pattern: 'nearDoubles' } } },
+      { label: 'Adding 9 (one away from ten)', source: { kind: 'generated', params: { operation: 'addition', pattern: 'plusNine' } } },
+      { label: 'Making a ten to cross ten', source: { kind: 'generated', params: { operation: 'addition', pattern: 'bridge' } } },
       { label: 'Adding within 20', source: { kind: 'generated', params: { operation: 'addition', maxSum: 20 } } },
       { label: 'Adding within 50', source: { kind: 'generated', params: { operation: 'addition', maxSum: 50 } } },
       { label: 'Adding within 100', source: { kind: 'generated', params: { operation: 'addition', maxSum: 100 } } },
@@ -84,7 +92,12 @@ export const SKILLS: Skill[] = [
       { label: 'Taking away 1', source: { kind: 'generated', params: { operation: 'subtraction', fixedSubtrahend: 1, maxMinuend: 20 } } },
       { label: 'Taking away 2', source: { kind: 'generated', params: { operation: 'subtraction', fixedSubtrahend: 2, maxMinuend: 20 } } },
       { label: 'Subtracting within 5', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 5 } } },
+      { label: 'Counting back 1, 2 or 3', source: { kind: 'generated', params: { operation: 'subtraction', pattern: 'countBack' } } },
       { label: 'Subtracting within 10', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 10 } } },
+      { label: 'Taking away from teen numbers', source: { kind: 'generated', params: { operation: 'subtraction', pattern: 'teenMinusTen' } } },
+      { label: 'Taking away with doubles', source: { kind: 'generated', params: { operation: 'subtraction', pattern: 'halves' } } },
+      { label: 'Taking away 9 and 8', source: { kind: 'generated', params: { operation: 'subtraction', pattern: 'minusNine' } } },
+      { label: 'Going back through ten', source: { kind: 'generated', params: { operation: 'subtraction', pattern: 'bridge' } } },
       { label: 'Subtracting within 20', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 20 } } },
       { label: 'Subtracting within 50', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 50 } } },
       { label: 'Subtracting within 100', source: { kind: 'generated', params: { operation: 'subtraction', maxMinuend: 100 } } },

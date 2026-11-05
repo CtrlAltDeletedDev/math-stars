@@ -206,7 +206,7 @@ describe('finding a lesson', () => {
 
   it('finds the lesson for a parent-screen mistake', () => {
     expect(lessonForMistake('stories', 'added-story-numbers', 9, 4)?.id).toBe('some-and-the-rest');
-    expect(lessonForMistake('taking-away', 'off-by-one', 4, 4)?.id).toBe('hop-back');
+    expect(lessonForMistake('taking-away', 'off-by-one', 9, 8)?.id).toBe('hop-back');
     expect(lessonForMistake('shapes', 'off-by-one', 2, 0)).toBeNull();
   });
 });
@@ -258,13 +258,13 @@ describe('"Practice it now"', () => {
   it('practises the level of the topic the lesson was opened from', () => {
     const countOn = LESSONS_BY_ID.get('count-on')!;
     expect(practiceLevelFor(countOn, 'strategies')?.id).toBe('strategy-count-on');
-    expect(practiceLevelFor(countOn, 'adding')?.id).toBe('addition-3');
+    expect(practiceLevelFor(countOn, 'adding')?.id).toBe('steps-count-on');
   });
 
   it('falls back to the lesson\'s own level when it was opened from nowhere in particular', () => {
     const countOn = LESSONS_BY_ID.get('count-on')!;
-    expect(practiceLevelFor(countOn, null)?.id).toBe('addition-3');
-    expect(practiceLevelFor(countOn, 'clocks')?.id, 'not one of its topics').toBe('addition-3');
+    expect(practiceLevelFor(countOn, null)?.id).toBe('steps-count-on');
+    expect(practiceLevelFor(countOn, 'clocks')?.id, 'not one of its topics').toBe('steps-count-on');
   });
 
   it('stays inside the topic for every place every lesson has', () => {

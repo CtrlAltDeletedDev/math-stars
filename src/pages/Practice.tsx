@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
@@ -20,6 +20,7 @@ import LessonOffer from '@/components/game/LessonOffer';
 import { Lesson } from '@/data/learn';
 import { forgetLessonVisit, lessonToOffer, leaveForLesson, returnFromLesson } from '@/engine/lessonOffer';
 import { ErrorTag } from '@/types';
+import { aidModeFor } from '@/engine/scaffold';
 import { BADGES } from '@/data/badges';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { House, Volume2, VolumeX, X } from 'lucide-react';
@@ -52,6 +53,12 @@ export default function Practice() {
   });
   const queue = start.queue;
   const [pick, setPick] = useState<PracticePick | null>(start.first);
+  // Decided when the question appears, from her answers before it, so the
+  // picture never vanishes mid-question as her own answer updates the window.
+  const aidMode = useMemo(
+    () => (pick ? aidModeFor(progress, pick.skillId, pick.rung) : 'show'),
+    [pick], // eslint-disable-line react-hooks/exhaustive-deps
+  );
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [lastCorrect, setLastCorrect] = useState(false);
@@ -406,7 +413,11 @@ export default function Practice() {
         )}
 
         <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'auto', justifyContent: 'center' }}>
-          <QuestionCard question={question} />
+          <QuestionCard
+            question={question}
+            aid={aidMode}
+            revealAid={triedChoices.length > 0 || (showFeedback && !lastCorrect)}
+          />
 
           {question.hint && <HintBubble hint={question.hint} visible={showHint} />}
 

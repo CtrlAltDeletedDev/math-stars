@@ -623,7 +623,17 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProgressContext.Provider value={{ progress, isLoaded, recordLevelComplete, recordDailyChallengeComplete, recordMasterComplete, recordQuestionsAnswered, recordPracticeAnswer, selectCharacter, purchaseItem, setActiveTheme, toggleMusic, toggleChallengeMode, toggleSlowMode, toggleAutoRead, setPracticeFocus, markLessonDone, setGradeLevel, storageIssue, importProgress }}>
-      {children}
+      {/* Nothing renders on a blank profile. Every game screen builds its
+          session once, in a useState initializer, from `progress` -- so a
+          screen opened directly (iPad Safari reloading a backgrounded tab on
+          /practice) used to build its first round from the empty default and
+          serve "+1" to a child on "make a ten". The save is read in one
+          effect, so this is a single frame. */}
+      {isLoaded ? children : (
+        <div style={{ height: '100dvh', background: '#87CEEB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 64 }}>
+          ⭐
+        </div>
+      )}
     </ProgressContext.Provider>
   );
 }
