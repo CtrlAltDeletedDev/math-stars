@@ -1,4 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+// Bundled, not fetched: the app has to work offline from the home screen, and
+// a font CDN is a request to a third party every time she opens it.
+import '@fontsource/fredoka/latin-500.css';
+import '@fontsource/fredoka/latin-600.css';
+import '@fontsource/fredoka/latin-700.css';
+import '@fontsource/atkinson-hyperlegible/latin-400.css';
+import '@fontsource/atkinson-hyperlegible/latin-700.css';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { useLearner } from './store';
 import Home from './screens/Home';
