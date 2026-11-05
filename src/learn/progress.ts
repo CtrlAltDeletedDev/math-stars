@@ -17,7 +17,8 @@ export const PASS = 0.75;
 export function lessonDone(l: Learner, lesson: Lesson): boolean {
   if (l.lessons[lesson.id]?.done) return true;
   const p = lesson.placedBy;
-  return !!p && standingOn(l, p.track) > p.stage;
+  if (!p) return false;
+  return (Array.isArray(p) ? p : [p]).every((x) => standingOn(l, x.track) > x.stage);
 }
 
 /**

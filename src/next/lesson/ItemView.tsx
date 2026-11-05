@@ -144,7 +144,7 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
                 key={c.value}
                 disabled={busy || tried.includes(c.value)}
                 onClick={() => {
-                  if (readAloud && !c.model) speak(c.say ?? c.label);
+                  if (readAloud && !c.model) speak(c.say ?? c.label ?? '');
                   setPicked(c.value);
                   setTried((t) => [...t, c.value]);
                   judge(isRight, c.value);
@@ -156,7 +156,7 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
                   background: state === 'right' ? C.goSoft : state === 'tried' ? C.amberSoft : C.card,
                   opacity: state === 'tried' ? 0.6 : 1,
                   boxShadow: state === 'idle' && !busy ? `0 4px 0 ${C.line}` : 'none',
-                  fontFamily: KID_FONT, fontWeight: 600, fontSize: c.label.length > 8 ? 22 : 34, color: C.ink,
+                  fontFamily: KID_FONT, fontWeight: 600, fontSize: (c.label ?? '').length > 8 ? 22 : 34, color: C.ink,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
                   cursor: 'pointer', touchAction: 'manipulation',
                 }}

@@ -35,7 +35,9 @@ export type ModelState =
    * bottom row, then the second frame; null is empty. `crossed` marks cells
    * taken away. `tray` holds counters waiting below the frame: tapping an
    * empty cell (in "do") moves the next one in. Tapping a counter removes it
-   * back to the tray, or crosses it out when `takeAway` is set.
+   * back to the tray, or crosses it out when `takeAway` is set. With no
+   * `tray` the supply is endless and a removed counter vanishes, so a "move
+   * 2 counters up" task sets `tray: { a: 0, b: 0 }` to be doable only by moving.
    */
   | { model: 'tenFrame'; frames: 1 | 2; cells: (CounterColour | null)[]; crossed?: number[]; tray?: { a: number; b: number }; takeAway?: boolean }
   /**
@@ -141,8 +143,12 @@ export type TeachStep = ShowStep | DoStep | AskStep;
 export interface Choice {
   /** What is checked against `answer`. */
   value: string;
-  /** What is shown: words, a number, an emoji. Spoken if `say` is absent. */
-  label: string;
+  /**
+   * What is shown: words, a number, an emoji. Spoken if `say` is absent.
+   * Optional when `model` is set: a number on a picture choice ("which ten
+   * frame shows 7?") would give the answer away.
+   */
+  label?: string;
   say?: string;
   /** A picture instead of (or with) the label. */
   model?: ModelState;
@@ -200,7 +206,13 @@ export interface Lesson {
    * so she is not re-taught "+1" when her path says she is on "within 10".
    * Only for lessons whose content is that stone's facts.
    */
-  placedBy?: { track: 'plus' | 'minus'; stage: number };
+  placedBy?: Placement | Placement[];
+}
+
+/** "She is past this stone on this track." A list means past all of them. */
+export interface Placement {
+  track: 'plus' | 'minus';
+  stage: number;
 }
 
 export interface Unit {

@@ -257,6 +257,11 @@ function DoCard({ step, accent, readAloud, sounds, onNext }: { step: DoStep; acc
         ) : (
           <>
             <SmallButton label="A hint" onClick={hint}><Lightbulb size={30} strokeWidth={ICON_STROKE} color="#C99700" /></SmallButton>
+            {state !== step.model && (
+              <SmallButton label="Start again" onClick={() => { lastMove.current = Date.now(); setState(step.model); setHintText(null); }}>
+                <RotateCcw size={28} strokeWidth={ICON_STROKE} color={C.inkSoft} />
+              </SmallButton>
+            )}
             {hints >= 2 && <SmallButton label="Show me how" onClick={showHow}><Hand size={30} strokeWidth={ICON_STROKE} color={accent} /></SmallButton>}
           </>
         )}

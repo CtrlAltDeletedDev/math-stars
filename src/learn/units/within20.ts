@@ -345,7 +345,8 @@ const CHOOSE_A_WAY: Lesson = {
   goal: 'Picks a strategy for any fact within 20: a double, make a ten, or go back through ten.',
   standard: '1.OA.6',
   emoji: '🧠',
-  placedBy: { track: 'minus', stage: 9 },
+  // Mixed plus and minus: known only once she is past both.
+  placedBy: [{ track: 'plus', stage: 9 }, { track: 'minus', stage: 9 }],
   teach: [
     { type: 'show', say: '7 plus 8. The numbers sit next to each other. A near double! 7 plus 7, and 1 more.', caption: '7 + 8 = 7 + 7 + 1', model: apart(7, 8) },
     { type: 'show', say: '9 plus 6. The 9 is almost a ten. Move 1 up: 10 plus 5.', caption: '9 + 6 = 10 + 5', model: frames2([9, 1], [0, 5]) },

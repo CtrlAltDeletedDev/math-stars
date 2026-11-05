@@ -92,7 +92,11 @@ function additionQuestion(a: number, b: number, maxSum: number): Question {
         // (0, 1, 2, 3 for 1 + 1). Writing the two numbers side by side, "12"
         // for 1 + 2, is a real early misreading of "+" as "and", and the one
         // far-off option that means something here.
-        correct <= 5 && a > 0 && b > 0 ? Number(`${a}${b}`) : -1,
+        correct <= 5 && a > 0 && b > 0 ? Number(`${a}${b}`)
+          // The same slip with a zero: "50" for 5 + 0, the digits side by
+          // side. It also gives +0 facts, whose other mistakes all sit next
+          // to the answer, one option that is not part of a run.
+          : (a === 0) !== (b === 0) && correct < 10 ? Number(`${Math.max(a, b)}0`) : -1,
       ],
       { step: 1 },
     ),

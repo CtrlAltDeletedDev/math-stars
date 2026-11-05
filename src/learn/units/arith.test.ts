@@ -242,14 +242,16 @@ describe('arithmetic units', () => {
         it('hides the answer from picture-choice labels', () => {
           for (const { item } of itemsOf(lesson)) {
             if (typeof item.input !== 'object' || !('choices' in item.input)) continue;
-            for (const c of item.input.choices) if (c.model) expect(c.label, item.id).toBe('');
+            for (const c of item.input.choices) if (c.model) expect(c.label ?? '', item.id).toBe('');
           }
         });
 
         if (lesson.placedBy) {
           it('is placed by a real stage', () => {
-            const { track, stage } = lesson.placedBy!;
-            expect(STAGES[track][stage], `${track} ${stage}`).toBeDefined();
+            const placed = lesson.placedBy!;
+            for (const { track, stage } of Array.isArray(placed) ? placed : [placed]) {
+              expect(STAGES[track][stage], `${track} ${stage}`).toBeDefined();
+            }
           });
         }
       });

@@ -89,8 +89,6 @@ for (const unit of UNITS) {
 
         it('never lets the order of the choices give the answer away', () => {
           const gen = lesson.practice;
-          const first = gen();
-          if (typeof first.input !== 'object' || !('choices' in first.input)) return;
           const slots: number[] = [];
           for (let i = 0; i < 200; i++) {
             const item = gen();
@@ -98,10 +96,13 @@ for (const unit of UNITS) {
               slots.push(item.input.choices.findIndex((c) => c.value === item.answer));
             }
           }
+          // Only the choice questions count: a practice can mix them with
+          // number-pad ones, and comparing against all 200 failed at random.
+          if (slots.length < 30) return;
           const counts = slots.reduce<Record<number, number>>((m, s) => ({ ...m, [s]: (m[s] ?? 0) + 1 }), {});
           const width = Math.max(...slots) + 1;
           if (width < 2) return;
-          for (let k = 0; k < width; k++) expect(counts[k] ?? 0, `slot ${k} of ${width}`).toBeGreaterThan(200 / width / 3);
+          for (let k = 0; k < width; k++) expect(counts[k] ?? 0, `slot ${k} of ${width}`).toBeGreaterThan(slots.length / width / 3);
         });
 
         it('has hints that never state the answer', () => {
