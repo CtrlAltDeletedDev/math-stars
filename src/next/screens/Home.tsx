@@ -1,25 +1,26 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Map as MapIcon, Play } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
-import { activeFocus, sunToday } from '@/core/learner';
-import { STAGES } from '@/core/stages';
+import { sunToday } from '@/core/learner';
 import { todayString } from '@/engine/dates';
 import { characterEmoji } from '../ui/character';
 import { useLearner } from '../store';
 import { ROUTES } from '../routes';
 import { C, KID_FONT } from '../theme';
-import { unlockSpeech } from '../platform/speech';
+import { speak, unlockSpeech } from '../platform/speech';
 import { sound } from '../platform/sound';
-import { pathView } from '../home/path';
+import { UnitSign, courseView } from '../home/path';
 import { PATH_W, layoutPath } from '../home/layout';
 import PathScene from '../home/PathScene';
 import Sun from '../home/Sun';
 import GrownUpsDoor from '../home/GrownUpsDoor';
 import { HOME_CSS } from '../home/styles';
 
-// Her path. One winding trail of stones, her character on the one she is on,
-// and one big Go. Nothing on it needs reading.
+// Her path: the course, one road of lesson stones grouped by unit, her
+// character on today's. Go opens today's lesson; the small square beside it is
+// the quick plus-and-minus walk. Nothing on it needs reading, and nothing is
+// locked: every stone opens its lesson.
 
 const BACKGROUND = `linear-gradient(180deg, ${C.sky} 0%, #EAF4EC 16%, ${C.grass} 34%, ${C.grass} 100%)`;
 /** Wider than this, the path would get silly-big on an iPad; centre it instead. */
@@ -29,9 +30,9 @@ const FADE_EDGES = 'linear-gradient(180deg, transparent 0, #000 36px, #000 calc(
 export default function Home() {
   const learner = useLearner();
   const navigate = useNavigate();
-  const view = useMemo(() => pathView(learner), [learner]);
-  const layout = useMemo(() => layoutPath(view.stones.length, view.hers), [view]);
-  const focus = activeFocus(learner);
+  const view = useMemo(() => courseView(learner), [learner]);
+  const layout = useMemo(() => layoutPath(view.nodes.map((n) => n.kind), view.hers), [view]);
+  const pinned = view.today && learner.pinnedLesson === view.today.id ? view.today : null;
   const walksToday = learner.days[todayString()]?.walks ?? 0;
 
   const scroller = useRef<HTMLDivElement>(null);
@@ -52,7 +53,7 @@ export default function Home() {
   const pathPx = Math.min(width, MAX_PATH_PX);
   const pad = width > 0 ? Math.max(0, (width / (pathPx / PATH_W) - PATH_W) / 2) : 0;
 
-  // Keep her stone in view: a little below the middle, so the two stones
+  // Keep today's stone in view: a little below the middle, so the stones
   // ahead of her and the fog show above.
   const scrollToHer = useCallback(() => {
     const sc = scroller.current;
@@ -70,12 +71,13 @@ export default function Home() {
     return () => window.removeEventListener('resize', scrollToHer);
   }, [scrollToHer]);
 
-  const go = () => {
-    // iPad Safari only lets speech and sound start from inside a tap.
-    unlockSpeech();
-    sound.unlock();
-    navigate(ROUTES.walk);
-  };
+  // iPad Safari only lets speech and sound start from inside a tap.
+  const unlock = () => { unlockSpeech(); sound.unlock(); };
+  const openLesson = (id: string) => { unlock(); navigate(ROUTES.lesson(id)); };
+  const sums = () => { unlock(); navigate(ROUTES.walk); };
+  // Nothing to learn yet (or all of it learned): Go is the sums walk.
+  const go = () => (view.today ? openLesson(view.today.id) : sums());
+  const sayUnit = (sign: UnitSign) => { unlock(); speak(sign.title); };
 
   return (
     // Not <Page>: the grass and sky run to the screen's edges on an iPad too.
@@ -92,7 +94,7 @@ export default function Home() {
       </header>
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-        {focus && <FocusRibbon track={focus.track} label={STAGES[focus.track][focus.stage]?.stone ?? ''} />}
+        {pinned && <PickedRibbon emoji={pinned.emoji} />}
         <div ref={scroller} className="np-scroll" style={{
           position: 'absolute', inset: 0, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column',
           // Soft edges, so a stone half-scrolled away fades rather than being cut.
@@ -100,24 +102,26 @@ export default function Home() {
         }}>
           {/* Pushes a short path down to sit just above Go. */}
           <div style={{ flex: '1 0 auto' }} />
-          <PathScene ref={svg} view={view} layout={layout} pad={pad} character={characterEmoji(learner.profile.characterId)} />
+          <PathScene ref={svg} view={view} layout={layout} pad={pad} character={characterEmoji(learner.profile.characterId)}
+            onLesson={openLesson} onUnit={sayUnit} />
         </div>
       </div>
 
       <nav style={{ display: 'flex', gap: 12, padding: '10px 16px 4px', position: 'relative', zIndex: 2, width: '100%', maxWidth: 560, margin: '0 auto', boxSizing: 'border-box' }}>
         <button
           type="button"
-          aria-label="More games"
+          aria-label="Quick sums"
           className="np-press"
-          onClick={() => navigate(ROUTES.more)}
+          onClick={sums}
           style={{
             flex: '0 0 auto', width: 100, height: 104, borderRadius: 28, border: 0, padding: 0, cursor: 'pointer',
-            background: C.card, boxShadow: `0 7px 0 ${C.line}`, color: C.inkSoft,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+            background: C.card, boxShadow: `0 7px 0 ${C.line}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2,
+            fontFamily: KID_FONT, fontSize: 48, fontWeight: 700, lineHeight: 1,
           }}
         >
-          <MapIcon size={34} strokeWidth={ICON_STROKE} aria-hidden="true" />
-          <span aria-hidden="true" style={{ fontSize: 21, lineHeight: 1, letterSpacing: -1 }}>🕐🪙🔷</span>
+          <span aria-hidden="true" style={{ color: C.plus }}>+</span>
+          <span aria-hidden="true" style={{ color: C.minus }}>−</span>
         </button>
         <button
           type="button"
@@ -139,22 +143,17 @@ export default function Home() {
   );
 }
 
-/** A grown-up's "this week, work on…", shown as a small ribbon over the path. */
-function FocusRibbon({ track, label }: { track: 'plus' | 'minus'; label: string }) {
-  const solid = track === 'plus' ? C.plus : C.minus;
-  const soft = track === 'plus' ? C.plusSoft : C.minusSoft;
-  const sign = track === 'plus' ? '+' : '−';
+/** A grown-up picked today's lesson: say so, quietly, over the path. */
+function PickedRibbon({ emoji }: { emoji: string }) {
   return (
     <div style={{ position: 'absolute', top: 8, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px 6px 14px', borderRadius: 999,
-        background: C.card, boxShadow: `0 3px 0 ${soft}, 0 4px 14px rgba(0,0,0,0.06)`,
-        border: `2px solid ${soft}`, fontFamily: KID_FONT, fontSize: 16, fontWeight: 600, color: C.inkSoft,
+        background: C.card, boxShadow: `0 3px 0 ${C.amberSoft}, 0 4px 14px rgba(0,0,0,0.06)`,
+        border: `2px solid ${C.amberSoft}`, fontFamily: KID_FONT, fontSize: 16, fontWeight: 600, color: C.inkSoft,
       }}>
-        <span>Picked for you:</span>
-        <span style={{ padding: '2px 10px', borderRadius: 999, background: soft, color: C.ink, fontWeight: 700 }}>
-          <span style={{ color: solid }}>{sign}</span> {label}
-        </span>
+        <span>Picked for you</span>
+        <span aria-hidden="true" style={{ width: 32, height: 32, borderRadius: '50%', background: C.amberSoft, display: 'grid', placeItems: 'center', fontSize: 19 }}>{emoji}</span>
       </div>
     </div>
   );

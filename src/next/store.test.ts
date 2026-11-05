@@ -94,11 +94,14 @@ describe('the new save', () => {
     expect(saveIssue()).toBe('cannot-save');
   });
 
-  it('remembers which app this device opens', () => {
+  it('opens the new app unless a grown-up chose the old one on this device', () => {
+    expect(usesNewApp(), 'the new app is the default').toBe(true);
+    setUsesNewApp(false);
     expect(usesNewApp()).toBe(false);
     setUsesNewApp(true);
     expect(usesNewApp()).toBe(true);
-    setUsesNewApp(false);
-    expect(usesNewApp()).toBe(false);
+    // A device that opted in while it was behind a switch stays on it.
+    storage.data.set('mathstars_shell', 'next');
+    expect(usesNewApp()).toBe(true);
   });
 });

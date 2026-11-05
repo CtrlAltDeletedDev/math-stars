@@ -82,10 +82,25 @@ export function parseLearner(raw: unknown): Learner | null {
     ? { track: focusTrack, stage: Math.min(nat(f.stage), topStage(focusTrack)), until: f.until }
     : null;
 
+  const lessons: Learner['lessons'] = {};
+  if (isObj(raw.lessons)) {
+    for (const [id, r] of Object.entries(raw.lessons)) {
+      if (!/^[a-z0-9-]{1,60}$/.test(id) || !isObj(r)) continue;
+      lessons[id] = {
+        tries: nat(r.tries),
+        best: Math.max(0, Math.min(1, num(r.best, 0))),
+        done: isDay(r.done) ? r.done : null,
+        last: isDay(r.last) ? r.last : '',
+      };
+    }
+  }
+
   const s = isObj(raw.streak) ? raw.streak : {};
   return {
     schema: LEARNER_SCHEMA,
     profile,
+    lessons,
+    pinnedLesson: typeof raw.pinnedLesson === 'string' && /^[a-z0-9-]{1,60}$/.test(raw.pinnedLesson) ? raw.pinnedLesson : null,
     tracks,
     facts,
     days,

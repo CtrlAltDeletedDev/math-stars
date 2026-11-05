@@ -156,11 +156,11 @@ export default function Parent() {
           </div>
         </div>
 
-        {/* The new app, behind a per-device switch while she tries it. */}
+        {/* The new app is the default; this is only seen on a device that chose to come back here. */}
         <div style={{ background: '#FBF6EC', borderRadius: 20, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#22252B' }}>Try the new Math Stars</div>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#22252B' }}>Switch back to the new Math Stars</div>
           <div style={{ fontFamily: 'Nunito', fontSize: 14, color: '#5B6270' }}>
-            Her path of plus and minus steps, one Go button, and sums she types on a number pad. Her place moves across; nothing here is changed or deleted, and you can switch back any time from its grown-ups screen.
+            This device was set to open the old version. The new one has her path of plus and minus steps, one Go button, and sums she types on a number pad. Nothing here is changed or deleted by switching.
           </div>
           <button
             onClick={() => { setUsesNewApp(true); navigate('/next'); }}

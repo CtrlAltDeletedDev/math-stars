@@ -4,6 +4,10 @@ import { questionFromId } from '@/engine/questionGenerator';
 import { FactRecord, FactState, factState, quickMs } from '@/core/facts';
 import { Grade, STAGES, TRACKS, TrackId, ceilingFor, topStage, trackOfFact } from '@/core/stages';
 import { Learner, activeFocus, standingOn } from '@/core/learner';
+import { COURSE, gradeAtLeast } from '@/learn/course';
+import { lessonDone } from '@/learn/progress';
+import { GradeCourse } from '@/learn/units';
+import { Lesson, Unit } from '@/learn/types';
 
 // What the grown-ups screen says, worked out from the learner.
 //
@@ -122,10 +126,18 @@ export function movesThisWeek(l: Learner, today: string): { track: TrackId; to: 
 }
 
 /**
- * The week in one or two plain sentences, e.g.
- * "Moved up to ten and some more on Tuesday. 112 sums, 84% right first try."
+ * The week in a few plain sentences, the course first, e.g.
+ * "Passed 2 lessons this week: Make a ten, Counting back. Moved up to ten and
+ * some more on Tuesday. 112 sums, 84% right first try."
  */
-export function weekSummary(l: Learner, today: string): string {
+export function weekSummary(l: Learner, today: string, course: GradeCourse[] = COURSE): string {
+  const lessons = lessonsSentence(l, today, course);
+  const rest = practiceSummary(l, today);
+  return lessons ? `${lessons} ${rest}` : rest;
+}
+
+/** The plus/minus half of the week: moves up, sums and accuracy. */
+function practiceSummary(l: Learner, today: string): string {
   const w = weekStats(l, today);
   const moves = movesThisWeek(l, today);
   const parts: string[] = [];
@@ -401,3 +413,119 @@ export function worksheet(l: Learner, today: string, count = 20, rnd: () => numb
 
 /** The backup file's name, by local date. */
 export const backupFileName = (today: string) => `math-stars-backup-${today}.json`;
+
+// --- Her course -------------------------------------------------------------------
+//
+// Lessons, by unit, by grade. "Done" is `lessonDone`: she passed the check, or
+// her plus/minus path already put her past it. The second kind has no record,
+// so it reads "already knew this" rather than a date she never had.
+// Every function takes the course so tests can hand it a fixture; units with
+// no lessons yet are left out, so a unit still being written never shows as 0 of 0.
+
+export type LessonStatus =
+  | { kind: 'passed'; on: string }
+  | { kind: 'placed' }
+  | { kind: 'started' }
+  | { kind: 'new' };
+
+export interface LessonRow {
+  lesson: Lesson;
+  status: LessonStatus;
+  tries: number;
+  /** Best check score as a whole percent, or null before her first check. */
+  best: number | null;
+}
+
+export interface UnitRow {
+  unit: Unit;
+  lessons: LessonRow[];
+  done: number;
+  total: number;
+}
+
+export interface GradeRow {
+  grade: Grade;
+  title: string;
+  units: UnitRow[];
+  done: number;
+  total: number;
+  /** Where she is against this grade: below her setting, hers, or ahead of it. */
+  place: 'earlier' | 'hers' | 'ahead';
+}
+
+export function lessonRow(l: Learner, lesson: Lesson): LessonRow {
+  const r = l.lessons[lesson.id];
+  const tries = r?.tries ?? 0;
+  const best = r && tries > 0 ? Math.round(r.best * 100) : null;
+  let status: LessonStatus;
+  if (r?.done) status = { kind: 'passed', on: r.done };
+  else if (lessonDone(l, lesson)) status = { kind: 'placed' };
+  else if (r) status = { kind: 'started' };
+  else status = { kind: 'new' };
+  return { lesson, status, tries, best };
+}
+
+const isDone = (r: LessonRow) => r.status.kind === 'passed' || r.status.kind === 'placed';
+
+export function courseReport(l: Learner, course: GradeCourse[] = COURSE): GradeRow[] {
+  const hers = l.profile.grade;
+  return course.map((g) => {
+    const units = g.units
+      .filter((u) => u.lessons.length > 0)
+      .map((unit) => {
+        const lessons = unit.lessons.map((lesson) => lessonRow(l, lesson));
+        return { unit, lessons, done: lessons.filter(isDone).length, total: lessons.length };
+      });
+    return {
+      grade: g.grade,
+      title: g.title,
+      units,
+      done: units.reduce((s, u) => s + u.done, 0),
+      total: units.reduce((s, u) => s + u.total, 0),
+      place: g.grade === hers ? 'hers' : gradeAtLeast(g.grade, hers) ? 'ahead' : 'earlier',
+    };
+  });
+}
+
+/** "Mostly done" for suggesting the next grade: four lessons in five. */
+export const MOSTLY_DONE = 0.8;
+
+/** The grade to suggest moving her to, when her own grade's lessons are mostly done. */
+export function suggestNextGrade(l: Learner, course: GradeCourse[] = COURSE): Grade | null {
+  const next = NEXT_GRADE[l.profile.grade];
+  const mine = courseReport(l, course).find((g) => g.place === 'hers');
+  if (!next || !mine || mine.total === 0) return null;
+  return mine.done / mine.total >= MOSTLY_DONE ? next : null;
+}
+
+/** The unit a lesson belongs to in this course. */
+export function unitInCourse(lessonId: string, course: GradeCourse[] = COURSE): { unit: Unit; grade: GradeCourse } | null {
+  for (const grade of course) for (const unit of grade.units) {
+    if (unit.lessons.some((x) => x.id === lessonId)) return { unit, grade };
+  }
+  return null;
+}
+
+/** Lessons whose check she passed in the last 7 days, oldest first. */
+export function lessonsPassedThisWeek(l: Learner, today: string, course: GradeCourse[] = COURSE): Lesson[] {
+  const from = addDays(today, -6);
+  const all = course.flatMap((g) => g.units.flatMap((u) => u.lessons));
+  const order = new Map(all.map((x, i) => [x.id, i]));
+  return Object.entries(l.lessons)
+    .filter(([id, r]) => r.done && r.done >= from && r.done <= today && order.has(id))
+    // By day, then in course order for lessons passed the same day.
+    .sort(([a, ra], [b, rb]) => (ra.done === rb.done ? order.get(a)! - order.get(b)! : ra.done! < rb.done! ? -1 : 1))
+    .map(([id]) => all[order.get(id)!]);
+}
+
+/** "Passed 2 lessons this week: Make a ten, Counting back." or null. */
+export function lessonsSentence(l: Learner, today: string, course: GradeCourse[] = COURSE): string | null {
+  const done = lessonsPassedThisWeek(l, today, course);
+  if (!done.length) return null;
+  const SHOW = 3;
+  const titles = done.slice(0, SHOW).map((x) => x.title);
+  // "More, fewer, the same" is one title: keep the list readable around it.
+  const names = titles.join(titles.some((t) => t.includes(',')) ? '; ' : ', ');
+  const more = done.length > SHOW ? ` and ${done.length - SHOW} more` : '';
+  return `Passed ${plural(done.length, 'lesson')} this week: ${names}${more}.`;
+}

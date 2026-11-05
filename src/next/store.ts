@@ -16,7 +16,11 @@ import { loadProgressResult } from '@/store/storage';
 
 export const LEARNER_KEY = 'mathstars_learner_v1';
 const UNREADABLE_KEY = 'mathstars_learner_unreadable';
-/** Which app this device opens: 'next' for the new one. Absent means the old one. */
+/**
+ * Which app this device opens. The new one is the default; 'old' records a
+ * grown-up's choice to go back to the old app on this device. ('next' was the
+ * opt-in value while the new app was behind a switch; it still means new.)
+ */
 export const SHELL_KEY = 'mathstars_shell';
 
 export type SaveIssue = null | 'cannot-save' | 'unreadable-backed-up';
@@ -91,14 +95,14 @@ export function resetLearnerCache() {
 // --- Which app this device opens -------------------------------------------
 
 export function usesNewApp(): boolean {
-  try { return localStorage.getItem(SHELL_KEY) === 'next'; } catch { return false; }
+  try { return localStorage.getItem(SHELL_KEY) !== 'old'; } catch { return true; }
 }
 
 export function setUsesNewApp(on: boolean) {
   try {
-    if (on) localStorage.setItem(SHELL_KEY, 'next');
-    else localStorage.removeItem(SHELL_KEY);
-  } catch { /* the switch just won't stick; both apps still work */ }
+    if (on) localStorage.removeItem(SHELL_KEY);
+    else localStorage.setItem(SHELL_KEY, 'old');
+  } catch { /* the choice just won't stick; both apps still work */ }
 }
 
 // --- Backup ---------------------------------------------------------------

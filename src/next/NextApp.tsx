@@ -13,6 +13,8 @@ import Walk from './screens/Walk';
 import GrownUps from './screens/GrownUps';
 import More from './screens/More';
 import Start from './screens/Start';
+import Lesson from './screens/Lesson';
+import Gallery from '@/learn/models/gallery';
 
 // The new Math Stars: five screens.
 //
@@ -36,6 +38,8 @@ export default function NextApp() {
         <Route path="grown-ups" element={<GrownUps />} />
         <Route path="more" element={<More />} />
         <Route path="start" element={<Start />} />
+        <Route path="lesson/:lessonId" element={needsStart ? <Navigate to="../start" replace /> : <Lesson />} />
+        <Route path="gallery" element={<Gallery />} />
         <Route path="*" element={<Navigate to="/next" replace />} />
       </Routes>
     </ErrorBoundary>
