@@ -87,7 +87,8 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
   const pictureNow = item.picture && (showPicture || phase === 'reveal') && support !== 'none';
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+    // data-answer is for the end-to-end tests, in development builds only.
+    <div data-answer={import.meta.env.DEV ? item.answer : undefined} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, minHeight: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div
@@ -142,6 +143,7 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
             return (
               <button
                 key={c.value}
+                data-value={import.meta.env.DEV ? c.value : undefined}
                 disabled={busy || tried.includes(c.value)}
                 onClick={() => {
                   if (readAloud && !c.model) speak(c.say ?? c.label ?? '');
@@ -227,6 +229,8 @@ function colourSigns(text: string) {
 
 function promptSize(prompt: string): string {
   if (prompt.length <= 12) return 'clamp(48px, min(12vw, 8vh), 104px)';
+  // A longer sum ("9 + 4 = 10 + ?") is still just numbers: keep it big.
+  if (prompt.length <= 18 && /^[\d\s+\-−=?]+$/.test(prompt)) return 'clamp(38px, min(9vw, 7vh), 84px)';
   if (prompt.length <= 30) return 'clamp(28px, 6vw, 48px)';
   return 'clamp(22px, 4.5vw, 32px)';
 }

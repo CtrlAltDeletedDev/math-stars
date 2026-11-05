@@ -67,8 +67,10 @@ function LessonRun({ lessonId }: { lessonId: string }) {
 
   if (card.kind === 'intro') {
     return (
-      <Page background={`linear-gradient(${C.sky}, ${C.paper} 60%)`} style={{ alignItems: 'center', justifyContent: 'center', gap: 22, textAlign: 'center' }}>
-        <TopBar onClose={() => navigate(ROUTES.home)} />
+      <Page background={`linear-gradient(${C.sky}, ${C.paper} 60%)`} style={{ alignItems: 'center', justifyContent: 'center', gap: 22, textAlign: 'center', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 'max(12px, env(safe-area-inset-top))', left: 16, right: 16 }}>
+          <TopBar onClose={() => navigate(ROUTES.home)} />
+        </div>
         <div style={{ fontSize: 22, fontWeight: 600, color: C.inkSoft }}>{unit?.emoji} {unit?.title}</div>
         <div className="nx-bob" style={{ fontSize: 110, lineHeight: 1 }}>{lesson.emoji}</div>
         <div style={{ fontWeight: 700, fontSize: 'clamp(32px, 7vw, 52px)', maxWidth: 560 }}>{lesson.title}</div>
