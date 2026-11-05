@@ -117,7 +117,9 @@ button {
 /* Printing the certificate: hide the app, keep the certificate, and drop the
    overlay's dimming so it doesn't render as a grey page. */
 @media print {
-  body * { visibility: hidden; }
+  /* Only while the certificate is on screen: any other page (the new app's
+     worksheet) prints as itself instead of as a blank sheet. */
+  body:has(#certificate-overlay) * { visibility: hidden; }
   #certificate, #certificate * { visibility: visible; }
   #certificate-overlay {
     position: absolute;

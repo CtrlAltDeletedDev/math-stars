@@ -1,5 +1,4 @@
 import { UserProgress } from '@/types';
-import { todayString } from '@/engine/dates';
 import { FactRecord, TOP_BOX } from './facts';
 import { LEARNER_SCHEMA, Learner, newLearner } from './learner';
 import { Grade, TrackId, topStage } from './stages';
@@ -35,7 +34,6 @@ export function factIdFromLegacy(id: string): string | null {
 export function migrateLegacy(old: UserProgress | null, now = Date.now()): Learner {
   const l = newLearner();
   if (!old) return l;
-  const day = todayString(new Date(now));
 
   for (const track of ['plus', 'minus'] as TrackId[]) {
     const s = old.skills?.[OLD_SKILL[track]];
@@ -45,9 +43,11 @@ export function migrateLegacy(old: UserProgress | null, now = Date.now()): Learn
       stage,
       recent: Array.isArray(s.recent) ? s.recent.filter((r) => typeof r === 'boolean').slice(-8) : [],
       ceilingHits: s.ceilingHits ?? 0,
-      // Stones below where she already stands, passed as of today: she has
-      // done them, and the path should say so the first time she sees it.
-      passed: Object.fromEntries(Array.from({ length: stage }, (_, i) => [i, day])),
+      // No dates for stones she passed in the old app: we don't know when, and
+      // stamping today made the grown-ups screen say she moved up four steps
+      // today. The path still shows them passed -- everything below where she
+      // stands is (passedStones).
+      passed: {},
     };
     // Kept absent when the old save never counted: see TrackState.demotions.
     if (typeof s.demotions === 'number') t.demotions = s.demotions;

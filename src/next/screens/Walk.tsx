@@ -70,8 +70,14 @@ export default function WalkScreen() {
 function Walk({ onAgain }: { onAgain: () => void }) {
   const navigate = useNavigate();
   const learner = useLearner();
-  const [plan] = useState(() => new WalkPlan(getLearner()));
-  const [item, setItem] = useState<WalkItem | null>(() => plan.next());
+  // The plan and its first sum come from one initializer: React may run an
+  // initializer twice in development, and a second plan.next() spent a slot.
+  const [start] = useState(() => {
+    const p = new WalkPlan(getLearner());
+    return { plan: p, first: p.next() };
+  });
+  const plan = start.plan;
+  const [item, setItem] = useState<WalkItem | null>(start.first);
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('ask');
   const [found, setFound] = useState(0);

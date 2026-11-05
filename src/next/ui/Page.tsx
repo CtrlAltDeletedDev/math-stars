@@ -10,7 +10,12 @@ export default function Page({ children, background = C.paper, style, wide = fal
   wide?: boolean;
 }) {
   return (
-    <div style={{ minHeight: '100dvh', background, fontFamily: KID_FONT, color: C.ink, display: 'flex', justifyContent: 'center' }}>
+    // The page scrolls itself: global.css locks html/body to the screen for the
+    // old app, so a screen taller than an iPad was otherwise unreachable.
+    <div style={{
+      height: '100dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
+      background, fontFamily: KID_FONT, color: C.ink, display: 'flex', justifyContent: 'center',
+    } as CSSProperties}>
       <div style={{
         width: '100%', maxWidth: wide ? 900 : 620, minHeight: '100dvh', display: 'flex', flexDirection: 'column',
         padding: 'max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',

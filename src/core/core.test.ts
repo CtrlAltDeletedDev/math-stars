@@ -303,7 +303,8 @@ describe('bringing her over from the old app', () => {
     expect(l.tracks.plus.recent).toEqual([true, false]);
     expect(l.tracks.plus.demotions).toBe(2);
     expect(l.tracks.minus.demotions, 'an old save that never counted stays uncounted').toBeUndefined();
-    expect(Object.keys(l.tracks.plus.passed).map(Number)).toEqual([0, 1, 2, 3]);
+    expect(l.tracks.plus.passed, 'no made-up dates for stones passed in the old app').toEqual({});
+    expect([...passedStones(l).plus].sort()).toEqual([0, 1, 2, 3]);
   });
 
   it('carries the facts she has been practising, and nothing that is not a sum', () => {
