@@ -15,7 +15,7 @@ import StarBadge from '@/components/ui/StarBadge';
 import BackgroundGradient from '@/components/ui/BackgroundGradient';
 import InstallBanner from '@/components/ui/InstallBanner';
 import { GAME_CONFIG } from '@/constants/gameConfig';
-import { Medal, Palette, Play, ShoppingBag } from 'lucide-react';
+import { Medal, Minus, Palette, Plus, ShoppingBag, Shuffle } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
 
 export default function Home() {
@@ -84,23 +84,47 @@ export default function Home() {
         {/* Everything below scrolls; the three big choices come first. */}
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 4 } as React.CSSProperties}>
 
-          {/* The one answer to "what should I do?" — adaptive, in-scope, always
-              right. It used to compete with a recommended level and a daily
-              challenge that a child who cannot read could not tell apart. */}
+          {/* The one answer to "what should I do?": plain sums, adding and
+              taking away mixed, getting harder by itself. Drawn as "+ −" so
+              she can find it without reading. */}
           <button
-            onClick={() => navigate('/practice')}
-            aria-label="Play"
+            onClick={() => navigate('/sums')}
+            aria-label="Plus and Minus"
             style={{
               background: 'linear-gradient(135deg, #7E57C2, #4527A0)',
               border: '3px solid rgba(255,255,255,0.5)', borderRadius: 22,
-              padding: '22px 18px', cursor: 'pointer', width: '100%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
-              boxShadow: '0 6px 0 rgba(0,0,0,0.22)', minHeight: 96,
+              padding: '18px 18px', cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
+              boxShadow: '0 6px 0 rgba(0,0,0,0.22)', minHeight: 110,
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <Play size={40} strokeWidth={ICON_STROKE} color="#fff" fill="#fff" aria-hidden />
-            <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 32, color: '#fff' }}>Play</span>
+            <span aria-hidden style={{ display: 'flex', gap: 8 }}>
+              {[Plus, Minus].map((Icon, i) => (
+                <span key={i} style={{
+                  width: 56, height: 56, borderRadius: '50%', background: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={36} strokeWidth={3.5} color="#4527A0" />
+                </span>
+              ))}
+            </span>
+            <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 30, color: '#fff' }}>Plus &amp; Minus</span>
+          </button>
+
+          {/* The old Play: two topics she can climb and one for variety each round. */}
+          <button
+            onClick={() => navigate('/practice')}
+            aria-label="Mix"
+            style={{
+              background: 'rgba(126,87,194,0.55)', border: '2px solid rgba(255,255,255,0.5)',
+              borderRadius: 18, padding: '10px 16px', cursor: 'pointer', width: '100%', minHeight: 64,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <Shuffle size={26} strokeWidth={ICON_STROKE} color="#fff" aria-hidden />
+            <span style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 22, color: '#fff' }}>Mix</span>
           </button>
 
           {/* The daily ritual, and the mistakes worth another look. */}

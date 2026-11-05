@@ -481,11 +481,12 @@ describe('a practice pick says which rung it came from', () => {
   });
 
   it('routes an SRS review to a ladder but gives it no rung', () => {
-    // Focus is deliberately on a different topic, so a pick routed to `adding`
-    // can only be the review -- not a fresh question that happens to look alike.
+    // The fifth slot of a focused sitting is the review slot, and Focus keeps
+    // reviews inside it, so Adding is in the focus; `rung: null` below is what
+    // tells the review from a fresh adding question.
     const p = buildInitialProgress();
     p.gradeLevel = '2';
-    p.practiceFocus = ['clocks'];
+    p.practiceFocus = ['clocks', 'adding'];
     p.srsCards = { 'add-3+4': dueCard('add-3+4') };
     const q = new PracticeQueue(p);
 
@@ -603,7 +604,9 @@ describe('practice queue', () => {
     p.skills = { clocks: { skillId: 'clocks', rung: 0, recent: [], attempts: 3, correct: 2 } };
     const q = new PracticeQueue(p);
     const seen = new Set<string>();
-    for (let i = 0; i < 400; i++) {
+    // Out of grade, clocks only ever takes the variety slot, about one round
+    // in seven: 400 questions missed it about once in 500 runs.
+    for (let i = 0; i < 1500; i++) {
       const pick = q.next();
       if (pick?.skillId) seen.add(pick.skillId);
     }

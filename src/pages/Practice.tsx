@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProgress } from '@/store/useProgress';
 import { CHARACTERS, getCharacterEmoji } from '@/data/characters';
 import { SKILLS_BY_ID, rankFor } from '@/data/skills';
-import { PracticeQueue, PracticePick, ROUND_SIZE } from '@/engine/practiceSession';
+import { PracticeQueue, PracticePick, ROUND_SIZE, SUMS_ROUND_SIZE } from '@/engine/practiceSession';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useBackgroundMusic } from '@/hooks/useBackgroundMusic';
 import { useSpeakQuestion } from '@/hooks/useSpeakQuestion';
@@ -28,7 +28,18 @@ import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 const PRACTICE_COLORS: [string, string] = ['#7E57C2', '#4527A0'];
 
-export default function Practice() {
+interface Props {
+  /**
+   * 'mix' is Play across every topic in her grade (or one topic, from a topic
+   * screen). 'sums' is Plus & Minus: adding and taking away only, in longer
+   * rounds, with no topic names on screen -- just sums.
+   */
+  mode?: 'mix' | 'sums';
+}
+
+export default function Practice({ mode = 'mix' }: Props) {
+  const sums = mode === 'sums';
+  const roundSize = sums ? SUMS_ROUND_SIZE : ROUND_SIZE;
   const navigate = useNavigate();
   const { progress, recordPracticeAnswer, recordQuestionsAnswered, toggleAutoRead } = useProgress();
   const sounds = useSoundEffects();
@@ -41,14 +52,14 @@ export default function Practice() {
 
   const characterName = character?.name ?? 'You';
   const [searchParams] = useSearchParams();
-  const sessionSkill = searchParams.get('skill');
+  const sessionSkill = sums ? null : searchParams.get('skill');
   // The queue and its first question come from one initializer, so a render
   // React repeats in development cannot draw a question twice and put the
   // round's plan out of step. Back from a lesson Play offered, she carries on
   // the same sitting, led by the topic the lesson was about.
   const [start] = useState(() => {
     const back = returnFromLesson();
-    const q = new PracticeQueue(progress, characterName, sessionSkill, ROUND_SIZE, back.lead);
+    const q = new PracticeQueue(progress, characterName, sessionSkill, roundSize, back.lead, { sums });
     return { queue: q, first: q.next(), offered: back.offered };
   });
   const queue = start.queue;
@@ -234,7 +245,7 @@ export default function Practice() {
 
   /** The next question, or the end-of-round card once the round is used up. */
   function continueRound() {
-    if (round.current.answered >= ROUND_SIZE) {
+    if (round.current.answered >= roundSize) {
       cancel();
       setRoundOver(true);
       return;
@@ -247,7 +258,7 @@ export default function Practice() {
     // "Done" in the lesson comes back to Play, on the same topic if she was on one.
     // Replacing this screen in history, as the lesson does on the way back,
     // keeps Back from walking her through Play, the lesson and Play again.
-    const back = sessionSkill ? `/practice?skill=${sessionSkill}` : '/practice';
+    const back = sums ? '/sums' : sessionSkill ? `/practice?skill=${sessionSkill}` : '/practice';
     leaveForLesson(offeredFor.current, offer.skillId);
     navigate(`/learn/${offer.lesson.id}?topic=${offer.skillId}&return=${encodeURIComponent(back)}`, { replace: true });
   }
@@ -376,7 +387,7 @@ export default function Practice() {
           ><X size={26} strokeWidth={ICON_STROKE} style={ICON_CENTER} aria-hidden /></button>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* How far through this round: the round ends on a card, not never. */}
-            <ProgressBar current={roundCount} total={ROUND_SIZE} />
+            <ProgressBar current={roundCount} total={roundSize} />
             <div style={{ fontFamily: 'Nunito', fontWeight: 700, fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center', minHeight: 17 }}>
               {streak >= 3 ? `🔥 ${streak} in a row` : ''}
             </div>
@@ -396,12 +407,15 @@ export default function Practice() {
           </div>
         </div>
 
-        {/* Which skill this question came from */}
-        <div style={{ textAlign: 'center', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
-          {skill
-            ? `${skill.emoji} ${skill.title} ${rankFor(progress.skills?.[skill.id]?.rung ?? 0)}`
-            : '💪 Something to practise again'}
-        </div>
+        {/* Which skill this question came from. Plus & Minus is just sums:
+            the sign on the question is all she needs to read. */}
+        {!sums && (
+          <div style={{ textAlign: 'center', fontFamily: 'Nunito', fontWeight: 700, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
+            {skill
+              ? `${skill.emoji} ${skill.title} ${rankFor(progress.skills?.[skill.id]?.rung ?? 0)}`
+              : '💪 Something to practise again'}
+          </div>
+        )}
 
         {triedChoices.length > 0 && !showFeedback && (
           <div className="anim-slide" style={{

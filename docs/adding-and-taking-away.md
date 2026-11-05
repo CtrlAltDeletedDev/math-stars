@@ -43,10 +43,15 @@ to within 100 and 200.
 
 ## Practising while you're busy
 
-- **Play** on the home screen is enough. Each round of ten works on two topics she can still
-  climb plus one for variety, so she moves within a single sitting.
-- To keep her on adding and taking away only, open the Parent screen (triple-tap the
-  "Math Stars!" title) and turn on **Focus Mode** for Adding and Taking Away.
+- **Plus & Minus**, the big button on the home screen, is just sums: adding and taking away
+  mixed together, two of each in every four questions, in rounds of 20. It moves her up and
+  down by itself. Every fourth question is a warm-up from a step she has already passed, so
+  older facts stay fresh. About three rounds is 10–15 minutes.
+- **Mix**, the smaller button under it, is the old Play: two topics she can climb plus one for
+  variety each round.
+- The Parent screen (triple-tap the "Math Stars!" title) opens with a **Plus & Minus** card: the
+  step she's on in each, what comes next, how accurate and how quick she is there, and how many
+  questions she did today.
 - To drill one thing ("she's on +9 this week"), open **Adding**, then play the matching
   lesson from the strip (for example **Adding 9**).
 - The Parent screen shows which step she's on in each topic, how accurate she is there, and

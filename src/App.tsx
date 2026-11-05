@@ -29,7 +29,9 @@ export default function App() {
       {/* Old category links (a bookmark, a back-stack entry) still resolve. */}
       <Route path="/category/:id" element={<CategoryRedirect />} />
       <Route path="/grade" element={<GradeSelect />} />
-      <Route path="/practice" element={<Practice />} />
+      {/* Keyed apart so moving between the two never reuses one queue for the other. */}
+      <Route path="/practice" element={<Practice key="mix" />} />
+      <Route path="/sums" element={<Practice key="sums" mode="sums" />} />
       <Route path="/game/daily/challenge" element={<DailyGame />} />
       <Route path="/game/review/practice" element={<ReviewGame />} />
       <Route path="/game/master/:topicId" element={<MasterGame />} />

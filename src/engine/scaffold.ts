@@ -28,13 +28,16 @@ export function aidModeFor(
   skillId: string | null,
   rung: number | null,
 ): AidMode {
-  // A review or a question from another rung says nothing about whether she
-  // is steady here, so it gets the picture.
+  // A review says nothing about whether she is steady anywhere: it gets the
+  // picture.
   if (!skillId || rung === null) return 'show';
   const state = progress.skills?.[skillId];
   if (!state) return 'show';
   const standing = Math.min(state.rung, ceilingFor(skillId, progress.gradeLevel));
-  if (standing !== rung) return 'show';
+  // A warm-up from a step she has already been promoted past waits behind the
+  // tap; one from above her is new ground and gets the picture.
+  if (rung < standing) return 'tap';
+  if (rung > standing) return 'show';
   const recent = state.recent;
   if (recent.length < AID_SETTLE) return 'show';
   const right = recent.filter(Boolean).length / recent.length;
