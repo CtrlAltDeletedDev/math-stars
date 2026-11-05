@@ -162,7 +162,13 @@ export interface Item {
   prompt: string;
   answer: string;
   input: 'number' | { choices: Choice[] } | { model: ModelState; goal: (s: ModelState) => boolean; solution: ModelState };
-  /** The picture: the lesson's model in view-only form. Faded in "check". */
+  /**
+   * Part of the question itself, always shown, even in the check: the clock
+   * to read, the coins to count, the graph to answer from, the blocks whose
+   * number she types. Never a hint.
+   */
+  figure?: ModelState;
+  /** The picture: support for working it out (counters for a sum). Faded in practice, gone in "check". */
   picture?: ModelState;
   /** A strategy, never the answer. */
   hint?: string;

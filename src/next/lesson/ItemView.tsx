@@ -101,6 +101,7 @@ export default function ItemView({ item, support, strict = false, readAloud, sou
           </button>
         </div>
 
+        {item.figure && <Model state={item.figure} />}
         {pictureNow && <div className="nx-rise"><Model state={item.picture!} size="small" /></div>}
         {item.picture && !pictureNow && support === 'tap' && (
           <button onClick={() => setShowPicture(true)} style={showMeBtn}>
