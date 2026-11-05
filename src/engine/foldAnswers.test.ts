@@ -83,7 +83,7 @@ describe('which ladder an answer is credited to', () => {
 });
 
 describe('level play', () => {
-  it('moves Number Tricks when she plays a Number Tricks level at her rung', () => {
+  it('moves Number Tricks when they play a Number Tricks level at their rung', () => {
     for (const levelId of ['strategy-doubles', 'strategy-make-ten', 'strategy-count-on']) {
       const rung = RUNG_FOR_LEVEL.get(levelId)!;
       const answers = questionsOf(levelId).slice(0, LADDER.window).map(right);
@@ -137,7 +137,7 @@ describe('modes that only know the question', () => {
   });
 
   it('never moves a ladder from a mixed session, even on a full window of right answers', () => {
-    // These sessions draw across rungs, so no answer in one says where she stands.
+    // These sessions draw across rungs, so no answer in one says where they stand.
     const answers = Array.from({ length: LADDER.window * 2 }, () => right(questionFromId('dbl-3')!));
     const { skills } = foldMixedAnswers(standingOn({ strategies: 0 }), {}, answers, 'strategies', '1');
     expect(skills.strategies.attempts).toBe(LADDER.window * 2);

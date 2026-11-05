@@ -32,7 +32,7 @@ export default function Flashcard() {
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   // A stale bookmark or a renamed level id must never render an empty screen:
-  // nothing throws, so the error boundary cannot catch it and she is simply
+  // nothing throws, so the error boundary cannot catch it and they are simply
   // stuck with no way back. Matches the guard in Game.tsx.
   if (!topic) return <Navigate to="/" replace />;
 

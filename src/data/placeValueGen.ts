@@ -35,7 +35,7 @@ export const ONE_DOT = '●';
 
 /**
  * Past five tens the picture runs off a phone screen and stops being
- * something she can count at a glance, so bigger numbers go without one.
+ * something they can count at a glance, so bigger numbers go without one.
  */
 const PICTURE_MAX_TENS = 5;
 
@@ -60,18 +60,18 @@ export type DigitAsk = 'tensdigit' | 'onesdigit' | 'howmanytens';
 
 /**
  * A repeated digit (44) is never asked about: both readings give 4, so it
- * cannot tell us whether she knows which place is which.
+ * cannot tell us whether they know which place is which.
  */
 const canAskDigit = (n: number) => isTwoDigit(n) && !isRepdigit(n);
 
 /**
  * Three options: the two digits and the number itself. The answer is a single
  * digit, and the mistakes worth offering are the other digit (the one this
- * rung exists to catch) and tapping the number she was shown.
+ * rung exists to catch) and tapping the number they were shown.
  *
  * Not four. The only way to reach four is a digit next to the answer, which no
  * child gives for "the tens digit of 47", or 40 — and 40 is a real mistake but
- * it gives the game away: "4, 7 or 40?" tells her the 4 is the one in the tens
+ * it gives the game away: "4, 7 or 40?" tells them the 4 is the one in the tens
  * place, which is the whole question. Nor would four options pass the rank
  * rule: a single-digit answer can never be one of the two biggest.
  */
@@ -125,7 +125,7 @@ export type BuildForm = 'build' | 'buildrev' | 'expand' | 'expandrev';
 /**
  * build      4 tens and 7 ones = ?   (any two-digit number; "4 tens and 0 ones" is taught)
  * buildrev   7 ones and 4 tens = ?   (ones said first, so writing the digits in the
- *                                    order heard gives 74: she has to read the words)
+ *                                    order heard gives 74: they have to read the words)
  * expand     40 + 7 = ?              (no "40 + 0")
  * expandrev  7 + 40 = ?
  *
@@ -158,7 +158,7 @@ function buildQuestion(form: BuildForm, n: number): Question {
   candidates.push([t + o, 'place-value']); // counted the tens as ones: 4 + 7 = 11
   if (words) {
     candidates.push([o, 'answered-a-given-number'], [t, 'answered-a-given-number']);
-    // Built the tens and forgot the ones. Nothing showed her 40, so this is a
+    // Built the tens and forgot the ones. Nothing showed them 40, so this is a
     // real slip with no tag that honestly describes it.
     if (o >= 1) candidates.push([tens, 'unknown']);
     // Counting the tens one too far or one short: 10, 20, 30, 40, 50 → 57.

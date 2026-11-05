@@ -11,14 +11,14 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 
 // --- Blocks -------------------------------------------------------------------
 
-/** Rods she may have when the lesson does not say: up to 100. */
+/** Rods they may have when the lesson does not say: up to 100. */
 export const DEFAULT_MAX_TENS = 10;
 
 export const maxTensOf = (s: S<'blocks'>) => s.maxTens ?? DEFAULT_MAX_TENS;
 
 /**
- * Loose ones she may lay down. With `canTrade` there is room for two tens'
- * worth so she can see a ten waiting to be bundled; without it, a ones place
+ * Loose ones they may lay down. With `canTrade` there is room for two tens'
+ * worth so they can see a ten waiting to be bundled; without it, a ones place
  * never holds ten.
  */
 export const maxOnesOf = (s: S<'blocks'>) => (s.canTrade ? 20 : 9);
@@ -102,7 +102,7 @@ export function stepMinute(s: S<'clock'>, by: number): S<'clock'> {
   return { ...s, ...minutesToClock(next) };
 }
 
-/** Put the hour hand where she pointed (degrees clockwise from 12). It lands on a whole hour. */
+/** Put the hour hand where they pointed (degrees clockwise from 12). It lands on a whole hour. */
 export function setHourFromAngle(s: S<'clock'>, angle: number): S<'clock'> {
   // The hand sits minute/60 of the way past its hour, so take that off first.
   const h = toClockHour(Math.round(angle / 30 - s.minute / 60));
@@ -177,7 +177,7 @@ export function togglePick(s: S<'shapes'>, i: number): S<'shapes'> {
 
 // --- Measure ------------------------------------------------------------------
 
-/** She may lay a couple past the end, so "too many" is a mistake she can make and see. */
+/** They may lay a couple past the end, so "too many" is a mistake they can make and see. */
 export const maxPlacedOf = (s: S<'measure'>) => Math.max(s.length + 2, s.placed);
 
 export function placeUnit(s: S<'measure'>): S<'measure'> {
@@ -208,7 +208,7 @@ export function graphColumns(s: S<'graph'>): number {
   return s.max ?? Math.max(5, ...s.rows.map((r) => r.count));
 }
 
-/** The most one row may hold when she adds: `max`, else 10. */
+/** The most one row may hold when they add: `max`, else 10. */
 export const graphCap = (s: S<'graph'>) => s.max ?? Math.max(GRAPH_CAP, ...s.rows.map((r) => r.count));
 
 export function addToRow(s: S<'graph'>, row: number): S<'graph'> {

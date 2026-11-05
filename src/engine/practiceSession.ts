@@ -12,10 +12,10 @@ import { sameness } from './sessionBuilder';
 // Picking the next question in endless practice.
 //
 // Three things compete for each slot, in priority order:
-//   1. a question she got wrong earlier *in this same session* (requeued a few
+//   1. a question they got wrong earlier *in this same session* (requeued a few
 //      questions later, while the correction is still fresh)
 //   2. a question the spaced-repetition engine says is due
-//   3. a fresh question at her current rung, on the topic whose turn it is
+//   3. a fresh question at their current rung, on the topic whose turn it is
 //
 // Play runs in rounds of ten on a few topics (see chooseRoundSkills), so that
 // something can actually move within one sitting.
@@ -24,10 +24,10 @@ export interface PracticePick {
   question: Question;
   skillId: string | null; // null for an SRS review question
   /**
-   * The rung this was served from, so the ladder can tell evidence about her
+   * The rung this was served from, so the ladder can tell evidence about their
    * current rung from evidence about some other one. Null for an SRS review,
-   * which is deliberately drawn from wherever she has been struggling and so
-   * says nothing about where she is standing now.
+   * which is deliberately drawn from wherever they have been struggling and so
+   * says nothing about where they are standing now.
    */
   rung: number | null;
 }
@@ -56,7 +56,7 @@ export const SUMS_SKILLS = ['adding', 'taking-away'] as const;
 /** Questions in one round of Plus & Minus: ten of each, and the daily goal. */
 export const SUMS_ROUND_SIZE = 20;
 
-/** Every this-many fresh questions in Plus & Minus, one is a warm-up from a step she has passed. */
+/** Every this-many fresh questions in Plus & Minus, one is a warm-up from a step they have passed. */
 export const WARMUP_EVERY = 4;
 
 /** How far back a warm-up may reach. */
@@ -65,7 +65,7 @@ const WARMUP_REACH = 3;
 /**
  * The order a Plus & Minus round asks its two ladders in: blocks of four, two
  * of each, shuffled within the block. Even overall so neither ladder is
- * starved; shuffled so she cannot answer "it's a minus one next" without
+ * starved; shuffled so they cannot answer "it's a minus one next" without
  * reading the sign -- noticing the sign is half of mixed practice.
  */
 export function sumsPlan(size: number, skills: readonly string[] = SUMS_SKILLS): string[] {
@@ -76,8 +76,8 @@ export function sumsPlan(size: number, skills: readonly string[] = SUMS_SKILLS):
 }
 
 /**
- * A rung below where she stands, for a warm-up: one of the last few steps she
- * passed, so the facts she climbed past keep coming up. Null on the first rung,
+ * A rung below where they stand, for a warm-up: one of the last few steps they
+ * passed, so the facts they climbed past keep coming up. Null on the first rung,
  * which has nothing below it.
  */
 export function warmupRung(standing: number): number | null {
@@ -98,7 +98,7 @@ const TEACHING_ORDER = new Map(TOPICS.map((t, i) => [t.id, i]));
  *
  * A round of three asks its two main topics four times each and the extra one
  * twice, interleaved: A B A B C A B A B C. Four is what the fast lane needs and
- * half of what the ordinary window needs, so a topic she is climbing can move
+ * half of what the ordinary window needs, so a topic they are climbing can move
  * within one round; picked at random instead, three topics split ten questions
  * about 3-3-3 and a round would often end with nothing moved. A round of one
  * or two topics simply takes turns.
@@ -126,20 +126,20 @@ function weightedPick(ids: string[], weight: (id: string) => number): string | u
 /**
  * The topics one round of Play concentrates on.
  *
- * Play used to spread every question across every topic in her grade — about
+ * Play used to spread every question across every topic in their grade — about
  * 1 in 16 each in first grade — so a promotion, which needs 8 answers at one
  * rung, took a week of play to come round on any one topic and a round never
  * felt like it went anywhere. Now a round is mostly about two topics:
  *
- *   1–2  topics she has started and can still climb, the ones nearest their
- *        next step most likely; or, until she has started two, the next topics
+ *   1–2  topics they have started and can still climb, the ones nearest their
+ *        next step most likely; or, until they have started two, the next topics
  *        in teaching order (TOPICS), so a new player begins with adding
- *   3    one more from anywhere in her grade, for variety, to introduce
- *        something new now and then, and to keep topics she has topped out on
+ *   3    one more from anywhere in their grade, for variety, to introduce
+ *        something new now and then, and to keep topics they have topped out on
  *        from going stale
  *
  * Last round's topics are weighted down, so rounds rotate rather than repeat.
- * Only topics in her grade take the first two slots. Due reviews and requeued
+ * Only topics in their grade take the first two slots. Due reviews and requeued
  * misses still come from anywhere (see `next`).
  */
 export function chooseRoundSkills(
@@ -147,7 +147,7 @@ export function chooseRoundSkills(
   pool: string[],
   previous: readonly string[] = [],
   n = ROUND_TOPICS,
-  /** Topics that must lead the round, e.g. the one whose lesson she just watched. */
+  /** Topics that must lead the round, e.g. the one whose lesson they just watched. */
   lead: readonly string[] = [],
 ): string[] {
   if (pool.length <= n) {
@@ -164,7 +164,7 @@ export function chooseRoundSkills(
   const hits = (id: string) => state(id)?.recent.filter(Boolean).length ?? 0;
   const rotated = (id: string) => (previous.includes(id) ? 0.25 : 1);
 
-  // A topic kept only because she started it before her grade moved (see
+  // A topic kept only because they started it before their grade moved (see
   // unlockedSkillIds) may still turn up for variety, but never takes a main
   // slot: its ceiling is the ladder's top, so it would always look climbable.
   const inGrade = (id: string) => isInGrade(id, grade);
@@ -207,13 +207,13 @@ export class PracticeQueue {
     private progress: UserProgress,
     private characterName = 'You',
     /**
-     * One topic to stay on for this session — set when she arrives from a
+     * One topic to stay on for this session — set when they arrive from a
      * topic screen's Play button. Outranks the parent's Focus Mode, because it
      * is the more specific and more recent intent.
      */
     private sessionSkill: string | null = null,
     private roundSize = ROUND_SIZE,
-    /** A topic to lead the first round with: the one whose lesson she just watched. */
+    /** A topic to lead the first round with: the one whose lesson they just watched. */
     lead: string | null = null,
     options: QueueOptions = {},
   ) {
@@ -239,7 +239,7 @@ export class PracticeQueue {
     // practise, so those rounds simply take turns through it, carrying on where
     // the last round stopped: starting each round from the top of a Focus Mode
     // list would ask its first few topics every round and never reach the rest.
-    // Only the open "everything in her grade" pool is narrowed and planned here.
+    // Only the open "everything in their grade" pool is narrowed and planned here.
     if (narrowed) {
       this.round = pool;
       this.plan = null;
@@ -260,7 +260,7 @@ export class PracticeQueue {
    * any, otherwise whatever the tiers have unlocked.
    *
    * This used to return every skill unconditionally, which is why a brand-new
-   * player met fractions and the times tables in her first session.
+   * player met fractions and the times tables in their first session.
    */
   private skillPool(): string[] {
     if (this.sums) return SUMS_SKILLS.filter((id) => SKILLS_BY_ID.has(id));
@@ -299,7 +299,7 @@ export class PracticeQueue {
    * The topics a review may come from, or null for any.
    *
    * A sitting someone narrowed -- Plus & Minus, a topic screen's Play, a
-   * parent's Focus Mode -- has said what she is practising, and a clock
+   * parent's Focus Mode -- has said what they are practising, and a clock
    * question turning up in the middle of Adding's own Play broke that
    * promise. Only the open, every-topic Play draws reviews from anywhere.
    */
@@ -334,10 +334,10 @@ export class PracticeQueue {
   }
 
   /**
-   * A question at this rung she has not just been asked. A small rung can only
+   * A question at this rung they have not just been asked. A small rung can only
    * say so many things, and one mixing a bank with a generator says some of
-   * them under two ids, so: a few draws, the first she has not seen lately,
-   * else the one she saw longest ago.
+   * them under two ids, so: a few draws, the first they have not seen lately,
+   * else the one they saw longest ago.
    */
   private freshAt(skill: Skill, rung: number): Question | null {
     let best: Question | null = null;
@@ -363,7 +363,7 @@ export class PracticeQueue {
     const mayInterrupt = (skillId: string | null) =>
       variety === null || turn === skillId || (turn === variety && !main.includes(skillId ?? ''));
 
-    // 1. Something she just got wrong, now far enough back to be worth retrying.
+    // 1. Something they just got wrong, now far enough back to be worth retrying.
     const dueIdx = this.requeue.findIndex((r) => r.at <= this.asked && mayInterrupt(r.skillId));
     if (dueIdx >= 0) {
       const [item] = this.requeue.splice(dueIdx, 1);
@@ -380,8 +380,8 @@ export class PracticeQueue {
       const review = this.dueReview();
       if (review) {
         // Routed to a ladder like any other answer. It carries no rung -- a
-        // review is drawn from wherever she has been struggling, so it says
-        // nothing about where she is standing -- but it used to carry no skill
+        // review is drawn from wherever they have been struggling, so it says
+        // nothing about where they are standing -- but it used to carry no skill
         // either, which made up to a fifth of every practice session invisible
         // to the learner model.
         return {
@@ -392,8 +392,8 @@ export class PracticeQueue {
       }
     }
 
-    // 3. Fresh question at her current rung, on the topic whose turn it is. The
-    // rest of the round, then anything in her grade, are a fallback, so a round
+    // 3. Fresh question at their current rung, on the topic whose turn it is. The
+    // rest of the round, then anything in their grade, are a fallback, so a round
     // whose topic cannot ask a question right now still never runs dry.
     if (!this.plan) this.turn++;
     const preferred = turn ?? '';
@@ -408,10 +408,10 @@ export class PracticeQueue {
         this.stateFor(skillId).rung,
         ceilingFor(skillId, this.progress.gradeLevel),
       );
-      // Plus & Minus keeps the facts she climbed past coming up: a drill of
+      // Plus & Minus keeps the facts they climbed past coming up: a drill of
       // nothing but "make a ten" is not what ordinary sums feel like. Served
-      // with its own rung, so it counts toward her totals and the SRS but
-      // never toward moving her on the rung she is standing on.
+      // with its own rung, so it counts toward their totals and the SRS but
+      // never toward moving them on the rung they are standing on.
       const warm = this.sums && (this.fresh + 1) % WARMUP_EVERY === 0 ? warmupRung(standing) : null;
       const rung = warm ?? standing;
       const q = this.freshAt(skill, rung);
@@ -422,7 +422,7 @@ export class PracticeQueue {
     return null;
   }
 
-  /** Keep the queue's view of progress current as she levels up mid-session. */
+  /** Keep the queue's view of progress current as they level up mid-session. */
   syncProgress(progress: UserProgress) {
     this.progress = progress;
   }

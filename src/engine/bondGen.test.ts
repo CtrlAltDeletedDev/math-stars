@@ -3,7 +3,7 @@ import { Question, ErrorTag } from '@/types';
 import { generateBondQuestion, bondFromId, BOND_ID_PATTERN } from '@/data/bondGen';
 
 // The number-bond generator the practice ladder deals from. Everything here
-// re-derives the answer from what she is shown — the numbers in the prompt and
+// re-derives the answer from what they are shown — the numbers in the prompt and
 // the pairs on the buttons — and never trusts `correctAnswer`.
 
 const RUNGS = [
@@ -174,7 +174,7 @@ describe.each(RUNGS)('%s', (_label, params, wholes) => {
     const rules: Record<string, (q: Question) => string[]> = {
       biggest: (q) => [String(Math.max(...nums(q)))],
       smallest: (q) => [String(Math.min(...nums(q)))],
-      'not a number she can see': (q) => q.choices.filter((c) => !numbersIn(q.prompt).includes(c)),
+      'not a number they can see': (q) => q.choices.filter((c) => !numbersIn(q.prompt).includes(c)),
       'one of the numbers that touch': (q) => q.choices.filter((c) => nums(q).includes(Number(c) - 1) || nums(q).includes(Number(c) + 1)),
     };
     for (const [name, rule] of Object.entries(rules)) expect(score(rule), name).toBeLessThan(0.47);

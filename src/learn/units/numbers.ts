@@ -6,7 +6,7 @@ import {
 
 // Unit: Numbers to 20.
 //
-// Before adding means anything she needs number sense: that the last number
+// Before adding means anything they need number sense: that the last number
 // counted is how many, that 7 is "5 and 2 more" on a ten frame, that a teen
 // number is a ten and some ones, and where each number sits on the line. No
 // lesson here is placed by the plus/minus path: none is a stage's facts.

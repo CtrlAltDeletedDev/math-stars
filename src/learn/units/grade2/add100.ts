@@ -1,7 +1,7 @@
 import { Unit } from '../../types';
 
 // Second grade: Adding to 100. Not written yet; the course skips a unit with no
-// lessons, so this is the place for it, not a gap she can see.
+// lessons, so this is the place for it, not a gap they can see.
 export const UNIT: Unit = {
   id: 'add-100',
   title: 'Adding to 100',

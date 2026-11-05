@@ -1,8 +1,8 @@
 // The new look: a picture book, not a slot machine.
 //
 // Warm paper, near-black numerals, and the two operations colour-coded
-// everywhere so she learns the sign by colour too. Green means go and right;
-// amber means "try again". Red is never used on her screens.
+// everywhere so they learn the sign by colour too. Green means go and right;
+// amber means "try again". Red is never used on their screens.
 
 export const C = {
   paper: '#FBF6EC',
@@ -26,7 +26,7 @@ export const C = {
   grassDeep: '#A9D08A',
 } as const;
 
-/** Her screens: round, chunky, open numerals. */
+/** Their screens: round, chunky, open numerals. */
 export const KID_FONT = "'Fredoka', 'Nunito', system-ui, sans-serif";
 /** The grown-ups screen: built for legibility. */
 export const ADULT_FONT = "'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif";

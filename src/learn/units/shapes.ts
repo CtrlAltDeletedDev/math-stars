@@ -5,8 +5,8 @@ import { any, ask, choiceItem, doStep, mix, modelItem, numberItem, randomInt, sh
 //
 // A shape is what its sides and corners make it, not its colour or size or
 // which way up it sits. So shapes are named, then their sides and corners are
-// counted, then she sorts by them. Solid shapes are met through things she
-// knows (a ball, a can, a box). Then shapes are cut: equal parts first, and
+// counted, then they sort by them. Solid shapes are met through things they
+// know (a ball, a can, a box). Then shapes are cut: equal parts first, and
 // "not fair" when they are not, then halves and fourths, and that more equal
 // parts means smaller parts.
 
@@ -38,7 +38,7 @@ const LOOKS_LIKE: Record<ShapeName, ShapeName[]> = {
   'rectangular prism': ['cube', 'cylinder', 'cone'],
 };
 
-/** Things she knows, shaped like each solid. */
+/** Things they know, shaped like each solid. */
 const LIKE: Record<string, { thing: string; emoji: string }> = {
   cube: { thing: 'a dice', emoji: '🎲' },
   sphere: { thing: 'a ball', emoji: '⚽' },
@@ -212,7 +212,7 @@ function likeItem(): Item {
 const solids: Lesson = {
   id: 'shapes-solid',
   title: 'Solid shapes',
-  goal: 'Name cubes, spheres, cones, cylinders and rectangular prisms, and match them to things she knows.',
+  goal: 'Name cubes, spheres, cones, cylinders and rectangular prisms, and match them to things they know.',
   standard: '1.G.1',
   emoji: '🧊',
   teach: [

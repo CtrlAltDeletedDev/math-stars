@@ -20,13 +20,13 @@ import { UNIT as time2 } from './grade2/time';
 import { UNIT as money2 } from './grade2/money';
 import { UNIT as fractions2 } from './grade2/fractions';
 
-// The course, grade by grade, in teaching order. It is one road: when she
-// finishes her grade's units, today's lesson carries straight on into the
-// next grade's, so the app grows with her rather than ending.
+// The course, grade by grade, in teaching order. It is one road: when they
+// finish their grade's units, today's lesson carries straight on into the
+// next grade's, so the app grows with them rather than ending.
 //
 // Kindergarten review lives in "Numbers to 20" for now; a grade's units can be
 // added here (append, or insert -- nothing saved refers to a unit's position,
-// only to lesson ids) and appear on her path as soon as they have lessons.
+// only to lesson ids) and appear on their path as soon as they have lessons.
 
 export interface GradeCourse {
   grade: Grade;

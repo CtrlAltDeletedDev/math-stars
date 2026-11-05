@@ -6,8 +6,8 @@ import { Scale } from 'lucide-react';
 // The pictures lessons are made of. Each one is drawn from a few numbers in
 // src/data/learn.ts, so a lesson is data and a new one needs no new drawing.
 //
-// Everything here is big, high-contrast and sparse on purpose: it is what she
-// looks at while the guide talks, and a busy picture competes with the voice.
+// Everything here is big, high-contrast and sparse on purpose: it is what they
+// look at while the guide talks, and a busy picture competes with the voice.
 
 const INK = '#3A4652';
 const RED = '#FF6B6B';
@@ -43,8 +43,8 @@ function NumberLineScene({ max, start, hops = 0, dir = 1, animate = false }: {
   }, [animate, hops, start, dir]);
 
   // Zoom to where the hops happen, at least 11 numbers wide. On a phone the
-  // whole 0–20 line is too small to watch; her homework line is still what the
-  // "try" steps use, so she sees both.
+  // whole 0–20 line is too small to watch; their homework line is still what the
+  // "try" steps use, so they see both.
   const end = start + dir * hops;
   let lo = Math.max(0, Math.min(start, end) - 2);
   let hi = Math.min(max, Math.max(start, end) + 2);

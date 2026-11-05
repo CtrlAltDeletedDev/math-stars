@@ -69,7 +69,7 @@ describe('story problems within 20', () => {
   });
 
   it('usually offers "added the two numbers" on a story that is really a take-away', () => {
-    // The exact mistake on her sheet: 14 balls, 6 soccer balls → she chose 20.
+    // The exact mistake on their sheet: 14 balls, 6 soccer balls → they chose 20.
     // Not *always*: the sum is always bigger than the answer, so offering it
     // every time would make "never the biggest" a working strategy. The shared
     // builder drops it exactly when it puts every distractor below the answer.
@@ -126,7 +126,7 @@ describe('story problems within 20', () => {
     }
   });
 
-  it('carry the hop line, so she can show her work', () => {
+  it('carry the hop line, so they can show their work', () => {
     for (let i = 0; i < 200; i++) {
       const q = generateStoryProblem('part');
       expect(q.visual).toEqual({ kind: 'numberLine', max: 20 });
@@ -161,7 +161,7 @@ describe('"which number sentence matches the story?"', () => {
 
   it('does not let the shape of the sentence give the answer away', () => {
     // If the right answer were always the only one with a minus, or never a
-    // plain "a + b = ?", she could pick it without reading the story.
+    // plain "a + b = ?", they could pick it without reading the story.
     const shapeOf = (c: string) => c.replace(/\d+/g, 'n');
     const rightShapes = new Map<string, number>();
     let onlyMinus = 0, total = 0;

@@ -1,7 +1,7 @@
 import { Question } from '@/types';
 import { buildTaggedChoices, Candidate, randomInt, shuffle } from '@/engine/choices';
 
-// Even and odd, generated rather than hand-listed, so a child at the top of her
+// Even and odd, generated rather than hand-listed, so a child at the top of their
 // grade is not shown the same sixteen questions forever. The hand-written bank
 // in evenOdd.ts and the levels that use it stay exactly as they are; these are
 // what the practice ladder draws on.
@@ -11,7 +11,7 @@ import { buildTaggedChoices, Candidate, randomInt, shuffle } from '@/engine/choi
 //   - "Is 7 even or odd?" with the number written as keycaps, like the bank.
 //   - The same question over a picture of that many things already standing in
 //     pairs. This is where "even" stops being a word to memorise and becomes
-//     "everyone has a partner": she looks at the end of the row, not the count.
+//     "everyone has a partner": they look at the end of the row, not the count.
 //     Pictures stop at 10 — twenty emoji in pairs is four lines on a phone, and
 //     past ten the skill is reading the last digit, not looking.
 //   - "Which number is even?" with exactly one number of the asked kind: three
@@ -74,7 +74,7 @@ function keycap(n: number): string {
   return [...String(n)].map((d) => d + KEYCAP).join('');
 }
 
-/** "🧦🧦 🧦🧦 🧦" — the pairs made for her, so the question is the lonely one at the end. */
+/** "🧦🧦 🧦🧦 🧦" — the pairs made for them, so the question is the lonely one at the end. */
 function inPairs(emoji: string, n: number): string {
   const groups: string[] = [];
   for (let left = n; left > 0; left -= 2) groups.push(emoji.repeat(Math.min(2, left)));
@@ -130,7 +130,7 @@ function pairsPicture(n: number, thing: Thing): Question {
 /**
  * The lowest number "which is odd?" may offer. Zero is even, and "zero is
  * nothing, so it can't be even" is a real first-grade belief, so it is a fair
- * wrong option once she is working to 20. To 10 it stays out, as in the bank.
+ * wrong option once they are working to 20. To 10 it stays out, as in the bank.
  */
 const floorOf = (range: Range) => (range === 20 ? 0 : 1);
 

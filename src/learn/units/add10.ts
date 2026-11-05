@@ -7,10 +7,10 @@ import {
 
 // Unit: Adding to 10.
 //
-// She has added within 5 already, so the unit moves fast from "adding is
+// They have added within 5 already, so the unit moves fast from "adding is
 // putting together" to the strategies that replace counting from 1: count on
 // from the bigger number, turn it around, doubles, and the pairs that make 10.
-// Every lesson uses one manipulative she moves herself, and that same
+// Every lesson uses one manipulative they move themselves, and that same
 // manipulative is the picture in practice.
 
 const sumAtMost = (max: number, min = 1): [number, number] => {

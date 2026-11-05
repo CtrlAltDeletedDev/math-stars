@@ -3,7 +3,7 @@ import { Question, ErrorTag } from '@/types';
 import { generateEvenOddQuestion, evenOddFromId, EVEN_ODD_ID_PATTERN, PAIR_GAP } from '@/data/evenOddGen';
 
 // The even-and-odd generator the practice ladder deals from. Everything here
-// re-derives the answer from what she is shown — the number in the prompt, the
+// re-derives the answer from what they are shown — the number in the prompt, the
 // keycaps, the objects in the picture — and never trusts `correctAnswer`.
 
 const RUNGS = [
@@ -200,7 +200,7 @@ describe.each(RUNGS)('%s', (_label, params, max) => {
       for (const q of which) {
         const nums = q.choices.map(Number);
         const picks = rule(nums);
-        // Where the rule says nothing she guesses.
+        // Where the rule says nothing they guess.
         score += picks.length === 0 ? guess : picks.filter((v) => v === Number(q.correctAnswer)).length / picks.length;
       }
       expect(score / which.length, name).toBeLessThan(guess + 0.17);

@@ -12,7 +12,7 @@ import { generatePlaceValueQuestion, placeValueFromId, PLACE_VALUE_ID_PATTERN } 
 import { buildTaggedChoices, randomInt, shuffle } from './choices';
 
 // Distractors are the mistakes a first grader actually makes, not the integers
-// nearest the answer. Picking a wrong option should tell us something: that she
+// nearest the answer. Picking a wrong option should tell us something: that they
 // counted one too far, added when the sign said subtract, or landed on the wrong
 // multiple. See src/engine/choices.ts for why this matters.
 
@@ -158,11 +158,11 @@ export function generateSubtractionQuestion(maxMinuend: number): Question {
 
 // --- Targeted fact practice -----------------------------------------------
 //
-// "She's working on +2 and -1 this week" is the single most common thing a
+// "They're working on +2 and -1 this week" is the single most common thing a
 // parent knows, and until now there was no way to ask for it. A level capped at
 // "sums to 10" spreads its questions over every pair that fits, so only about
 // one question in four was actually a +2. These two keep the operation fixed and
-// vary the number she starts from, which is exactly how the fact is drilled at
+// vary the number they start from, which is exactly how the fact is drilled at
 // school: 3 + 2, then 7 + 2, then 15 + 2.
 //
 // They deliberately reuse additionQuestion/subtractionQuestion, so a targeted
@@ -177,7 +177,7 @@ export function generateTargetedAdditionQuestion(addend: number, maxSum: number)
 
 export function generateTargetedSubtractionQuestion(subtrahend: number, maxMinuend: number): Question {
   // From the subtrahend upward, so the answer is never negative. Starting *at*
-  // it is kept on purpose: "2 - 2 = 0" is a real fact she is taught.
+  // it is kept on purpose: "2 - 2 = 0" is a real fact they are taught.
   const a = randomInt(subtrahend, Math.max(subtrahend, maxMinuend));
   return subtractionQuestion(a, subtrahend, maxMinuend);
 }
@@ -259,7 +259,7 @@ export function generateSubtractionPattern(pattern: SubPattern): Question {
     case 'minusNine':
       return subtractionQuestion(randomInt(11, 18), coin() ? 9 : 8, 20);
     case 'bridge': {
-      // 13 - 5: more taken away than there are ones, so she has to go back
+      // 13 - 5: more taken away than there are ones, so they have to go back
       // through ten.
       const a = randomInt(11, 18);
       return subtractionQuestion(a, randomInt(a - 9, 9), 20);
@@ -332,7 +332,7 @@ export function generateMissingNumberQuestion(maxSum: number, kind: 'addition' |
 //
 // "17 = ? + 6" is on the first-grade unit test, and it is a different question
 // from "6 + ? = 17" to a six-year-old: an equals sign at the front reads as
-// "the answer goes here", so she writes 23. Every position of the unknown, and
+// "the answer goes here", so they write 23. Every position of the unknown, and
 // both sides of the equals sign, is part of knowing what "=" means.
 //
 //   addl   ? + p = w        eqr   w = p + ?        eql   w = ? + p
@@ -370,7 +370,7 @@ function flippedMissingQuestion(form: MissingForm, x: number, y: number, maxSum:
     prompt,
     correctAnswer: String(correct),
     ...buildTaggedChoices(correct, [
-      [x + y, 'wrong-operation'], // added the two numbers she can see
+      [x + y, 'wrong-operation'], // added the two numbers they can see
       [x, 'answered-the-whole'],
       [y, 'answered-a-given-number'],
       [correct - 1, 'off-by-one'],
@@ -419,7 +419,7 @@ export function generateAnyPositionMissing(maxSum: number): Question {
 //
 // "helper" options are all *true* sums on purpose (4 + 19 = 23 is a fine fact,
 // just not one about 19 − 4). Finding the one with the same whole is the
-// skill; an option that was simply wrong arithmetic would let her skip it.
+// skill; an option that was simply wrong arithmetic would let them skip it.
 
 export type RelatedMode = 'helper' | 'restate' | 'both';
 
@@ -755,7 +755,7 @@ export function generateFromParams(params: Record<string, number | string>, char
  * every Home render. Fraction and money questions mint ids that neither this
  * function nor the bank can resolve, so counting them made the "Practice
  * Mistakes -- N to review" badge promise work the review session could not
- * deliver, landing her on "Nothing to practice!" every single time.
+ * deliver, landing them on "Nothing to practice!" every single time.
  */
 export function canRebuildFromId(id: string): boolean {
   return (

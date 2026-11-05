@@ -1,6 +1,6 @@
 import { CHARACTERS } from '@/data/characters';
 
-/** Her character's face. The old app's evolving-with-stars faces are gone: she is who she picked. */
+/** Their character's face. The old app's evolving-with-stars faces are gone: they are who they picked. */
 export function characterEmoji(id: string | null): string {
   return CHARACTERS.find((c) => c.id === id)?.emoji ?? '🐱';
 }

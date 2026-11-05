@@ -3,7 +3,7 @@ import { generateClockQuestion, clockFromId, CLOCK_ID_PATTERN } from '@/data/clo
 import { ErrorTag, Question } from '@/types';
 
 // The generated Clocks ladder. Everything here re-derives the time from what
-// she is shown — the drawn hands, or the time written in the prompt — and never
+// they are shown — the drawn hands, or the time written in the prompt — and never
 // trusts `correctAnswer`. Failures are collected and asserted once, so a broken
 // rule lists every question it broke on.
 
@@ -52,7 +52,7 @@ const spokenTime = ({ h, m }: Time) => (m === 0 ? `${h} o'clock` : `${h} ${m}`);
 type Form = 'read' | 'hour' | 'half';
 interface Solved { form: Form; start: Time; answer: Time }
 
-/** What she is asked, worked out from the prompt and the drawn clock alone. */
+/** What they are asked, worked out from the prompt and the drawn clock alone. */
 function solve(q: Question): Solved {
   if (q.visual?.kind !== 'clock') throw new Error(`${q.id}: no clock drawn`);
   const drawn = { h: q.visual.hour, m: q.visual.minute };
@@ -60,7 +60,7 @@ function solve(q: Question): Solved {
   const later = q.prompt.match(/^It is (\d{1,2}:\d\d)\.\n\nWhat time will it be in (one hour|half an hour)\?$/);
   if (!later) throw new Error(`${q.id}: unrecognised prompt ${JSON.stringify(q.prompt)}`);
   const start = parse(later[1]);
-  // The words and the picture have to agree, or one of them is lying to her.
+  // The words and the picture have to agree, or one of them is lying to them.
   if (fmt(start) !== fmt(drawn)) throw new Error(`${q.id}: prompt says ${later[1]}, clock shows ${fmt(drawn)}`);
   return later[2] === 'one hour'
     ? { form: 'hour', start, answer: addMinutes(start, 60) }
@@ -123,7 +123,7 @@ describe.each(RUNGS)('clock rung: $label', (rung) => {
       const { form, start, answer } = solve(q);
       if (!q.speakText) bad.push(`${q.id}: nothing to say`);
       if (form !== 'read') {
-        // The start time is said the way she would say it, and so is the question.
+        // The start time is said the way they would say it, and so is the question.
         if (!q.speakText?.includes(`It is ${spokenTime(start)}.`)) bad.push(`${q.id}: says "${q.speakText}"`);
         if (!q.speakText?.includes(form === 'hour' ? 'in one hour' : 'in half an hour')) bad.push(`${q.id}: says "${q.speakText}"`);
         // The answer is never sitting in the question.
@@ -153,7 +153,7 @@ describe.each(RUNGS)('clock rung: $label', (rung) => {
         // Every claim, checked against the value it is attached to:
         //   off-by-one — read: the hour one too far or one short, minutes right;
         //                one hour on: two hours on.
-        //   answered-a-given-number — the time she was told, and only that.
+        //   answered-a-given-number — the time they were told, and only that.
         //   wrong-operation — went back instead of on, by exactly the amount asked.
         if (tag === 'off-by-one' && !(form === 'read' ? Math.abs(fromAnswer) === 60 : form === 'hour' && fromStart === 120)) bad.push(say);
         if (tag === 'answered-a-given-number' && (form === 'read' || fromStart !== 0)) bad.push(say);
@@ -301,7 +301,7 @@ describe.each(RUNGS)('clock rung $label gives nothing away', (rung) => {
     }
   });
 
-  it('never offers a time she could learn to ignore', () => {
+  it('never offers a time they could learn to ignore', () => {
     // A button that is almost never right turns four options into three. 12:00
     // is the case to watch: the long hand read as the hour, offered against
     // eleven other answers.

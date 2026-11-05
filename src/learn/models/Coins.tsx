@@ -5,10 +5,10 @@ import { ModelStyles, bigButton, useChangeKey } from './b-shared';
 import { addCoin, coinName, coinTotal, removeCoin } from './logic-b';
 
 // US coins, drawn: true relative sizes (the dime is the smallest even though
-// it is worth more than a penny or a nickel -- a thing she has to learn), the
+// it is worth more than a penny or a nickel -- a thing they have to learn), the
 // penny copper, the others silver, ridged edges on the dime and quarter as on
 // the real coins, a profile embossed on the face, and the value written large
-// so she can count without knowing the names yet.
+// so they can count without knowing the names yet.
 
 type Metal = { light: string; mid: string; dark: string; rim: string; ink: string };
 const COPPER: Metal = { light: '#F6C7A1', mid: '#D98A55', dark: '#A65A2C', rim: '#8A4521', ink: '#4A1F08' };

@@ -3,7 +3,7 @@ import { buildTaggedChoices, Candidate, randomInt, shuffle, TaggedChoices } from
 
 // Counting and number order, generated rather than hand-listed, so the
 // Counting ladder never runs dry. The hand-written bank in `counting.ts` has
-// about 16 questions a rung, and a child at the top of her grade saw the same
+// about 16 questions a rung, and a child at the top of their grade saw the same
 // handful every day. These are what the practice ladder draws on; the bank and
 // the levels built from it stay as they are.
 //
@@ -58,7 +58,7 @@ const OBJECT_BY_KEY = new Map(OBJECTS.map((o) => [o.key, o]));
 
 // Two kinds that cannot be mistaken for each other at a glance — different
 // colour and different shape — so "count only the apples" is about attention,
-// not eyesight. Either one can be the kind she is asked about.
+// not eyesight. Either one can be the kind they are asked about.
 const PAIRS: readonly [string, string][] = [
   ['apple', 'banana'], ['star', 'moon'], ['frog', 'ladybug'], ['fish', 'crab'],
   ['flower', 'bee'], ['chick', 'turtle'], ['strawberry', 'lemon'], ['balloon', 'ball'],
@@ -82,7 +82,7 @@ const GROUP = 5;
  * The card does not keep line breaks in `promptEmoji`, so the space does the
  * work: on a phone a group of five fills a line and the groups stack into
  * rows; on a tablet two sit side by side. Either way 17 objects read as "five,
- * five, five and two" instead of one long run she loses her place in.
+ * five, five and two" instead of one long run they lose their place in.
  */
 function lineUp(items: readonly string[]): string {
   const groups: string[] = [];
@@ -102,7 +102,7 @@ function mixIn(target: string, a: number, other: string, b: number): string[] {
 // The mistakes, and the options built from them
 // ---------------------------------------------------------------------------
 
-/** 41 for 14: she writes the digit she hears first. Only where the swap is a different number. */
+/** 41 for 14: they write the digit they hear first. Only where the swap is a different number. */
 function swapped(n: number): number | null {
   if (n < 12 || n > 99) return null;
   const tens = Math.floor(n / 10), ones = n % 10;
@@ -111,7 +111,7 @@ function swapped(n: number): number | null {
 }
 
 /**
- * Losing track of a ten — errors a first grader makes with a number she can
+ * Losing track of a ten — errors a first grader makes with a number they can
  * say perfectly well out loud:
  *   - 41 for 14, the swap above;
  *   - a ten short: 7 for 17 ("seven-teen" names the seven first), 37 for 47,
@@ -136,7 +136,7 @@ function tenSlips(n: number, { teensOnly = false, crossingBack = false } = {}): 
 const valueOf = (c: Candidate) => (typeof c === 'number' ? c : c[0]);
 
 // Options may run a little past the top of the rung — 101 is an honest slip
-// after 99 — but never into numbers she has not met.
+// after 99 — but never into numbers they have not met.
 const OPTION_CEILING = 110;
 
 /** Far enough from the answer that four options containing it cannot be four in a row. */
@@ -266,7 +266,7 @@ function countQuestion(obj: CountObject, n: number): Question {
 /**
  * Two kinds mixed together; count only one. Sorting and counting by kind is a
  * kindergarten standard, and it is the one counting question that can tell us
- * something a plain count cannot: counting everything she sees is "gave the
+ * something a plain count cannot: counting everything they see is "gave the
  * whole when asked for a part".
  */
 function countOneKindQuestion(obj: CountObject, a: number, other: CountObject, b: number): Question {
@@ -334,11 +334,11 @@ function shown(shape: OrderShape, ans: number): number[] {
 /**
  * Offer ONE of the numbers on screen, and hide the rest.
  *
- * Answering with a number she can already see is worth catching. But offer
+ * Answering with a number they can already see is worth catching. But offer
  * every number on screen and the answer becomes "the one that isn't up
  * there" — and on "5, ?, 7" also the one sandwiched between the other two. One
  * is enough to catch the slip. `usual` is the one most worth offering (the
- * last number, which she repeats), chosen `share` of the time.
+ * last number, which they repeat), chosen `share` of the time.
  */
 function oneOnScreen(nums: readonly number[], usual?: number, share = 0.7) {
   const offered = usual !== undefined && Math.random() < share ? usual : pick(nums);
@@ -444,7 +444,7 @@ const ORDER_RANGE: Record<OrderShape, [number, number]> = {
   missing: [10, 99], // 9, ?, 11 up to 98, ?, 100
 };
 
-/** Uniform in [lo, hi], but `bias` of the time one ending in `endings`: the crossings are where she slips. */
+/** Uniform in [lo, hi], but `bias` of the time one ending in `endings`: the crossings are where they slip. */
 function biased(lo: number, hi: number, endings: readonly number[], bias = 0.4): number {
   const special = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).filter((n) => endings.includes(n % 10));
   return special.length && Math.random() < bias ? pick(special) : randomInt(lo, hi);

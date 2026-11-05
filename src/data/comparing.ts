@@ -2,7 +2,7 @@ import { Question } from '@/types';
 
 // The only three signs that can go in the box. There used to be a fourth option,
 // '≠', which was never the marked answer — and which is genuinely *true* for
-// every unequal pair, so a child who picked it was right and was told she was
+// every unequal pair, so a child who picked it was right and was told they were
 // wrong. Order doesn't matter here; buildSession shuffles choices per session.
 const COMPARE_CHOICES = ['<', '>', '='];
 

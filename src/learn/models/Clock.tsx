@@ -9,7 +9,7 @@ import {
 // A real analogue clock: a blue case, a cream face, 1-12 in big round
 // numerals, sixty minute marks. The hour hand is short, thick and navy; the
 // minute hand long, thin and orange, so "which hand is which" is something
-// she can see. The hour hand creeps toward the next hour as the minutes pass
+// they can see. The hour hand creeps toward the next hour as the minutes pass
 // (halfway at half past), exactly as a real clock does.
 
 const VB = 260;
@@ -115,7 +115,7 @@ export default function Clock({ state, onChange, size = 'big' }: ModelProps<'clo
       e.preventDefault();
       svgRef.current?.setPointerCapture(e.pointerId);
       const a = pointerAngle(e);
-      // The minute hand jumps to her finger: start from where it points now.
+      // The minute hand jumps to their finger: start from where it points now.
       drag.current = { hand, last: minuteHandAngle(minute), total: clockToMinutes(hour, minute) };
       setDragging(hand);
       moveTo(a);
@@ -170,7 +170,7 @@ export default function Clock({ state, onChange, size = 'big' }: ModelProps<'clo
   );
 }
 
-/** − [the hand] + : steps one hand, with a little clock showing only that hand so she knows which. */
+/** − [the hand] + : steps one hand, with a little clock showing only that hand so they know which. */
 function Stepper({ hand, onStep }: { hand: 'hour' | 'minute'; onStep: (by: number) => void }) {
   const colour = hand === 'hour' ? HOUR_COLOUR : MINUTE_COLOUR;
   const soft = hand === 'hour' ? '#E3E7F7' : '#FDE8D4';

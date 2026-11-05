@@ -9,19 +9,19 @@ import { GradeLevel, ceilingFor, isInGrade } from './grades';
 // separate worlds: `categories[].levels[]` (numbered, locked, starred) and
 // `skills[]` (adaptive rungs) modelled the same maths with the same generator
 // params and never shared a byte. A child could three-star every level in
-// One Step at a Time and still be served rung 0 the moment she opened Practice,
+// One Step at a Time and still be served rung 0 the moment they opened Practice,
 // because passing a level wrote nothing the ladder could read.
 //
 // One topic per skill, and every level belongs to exactly one topic (asserted in
 // grades.test.ts). The child now sees a single meter per topic and it moves
-// whatever she plays.
+// whatever they play.
 
 export interface TopicLevelRef {
   levelId: string;
   /**
    * The rung this level is teaching. Earns its keep three times over: seeding
    * the ladder from level history during the v5 migration, scoping the replay
-   * strip to the grade, and picking the lesson nearest her current rung.
+   * strip to the grade, and picking the lesson nearest their current rung.
    */
   rung: number;
 }
@@ -350,12 +350,12 @@ export function topicLevelsInScope(topic: Topic, grade: GradeLevel | null): Leve
 }
 
 /**
- * The level after this one in its topic, inside her grade — what "Next" offers.
+ * The level after this one in its topic, inside their grade — what "Next" offers.
  *
  * It used to be the next level of the *category*, and categories and topics do
  * not line up: after "Adding to 20" it offered "Taking Away (to 5)", and after
  * "Count by 10s" it offered the × 2 table to a first grader whose grade stops
- * short of times tables. Null at the end of the topic, or for a level her grade
+ * short of times tables. Null at the end of the topic, or for a level their grade
  * does not reach.
  */
 export function nextLevelInTopic(levelId: string, grade: GradeLevel | null): Level | null {

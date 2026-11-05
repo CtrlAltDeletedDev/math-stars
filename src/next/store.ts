@@ -7,9 +7,9 @@ import { loadProgressResult } from '@/store/storage';
 // The new app's save: one learner, one key, written on every change.
 //
 // It never writes the old app's key (`mathstars_progress_v2`). The first time
-// it runs on a device it *reads* the old save and brings her across; after
+// it runs on a device it *reads* the old save and brings them across; after
 // that the old save just sits there, untouched, so switching back to the old
-// app finds everything exactly as she left it.
+// app finds everything exactly as they left it.
 //
 // Writes are synchronous. The whole learner is a few tens of KB, and a
 // debounced save is what loses the last answer when Safari kills a tab.
@@ -42,7 +42,7 @@ function read(): Learner {
       if (parsed) return parsed;
     } catch { /* fall through to the backup below */ }
     // Unreadable. Park it rather than lose it, then start again from the old
-    // save -- which still holds her place -- instead of from nothing.
+    // save -- which still holds their place -- instead of from nothing.
     try { localStorage.setItem(UNREADABLE_KEY, raw); issue = 'unreadable-backed-up'; } catch { /* nothing more to do */ }
   }
   const old = loadProgressResult();
@@ -111,7 +111,7 @@ export function exportBackup(): string {
   return JSON.stringify(getLearner(), null, 2);
 }
 
-/** Replace her save from a backup file. Returns false if the file is not one. */
+/** Replace their save from a backup file. Returns false if the file is not one. */
 export function importBackup(text: string): boolean {
   try {
     const parsed = parseLearner(JSON.parse(text));

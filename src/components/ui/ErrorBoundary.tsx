@@ -22,7 +22,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   handleGoHome = () => {
     // Full reload rather than a route change: whatever state caused the throw
-    // is gone afterwards, so she can't bounce straight back into it.
+    // is gone afterwards, so they can't bounce straight back into it.
     window.location.hash = '#/';
     window.location.reload();
   };

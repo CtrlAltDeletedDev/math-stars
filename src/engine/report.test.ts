@@ -11,7 +11,7 @@ const save = (over: Partial<UserProgress> = {}): UserProgress =>
 const card = (questionId: string, easeFactor: number, lastSeen = 0) =>
   ({ questionId, easeFactor, intervalDays: 1, nextDueDate: 0, repetitions: 0, lastSeen });
 
-describe('what she keeps getting wrong', () => {
+describe('what they keep getting wrong', () => {
   it('names the commonest pattern first', () => {
     const p = save({ errorPatterns: { 'taking-away': { 'off-by-one': 4, 'wrong-operation': 11 } } });
     const [first, second] = mistakesForSkill(p, 'taking-away');
@@ -78,7 +78,7 @@ describe('what she keeps getting wrong', () => {
   });
 });
 
-describe('the facts she keeps missing', () => {
+describe('the facts they keep missing', () => {
   it('turns a card id back into a real question', () => {
     const p = save({ srsCards: { 'add-8+7': card('add-8+7', 1.9) } });
     const [fact] = hardestFacts(p);
@@ -97,7 +97,7 @@ describe('the facts she keeps missing', () => {
     expect(hardestFacts(p).map((f) => f.questionId)).toEqual(['add-8+7', 'add-9+6', 'add-2+2']);
   });
 
-  it('leaves out facts she has never got wrong', () => {
+  it('leaves out facts they have never got wrong', () => {
     // Ease only falls on a miss, so a card at or above the starting value has
     // never been missed — it is unseen, not shaky.
     const p = save({ srsCards: { 'add-1+1': card('add-1+1', 2.5), 'add-9+9': card('add-9+9', 2.8) } });
@@ -117,7 +117,7 @@ describe('the facts she keeps missing', () => {
 });
 
 describe('the one topic to name at the top', () => {
-  it('picks her weakest skill, by lifetime accuracy', () => {
+  it('picks their weakest skill, by lifetime accuracy', () => {
     const p = save({
       skills: {
         adding: { skillId: 'adding', rung: 2, recent: [], attempts: 100, correct: 90 },

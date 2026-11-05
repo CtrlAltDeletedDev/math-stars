@@ -10,7 +10,7 @@ import { countObject, objectsLabel, scatterGrid, scatterPositions } from './logi
 //
 // In "do", each tap on an uncounted thing gives it the next number, in a
 // badge (1, 2, 3...). Tapping the last one counted takes its number back, so
-// a slip is undone the way she made it.
+// a slip is undone the way they made it.
 
 const SIZES = {
   big: { cell: 72, box: 400, badge: 0.34 },

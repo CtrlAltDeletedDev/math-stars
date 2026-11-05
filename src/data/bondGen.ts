@@ -45,7 +45,7 @@ function mistakes(whole: Whole, part: number): [number, ErrorTag][] {
   const out: [number, ErrorTag][] = [
     [whole, 'answered-the-whole'],
     [part, 'answered-a-given-number'],
-    [part + whole, 'wrong-operation'], // added the two numbers she can see
+    [part + whole, 'wrong-operation'], // added the two numbers they can see
   ];
   // Bonds to 20 are bonds to 10 with a ten on: "3 + ? = 20" answered 7 is a
   // bond to 10 with the ten dropped, and "13 + ? = 20" answered 17 kept the ten
@@ -187,7 +187,7 @@ function wrongSums(whole: Whole): [number, ErrorTag][] {
   return shuffle([pick(near), pick(far), pick([...near, ...far])]);
 }
 
-/** A pair making `sum`, both numbers at least 1 and below the whole she was asked for. */
+/** A pair making `sum`, both numbers at least 1 and below the whole they were asked for. */
 function pairMaking(sum: number, whole: Whole): Pair {
   const x = randomInt(Math.max(1, sum - (whole - 1)), Math.min(whole - 1, sum - 1));
   return [x, sum - x];

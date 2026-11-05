@@ -6,7 +6,7 @@ import { addToRow, graphCap, graphColumns, removeFromRow } from './logic-b';
 // A picture graph: one row per thing, its picture and name on the left, then
 // one picture per vote in a light grid, every picture in its own column so
 // the rows can be compared by length. Column numbers run along the bottom.
-// In "do" she taps the end of a row to add one, or the last picture to take
+// In "do" they tap the end of a row to add one, or the last picture to take
 // it back.
 
 const LABEL_W = 92;

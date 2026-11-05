@@ -9,7 +9,7 @@ import { ceilingFor } from '@/data/grades';
 import { UserProgress, SRSCard } from '@/types';
 
 // Plus & Minus: the plain-sums stream on Home. Adding and taking away only,
-// mixed evenly, getting harder by itself, with the facts she has passed still
+// mixed evenly, getting harder by itself, with the facts they have passed still
 // coming up.
 
 const due = (questionId: string): SRSCard => ({
@@ -39,12 +39,12 @@ describe('the Plus & Minus plan', () => {
     }
   });
 
-  it('is not a strict alternation she could follow without reading the sign', () => {
+  it('is not a strict alternation they could follow without reading the sign', () => {
     const plans = new Set(Array.from({ length: 50 }, () => sumsPlan(8).join()));
     expect(plans.size).toBeGreaterThan(5);
   });
 
-  it('warms up from one of the last few steps she passed, and never below the first', () => {
+  it('warms up from one of the last few steps they passed, and never below the first', () => {
     expect(warmupRung(0)).toBeNull();
     for (let i = 0; i < 200; i++) {
       const r = warmupRung(5)!;
@@ -84,7 +84,7 @@ describe('a Plus & Minus queue', () => {
     expect(adds).toBeLessThan(120);
   });
 
-  it('serves a warm-up from below her rung now and then, and it never moves the window', () => {
+  it('serves a warm-up from below their rung now and then, and it never moves the window', () => {
     let p = child({ adding: 6, 'taking-away': 6 });
     const q = new PracticeQueue(p, 'You', null, SUMS_ROUND_SIZE, null, { sums: true });
     let warmups = 0;
@@ -95,7 +95,7 @@ describe('a Plus & Minus queue', () => {
       if (pick.rung !== null && pick.rung < standing) {
         warmups++;
         const after = recordSkillAnswer(before, true, ceilingFor(pick.skillId!, '1'), pick.rung).state;
-        expect(after.recent, 'a warm-up is not evidence about her rung').toEqual(before.recent);
+        expect(after.recent, 'a warm-up is not evidence about their rung').toEqual(before.recent);
         expect(after.attempts).toBe(before.attempts + 1);
       }
     }
@@ -108,9 +108,9 @@ describe('a Plus & Minus queue', () => {
     for (let i = 0; i < 40; i++) expect(q.next()!.rung).toBe(0);
   });
 
-  it('climbs both ladders in one round when she knows it', () => {
+  it('climbs both ladders in one round when they know it', () => {
     let p = child({ adding: 2, 'taking-away': 2 });
-    for (const id of SUMS_SKILLS) p.skills[id].demotions = 0; // still placing her
+    for (const id of SUMS_SKILLS) p.skills[id].demotions = 0; // still placing them
     const q = new PracticeQueue(p, 'You', null, SUMS_ROUND_SIZE, null, { sums: true });
     for (let i = 0; i < SUMS_ROUND_SIZE; i++) {
       const pick = q.next()!;

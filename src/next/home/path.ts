@@ -5,16 +5,16 @@ import type { GradeCourse } from '@/learn/units';
 import { Lesson } from '@/learn/types';
 import { friendFor } from '../ui/friends';
 
-// What her path shows: the course, one road from the bottom of the screen up.
+// What their path shows: the course, one road from the bottom of the screen up.
 // Each unit starts with a sign in its colour, then its lessons as stones. The
 // road runs on across grades. Pure, so the rules here can be tested; the
 // screen only draws it.
 
 /**
  * How a lesson stone looks.
- *   done    she passed its check (or her plus/minus path puts her past it)
- *   today   today's lesson: big, glowing, her character on it
- *   open    not done, but behind today's (a grade below hers, or skipped by a pin)
+ *   done    they passed its check (or their plus/minus path puts them past it)
+ *   today   today's lesson: big, glowing, their character on it
+ *   open    not done, but behind today's (a grade below theirs, or skipped by a pin)
  *   ahead   beyond today's, fading into the fog
  */
 export type StoneState = 'done' | 'today' | 'open' | 'ahead';
@@ -27,14 +27,14 @@ export interface UnitSign {
   colour: string;
   /** "2nd grade" where a grade's road begins, else null. */
   grade: string | null;
-  /** How far past her stone, in lesson stones, for the fade: 0 at or below. */
+  /** How far past their stone, in lesson stones, for the fade: 0 at or below. */
   ahead: number;
 }
 
 export interface LessonStone {
   kind: 'lesson';
   id: string;
-  /** Parent words; for screen readers, never shown to her. */
+  /** Parent words; for screen readers, never shown to them. */
   title: string;
   emoji: string;
   colour: string;
@@ -44,7 +44,7 @@ export interface LessonStone {
   ahead: number;
 }
 
-/** Where she waits when the course has no lessons at all yet. */
+/** Where they wait when the course has no lessons at all yet. */
 export interface Trailhead {
   kind: 'start';
   ahead: 0;
@@ -62,15 +62,15 @@ export interface UnitProgress {
 export interface CourseView {
   /** Bottom to top. Never empty. */
   nodes: PathNode[];
-  /** The node her character stands on. */
-  hers: number;
+  /** The node their character stands on. */
+  current: number;
   /** Today's lesson, or null when there is none to do (Go then opens the sums walk). */
   today: Lesson | null;
-  /** Lessons done in today's unit, beside her stone. */
+  /** Lessons done in today's unit, beside their stone. */
   progress: UnitProgress | null;
 }
 
-/** Lesson stones drawn beyond hers before the fog. */
+/** Lesson stones drawn beyond theirs before the fog. */
 export const AHEAD_SHOWN = 3;
 
 export interface CourseInputs {
@@ -112,14 +112,14 @@ export function courseView(l: Learner, inputs: CourseInputs = {}): CourseView {
     }
   }
   const total = index;
-  if (total === 0) return { nodes: [{ kind: 'start', ahead: 0 }], hers: 0, today: null, progress: null };
+  if (total === 0) return { nodes: [{ kind: 'start', ahead: 0 }], current: 0, today: null, progress: null };
 
-  // She stands on today's stone; with nothing to do today, at the end of the road so far.
+  // They stand on today's stone; with nothing to do today, at the end of the road so far.
   const herLesson = todayAt >= 0 ? todayAt : total - 1;
   const top = Math.min(total - 1, Math.max(herLesson, lastDone) + AHEAD_SHOWN);
 
   const nodes: PathNode[] = [];
-  let hers = 0;
+  let current = 0;
   let progress: UnitProgress | null = null;
   index = 0;
   outer: for (const { grade, unit, firstOfGrade } of all) {
@@ -135,7 +135,7 @@ export function courseView(l: Learner, inputs: CourseInputs = {}): CourseView {
       const done = isDone(lesson);
       const state: StoneState = index === todayAt ? 'today' : done ? 'done' : index > herLesson ? 'ahead' : 'open';
       if (index === herLesson) {
-        hers = nodes.length;
+        current = nodes.length;
         if (todayAt >= 0) {
           progress = { emoji: unit.emoji, colour: unit.colour, done: unit.lessons.filter(isDone).length, total: unit.lessons.length };
         }
@@ -147,5 +147,5 @@ export function courseView(l: Learner, inputs: CourseInputs = {}): CourseView {
       });
     }
   }
-  return { nodes, hers, today: todayAt >= 0 ? today : null, progress };
+  return { nodes, current, today: todayAt >= 0 ? today : null, progress };
 }

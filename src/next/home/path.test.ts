@@ -39,15 +39,15 @@ describe('courseView', () => {
     expect(v.nodes[0]).toMatchObject({ kind: 'unit', id: 'a', grade: '1st grade', colour: '#111111' });
     expect(stones(v).map((s) => s.id)).toEqual(['a-1', 'a-2', 'a-3', 'a-4'].slice(0, AHEAD_SHOWN + 1));
     expect(signs(v).map((s) => s.id)).toEqual(['a']);
-    expect(v.nodes[v.hers]).toMatchObject({ kind: 'lesson', id: 'a-1', state: 'today' });
+    expect(v.nodes[v.current]).toMatchObject({ kind: 'lesson', id: 'a-1', state: 'today' });
   });
 
   it('runs on across units and into the next grade, with a grade sign where it begins', () => {
     const v = view(ALL.slice(0, 10).map((l) => l.id), 'c-1');
     expect(signs(v).map((s) => [s.id, s.grade])).toEqual([['a', '1st grade'], ['b', null], ['c', '2nd grade']]);
     expect(signs(v).some((s) => s.id === 'empty')).toBe(false);
-    expect(v.nodes[v.hers]).toMatchObject({ id: 'c-1', state: 'today' });
-    // Every stone below today's is drawn, so she can scroll back down the road.
+    expect(v.nodes[v.current]).toMatchObject({ id: 'c-1', state: 'today' });
+    // Every stone below today's is drawn, so they can scroll back down the road.
     expect(stones(v)[0].id).toBe('a-1');
   });
 
@@ -71,30 +71,30 @@ describe('courseView', () => {
     expect(earnsFriend(3, 4)).toBe(true);
   });
 
-  it('shows lessons done in today\'s unit beside her', () => {
+  it('shows lessons done in today\'s unit beside them', () => {
     const v = view(['a-1', 'a-2', 'b-1'], 'a-3');
     expect(v.progress).toEqual({ emoji: '🔢', colour: '#111111', done: 2, total: 6 });
   });
 
-  it('with nothing to do today, stands her at the end of the road and Go has no lesson', () => {
+  it('with nothing to do today, stands them at the end of the road and Go has no lesson', () => {
     const v = view(ALL.map((l) => l.id), null);
     expect(v.today).toBeNull();
     expect(v.progress).toBeNull();
-    expect(v.hers).toBe(v.nodes.length - 1);
+    expect(v.current).toBe(v.nodes.length - 1);
     expect(stones(v)).toHaveLength(ALL.length);
   });
 
   it('never leaves the path empty, even with no lessons written yet', () => {
     const v = courseView(newLearner(), { course: [{ grade: '1', title: '1st grade', units: [unit('x', 0)] }], today: null });
     expect(v.nodes).toEqual([{ kind: 'start', ahead: 0 }]);
-    expect(v.hers).toBe(0);
+    expect(v.current).toBe(0);
   });
 
-  it('reads the real course: today is her stone, and empty units are skipped', () => {
+  it('reads the real course: today is their stone, and empty units are skipped', () => {
     const l = newLearner();
     const v = courseView(l);
     const today = todaysLesson(l);
-    if (today) expect(v.nodes[v.hers]).toMatchObject({ kind: 'lesson', id: today.id, state: 'today' });
+    if (today) expect(v.nodes[v.current]).toMatchObject({ kind: 'lesson', id: today.id, state: 'today' });
     const empty = new Set(COURSE.flatMap((g) => g.units).filter((u) => u.lessons.length === 0).map((u) => u.id));
     expect(signs(v).some((s) => empty.has(s.id))).toBe(false);
   });
@@ -102,9 +102,9 @@ describe('courseView', () => {
 
 describe('layoutPath', () => {
   it('stacks the first node at the bottom and every node above the one before', () => {
-    for (let hers = 0; hers < 10; hers++) {
-      const kinds = Array.from({ length: hers + 4 }, (_, i) => (i % 5 === 0 ? 'unit' as const : 'lesson' as const));
-      const { spots, height } = layoutPath(kinds, hers);
+    for (let current = 0; current < 10; current++) {
+      const kinds = Array.from({ length: current + 4 }, (_, i) => (i % 5 === 0 ? 'unit' as const : 'lesson' as const));
+      const { spots, height } = layoutPath(kinds, current);
       for (let i = 1; i < kinds.length; i++) expect(spots[i].y).toBeLessThan(spots[i - 1].y);
       expect(spots[0].y).toBeLessThan(height);
       expect(spots[kinds.length - 1].y).toBeGreaterThan(0);
@@ -112,9 +112,9 @@ describe('layoutPath', () => {
     }
   });
 
-  it('leaves her progress dots room on the side they go', () => {
-    for (let hers = 0; hers < 13; hers++) {
-      const s = layoutPath(Array(hers + 1).fill('lesson'), hers).spots[hers];
+  it('leaves their progress dots room on the side they go', () => {
+    for (let current = 0; current < 13; current++) {
+      const s = layoutPath(Array(current + 1).fill('lesson'), current).spots[current];
       const w = pebblePillWidth(6);
       if (roomySide(s) === 'right') expect(s.x + s.r + 12 + w).toBeLessThanOrEqual(PATH_W + 12);
       else expect(s.x - s.r - 12 - w).toBeGreaterThanOrEqual(-12);

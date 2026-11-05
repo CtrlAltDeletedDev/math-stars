@@ -4,7 +4,7 @@ import { any, ask, choiceItem, doStep, mix, modelItem, numberItem, randomInt, sh
 // Unit: Telling time.
 //
 // The clock is the manipulative from the first step: the short hand and the
-// long hand are named, then she sets o'clock times herself (the minute hand
+// long hand are named, then they set o'clock times themselves (the minute hand
 // snaps to 12), then half past (it snaps to 12 or 6). Reading comes after
 // setting, and the wrong answers on every clock are the ones children give:
 // the hands read the wrong way round, and the hour read from the number the
@@ -76,7 +76,7 @@ function whichClockItem(h: number, m: number): Item {
 
 const whichClock = (minutes: number[]) => (): Item => whichClockItem(randomInt(1, 12), any(minutes));
 
-/** "Show 3:30" -- she sets the clock. */
+/** "Show 3:30" -- they set the clock. */
 function setItem(minutes: number[], snap: 60 | 30) {
   return (): Item => {
     const h = randomInt(1, 12), m = any(minutes);
@@ -94,7 +94,7 @@ function setItem(minutes: number[], snap: 60 | 30) {
   };
 }
 
-/** What to fix on her clock. */
+/** What to fix on their clock. */
 const fixClock = (h: number, m: number) => (s: Clock) => {
   if (s.minute !== m) return m === 0 ? 'Move the long hand straight up to 12.' : 'Move the long hand halfway round, down to 6.';
   if (s.hour !== h) return m === 0 ? `Now the short hand: point it at ${h}.` : `Move the short hand so it has just passed ${h}.`;

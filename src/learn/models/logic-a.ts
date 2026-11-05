@@ -2,7 +2,7 @@ import { CounterColour, ModelState } from '../types';
 
 // Pure state helpers for the ten frame, number line, objects, bond, compare
 // and text models. The components only draw a state and call these to make
-// the next one, so every tap she can make is tested here without a browser.
+// the next one, so every tap they can make is tested here without a browser.
 
 export type TenFrameState = Extract<ModelState, { model: 'tenFrame' }>;
 export type NumberLineState = Extract<ModelState, { model: 'numberLine' }>;
@@ -35,8 +35,8 @@ export function nextTrayCounter(s: TenFrameState): CounterColour | null {
 }
 
 /**
- * Put the next tray counter in cell `i`. Fill order is wherever she taps; we
- * do not snap to the first empty cell, so the frame shows what she did.
+ * Put the next tray counter in cell `i`. Fill order is wherever they tap; we
+ * do not snap to the first empty cell, so the frame shows what they did.
  */
 export function placeCounter(s: TenFrameState, i: number): TenFrameState {
   const cells = tenFrameCells(s);
@@ -101,7 +101,7 @@ export function hopSize(s: NumberLineState): number {
   return s.jumps && s.jumps > 0 ? s.jumps : 1;
 }
 
-/** Where she is now: the last number landed on, else the start. */
+/** Where they are now: the last number landed on, else the start. */
 export function hereOf(s: NumberLineState): number | null {
   return s.path.length ? s.path[s.path.length - 1] : s.start;
 }
@@ -111,8 +111,8 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 /**
  * A tap on the number `n`. The first tap sets the start (on a line of tens,
  * the nearest ten from `min`); every later tap hops, one hop at a time, to
- * the nearest number she can reach from where she is, adding each landing to
- * `path`. Tapping where she already is does nothing.
+ * the nearest number they can reach from where they are, adding each landing to
+ * `path`. Tapping where they already are does nothing.
  */
 export function tapNumberLine(s: NumberLineState, n: number): NumberLineState {
   const step = hopSize(s);
@@ -143,7 +143,7 @@ export function hop(s: NumberLineState, dir: 1 | -1): NumberLineState {
 
 /**
  * Take back the last hop. With no hops left it clears the start, unless
- * `keepStart` (the lesson set the start, so it is not hers to take back).
+ * `keepStart` (the lesson set the start, so it is not theirs to take back).
  */
 export function undoHop(s: NumberLineState, keepStart = false): NumberLineState {
   if (s.path.length) return { ...s, path: s.path.slice(0, -1) };
@@ -164,7 +164,7 @@ export interface LineWindow { lo: number; hi: number; step: number }
  * many tick marks fit across the width. If the whole line fits it is all
  * drawn; otherwise a window `room` ticks wide around the start and the hops
  * (with up to two to spare either side). Hops wider than the room keep where
- * she is now in view.
+ * they are now in view.
  * The tick step is `jumps` (0–100 by tens draws 11 ticks), else 1.
  */
 export function numberLineWindow(s: NumberLineState, room: number): LineWindow {
@@ -186,7 +186,7 @@ export function numberLineWindow(s: NumberLineState, room: number): LineWindow {
     const spare = [2, 1, 0].find((m) => end - first + 1 + 2 * m <= room) ?? 0;
     lo = Math.max(0, first - spare);
     hi = Math.min(last, end + spare);
-    // The hops are wider than the room: keep where she is now in view.
+    // The hops are wider than the room: keep where they are now in view.
     if (hi - lo + 1 > room) {
       const here = toTick(hereOf(s)!);
       hi = Math.min(last, here + 2);
@@ -217,7 +217,7 @@ export function numberLineLabel(s: NumberLineState): string {
 
 /**
  * A tap on object `i` in "do": an uncounted one gets the next number; the last
- * one counted is un-counted (her undo). Crossed-out things are not counted.
+ * one counted is un-counted (their undo). Crossed-out things are not counted.
  */
 export function countObject(s: ObjectsState, i: number): ObjectsState {
   if (i < 0 || i >= s.count || s.crossed?.includes(i)) return s;
@@ -294,7 +294,7 @@ export function bondSplit(s: BondState): number {
 /**
  * Move one counter out of part `from` (0 left, 1 right) into the other.
  * `split` and both `parts` move together, so the numbers always match the
- * counters she sees.
+ * counters they see.
  */
 export function moveSplit(s: BondState, from: 0 | 1): BondState {
   const whole = s.whole ?? 0;

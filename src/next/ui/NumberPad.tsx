@@ -5,12 +5,12 @@ import { C, KID_FONT } from '../theme';
 
 // The number pad.
 //
-// She types the answer, like on a worksheet. Four options invited tap-guessing
+// They type the answer, like on a worksheet. Four options invited tap-guessing
 // and let the answer's position or shape give it away; a pad can do neither,
-// and what she types is better evidence than which option she tapped.
+// and what they type is better evidence than which option they tapped.
 //
 // There is no auto-submit when enough digits are in: that would leak how many
-// digits the answer has. ✓ is the commit, and it goes green only once she has
+// digits the answer has. ✓ is the commit, and it goes green only once they have
 // typed something.
 
 interface Props {

@@ -55,7 +55,7 @@ describe('skill ladders', () => {
 
   it('give the small hand-written topics generated questions as well as their own', () => {
     // These rungs drew only on banks of 8-40 questions, so a child at the top
-    // of her grade saw the same few for ever.
+    // of their grade saw the same few for ever.
     const GENERATED = /^(gclock|gcount|gorder|gcmp|geo|gbond|gpv)-/;
     for (const id of ['clocks', 'counting', 'comparing', 'even-odd', 'number-bonds', 'place-value']) {
       const skill = SKILLS_BY_ID.get(id)!;
@@ -190,13 +190,13 @@ describe('fractions', () => {
 // ---------------------------------------------------------------------------
 
 describe('the promote/demote rule', () => {
-  // A child the topic has already placed: one demotion behind her, so the fast
-  // lane is closed and this is the rule she lives under from then on.
+  // A child the topic has already placed: one demotion behind them, so the fast
+  // lane is closed and this is the rule they live under from then on.
   const settled = (rung = 0): SkillState => ({ ...newSkillState('adding'), rung, demotions: 1 });
   const run = (results: boolean[], start = settled()) =>
     results.reduce((st, r) => recordSkillAnswer(st, r).state, start);
 
-  it('does not move her before a full window', () => {
+  it('does not move them before a full window', () => {
     const st = run(Array(LADDER.window - 1).fill(true));
     expect(st.rung).toBe(0);
   });
@@ -204,7 +204,7 @@ describe('the promote/demote rule', () => {
   it('promotes after 6 of 8 correct', () => {
     const st = run([true, true, true, true, true, true, false, false]);
     expect(st.rung).toBe(1);
-    expect(st.recent).toEqual([]); // window cleared, so she gets a fresh look
+    expect(st.recent).toEqual([]); // window cleared, so they get a fresh look
   });
 
   it('does not promote on 5 of 8', () => {
@@ -232,7 +232,7 @@ describe('the promote/demote rule', () => {
 
   it('does not oscillate on a mixed run', () => {
     // Alternating right/wrong is 50% — comfortably between the two thresholds,
-    // so she should sit still rather than bounce.
+    // so they should sit still rather than bounce.
     let st = settled(2);
     const moves: string[] = [];
     for (let i = 0; i < 200; i++) {
@@ -263,8 +263,8 @@ describe('the promote/demote rule', () => {
 });
 
 describe('the fast lane', () => {
-  // Every topic starts her on its first rung. A first grader who can already
-  // add to 20 began on "+1" and needed 32 answers to climb to where she was.
+  // Every topic starts them on its first rung. A first grader who can already
+  // add to 20 began on "+1" and needed 32 answers to climb to where they were.
   const feed = (results: boolean[], start: SkillState, ceiling?: number) =>
     results.reduce((st, r) => recordSkillAnswer(st, r, ceiling).state, start);
 
@@ -278,7 +278,7 @@ describe('the fast lane', () => {
     expect(feed(Array(16).fill(true), newSkillState('adding')).rung).toBe(4);
   });
 
-  it('needs her first four at a rung to be right; after a miss the ordinary rule decides', () => {
+  it('needs their first four at a rung to be right; after a miss the ordinary rule decides', () => {
     const missed = feed([true, true, true, false], newSkillState('adding'));
     expect(missed.rung).toBe(0);
     // 7 of 8 still promotes, at the full window.
@@ -288,7 +288,7 @@ describe('the fast lane', () => {
     expect(feed(Array(LADDER.fastLane).fill(true), st).rung).toBe(2);
   });
 
-  it('closes for good the first time the topic moves her down', () => {
+  it('closes for good the first time the topic moves them down', () => {
     const tooHard = feed(Array(LADDER.window).fill(false), { ...newSkillState('adding'), rung: 3 });
     expect(tooHard.rung).toBe(2);
     expect(tooHard.demotions).toBe(1);
@@ -296,7 +296,7 @@ describe('the fast lane', () => {
     expect(feed(Array(LADDER.window).fill(true), tooHard).rung).toBe(3);
   });
 
-  it('never climbs past her grade, and does not count it as outgrowing the grade', () => {
+  it('never climbs past their grade, and does not count it as outgrowing the grade', () => {
     const st = feed(Array(LADDER.fastLane).fill(true), { ...newSkillState('adding'), rung: 4 }, 4);
     expect(st.rung).toBe(4);
     expect(st.ceilingHits).toBe(0);
@@ -311,7 +311,7 @@ describe('the fast lane', () => {
   });
 
   it('leaves a save from before demotions were counted on the ordinary rule', () => {
-    // No count means no evidence she has never been moved down.
+    // No count means no evidence they have never been moved down.
     const legacy: SkillState = { skillId: 'adding', rung: 1, recent: [], attempts: 90, correct: 70, ceilingHits: 0 };
     expect(inPlacement(legacy)).toBe(false);
     expect(feed(Array(LADDER.fastLane).fill(true), legacy).rung).toBe(1);
@@ -326,7 +326,7 @@ describe('the fast lane', () => {
     expect(masteryFor('adding', progress(placed)).fill).toBeCloseTo((2 / LADDER.promoteAt) / 10);
   });
 
-  it('never shows a full ring at the top of her grade', () => {
+  it('never shows a full ring at the top of their grade', () => {
     // First grade tops adding out at rung 9. Six or seven right answers in a
     // window that has not yet reset used to draw the ring full.
     const at = (recent: boolean[]): UserProgress => ({
@@ -357,7 +357,7 @@ describe('the fast lane', () => {
 // Which rung the evidence is about
 // ---------------------------------------------------------------------------
 
-describe('an answer only moves her when it came from her own rung', () => {
+describe('an answer only moves them when it came from their own rung', () => {
   const feed = (
     start: SkillState,
     results: boolean[],
@@ -368,10 +368,10 @@ describe('an answer only moves her when it came from her own rung', () => {
     start,
   );
 
-  it('does not promote her for acing an easier rung', () => {
+  it('does not promote them for acing an easier rung', () => {
     // The reported case: a child standing on rung 2 replays "Adding 1 more"
     // (rung 0) four times. Every level is one full window, so each replay used
-    // to be one guaranteed promotion -- four replays walked her to rung 6,
+    // to be one guaranteed promotion -- four replays walked them to rung 6,
     // "Adding within 100", on nothing harder than n + 1.
     let st: SkillState = { ...newSkillState('adding'), rung: 2 };
     for (let replay = 0; replay < 4; replay++) {
@@ -382,23 +382,23 @@ describe('an answer only moves her when it came from her own rung', () => {
     expect(st.correct).toBe(4 * LADDER.window);
   });
 
-  it('does not demote her for failing a harder rung', () => {
+  it('does not demote them for failing a harder rung', () => {
     // The mirror image, and the reason the replay strip was unsafe in both
-    // directions: a curious tap on a level well above her should not cost her
-    // the ground she has.
+    // directions: a curious tap on a level well above them should not cost them
+    // the ground they have.
     let st: SkillState = { ...newSkillState('adding'), rung: 3 };
     st = feed(st, Array(LADDER.window * 3).fill(false), 6);
     expect(st.rung).toBe(3);
     expect(st.attempts).toBe(LADDER.window * 3);
   });
 
-  it('still promotes on evidence from the rung she is standing on', () => {
+  it('still promotes on evidence from the rung they are standing on', () => {
     const start: SkillState = { ...newSkillState('adding'), rung: 2 };
     const st = feed(start, Array(LADDER.window).fill(true), 2);
     expect(st.rung).toBe(3);
   });
 
-  it('still demotes on evidence from the rung she is standing on', () => {
+  it('still demotes on evidence from the rung they are standing on', () => {
     const start: SkillState = { ...newSkillState('adding'), rung: 2 };
     const st = feed(start, Array(LADDER.window).fill(false), 2);
     expect(st.rung).toBe(1);
@@ -406,7 +406,7 @@ describe('an answer only moves her when it came from her own rung', () => {
 
   it('never folds an answer marked as belonging to no rung', () => {
     // What an SRS review passes, and what a mixed level passes for a question
-    // routed to a second ladder: real effort, no claim about where she stands.
+    // routed to a second ladder: real effort, no claim about where they stand.
     const start: SkillState = { ...newSkillState('adding'), rung: 2 };
     const st = feed(start, Array(LADDER.window * 4).fill(true), null);
     expect(st.rung).toBe(2);
@@ -422,13 +422,13 @@ describe('an answer only moves her when it came from her own rung', () => {
     st = feed(st, Array(20).fill(false), 0);    // a long easy replay, all wrong
     expect(st.recent).toEqual([true, true, true]);
     st = feed(st, [true, true, true, true, true], 1);
-    expect(st.rung).toBe(2); // the 8 on-rung answers still promote her
+    expect(st.rung).toBe(2); // the 8 on-rung answers still promote them
   });
 
-  it('treats the ceiling as her rung when her saved rung sits above it', () => {
-    // A child moved *down* a grade keeps her saved rung but is served at the
+  it('treats the ceiling as their rung when their saved rung sits above it', () => {
+    // A child moved *down* a grade keeps their saved rung but is served at the
     // ceiling. Those answers are evidence about the ceiling rung, which is the
-    // only ground she is actually standing on.
+    // only ground they are actually standing on.
     const start: SkillState = { ...newSkillState('adding'), rung: 6 };
     const st = feed(start, Array(LADDER.window).fill(false), 4, 4);
     expect(st.rung).toBe(3); // demoted from the ceiling, not frozen
@@ -464,9 +464,9 @@ describe('a practice pick says which rung it came from', () => {
     expect(sawFresh).toBe(true);
   });
 
-  it('reports the ceiling, not the saved rung, when her grade clamps her', () => {
-    // Her ladder says rung 12 but first grade tops out at 9, so that is the rung
-    // she is actually served -- and therefore the one her answers are about.
+  it('reports the ceiling, not the saved rung, when their grade clamps them', () => {
+    // Their ladder says rung 12 but first grade tops out at 9, so that is the rung
+    // they are actually served -- and therefore the one their answers are about.
     const p = buildInitialProgress();
     p.gradeLevel = '1';
     p.practiceFocus = ['adding'];
@@ -495,7 +495,7 @@ describe('a practice pick says which rung it came from', () => {
     expect(review).not.toBeNull();
     expect(review!.question.id).toBe('add-3+4');
     expect(review!.skillId, 'a review used to be invisible to the ladder').toBe('adding');
-    expect(review!.rung, 'a review says nothing about where she is standing').toBeNull();
+    expect(review!.rung, 'a review says nothing about where they are standing').toBeNull();
   });
 
   it('a requeued miss keeps the rung it was first served from', () => {
@@ -520,7 +520,7 @@ describe('a practice pick says which rung it came from', () => {
 describe('every catalogue level names the rung it teaches', () => {
   it('has a rung for every level, so level play is never off-rung by accident', () => {
     // recordLevelComplete passes `RUNG_FOR_LEVEL.get(levelId) ?? null`, and null
-    // means "do not move her". A level missing from the table would therefore
+    // means "do not move them". A level missing from the table would therefore
     // stop feeding the ladder silently rather than loudly.
     const missing = allCatalogueLevelIds().filter((id) => !RUNG_FOR_LEVEL.has(id));
     expect(missing).toEqual([]);
@@ -551,8 +551,8 @@ describe('practice queue', () => {
   });
 
   // The tiered "waves" this used to assert are gone; the grade band decides what
-  // she meets. A five-year-old must never be handed fractions or the times
-  // tables, and that is now a statement about her grade, not about her rung.
+  // they meet. A five-year-old must never be handed fractions or the times
+  // tables, and that is now a statement about their grade, not about their rung.
   it('keeps second-grade topics away from a kindergartener', () => {
     const p = buildInitialProgress();
     p.gradeLevel = 'K';
@@ -581,8 +581,8 @@ describe('practice queue', () => {
     expect(seen.has('fractions')).toBe(true);
   });
 
-  it('never serves a question above her grade ceiling', () => {
-    // Her ladder says "adding within 200" but she is set to first grade, whose
+  it('never serves a question above their grade ceiling', () => {
+    // Their ladder says "adding within 200" but they are set to first grade, whose
     // ceiling is "within 20". The seeded rung must not leak harder questions.
     const p = buildInitialProgress();
     p.gradeLevel = '1';
@@ -598,7 +598,7 @@ describe('practice queue', () => {
     expect(maxSeen, 'first grade tops out at sums within 20').toBeLessThanOrEqual(20);
   });
 
-  it('keeps a topic she has started even after the grade moves on', () => {
+  it('keeps a topic they have started even after the grade moves on', () => {
     const p = buildInitialProgress();
     p.gradeLevel = 'K';
     p.skills = { clocks: { skillId: 'clocks', rung: 0, recent: [], attempts: 3, correct: 2 } };
@@ -610,7 +610,7 @@ describe('practice queue', () => {
       const pick = q.next();
       if (pick?.skillId) seen.add(pick.skillId);
     }
-    expect(seen.has('clocks'), 'a topic must not vanish from under her').toBe(true);
+    expect(seen.has('clocks'), 'a topic must not vanish from under them').toBe(true);
   });
 
   it('sticks to the parent\'s picks when Focus Mode is on', () => {
@@ -644,7 +644,7 @@ describe('practice queue', () => {
     expect(cameBack).toBe(true);
   });
 
-  it('asks questions at the rung she is actually on', () => {
+  it('asks questions at the rung they are actually on', () => {
     const p = buildInitialProgress();
     p.skills = { adding: { skillId: 'adding', rung: 11, recent: [], attempts: 0, correct: 0 } };
     const q = new PracticeQueue(p);
@@ -665,7 +665,7 @@ describe('practice queue', () => {
 // ---------------------------------------------------------------------------
 
 describe('rounds of Play', () => {
-  // Play used to spread every question over every topic in her grade, about 1
+  // Play used to spread every question over every topic in their grade, about 1
   // in 16 each in first grade, so no topic got the 8 answers a promotion needs
   // within a sitting. A round concentrates on a few.
   const grade1 = (skills: Record<string, Partial<SkillState>> = {}): UserProgress => ({
@@ -684,7 +684,7 @@ describe('rounds of Play', () => {
     }
   });
 
-  it('keeps her on what she is climbing, not on what she has topped out', () => {
+  it('keeps them on what they are climbing, not on what they have topped out', () => {
     // Clocks tops out at rung 1 in first grade; adding and counting can still climb.
     const p = grade1({ adding: { rung: 2 }, counting: { rung: 0 }, clocks: { rung: 1 } });
     let climbing = 0, topped = 0;
@@ -721,7 +721,7 @@ describe('rounds of Play', () => {
       previous = round;
     }
     expect(repeats / 300).toBeLessThan(0.15);
-    expect(thirds.size, 'over many rounds the third slot reaches most of her grade').toBeGreaterThan(pool(p).length * 0.6);
+    expect(thirds.size, 'over many rounds the third slot reaches most of their grade').toBeGreaterThan(pool(p).length * 0.6);
   });
 
   it('asks the two main topics four times each, so a topic can move within one round', () => {
@@ -757,7 +757,7 @@ describe('rounds of Play', () => {
     expect(first[0]).toBe('adding');
   });
 
-  it('stays on the topic a topic screen sent her to, and on a parent\'s Focus Mode picks', () => {
+  it('stays on the topic a topic screen sent them to, and on a parent\'s Focus Mode picks', () => {
     expect(new PracticeQueue(grade1(), 'You', 'clocks').roundSkills()).toEqual(['clocks']);
     const focused = { ...grade1(), practiceFocus: ['adding', 'money', 'fractions', 'clocks'] };
     expect(new PracticeQueue(focused).roundSkills().sort()).toEqual(['adding', 'clocks', 'fractions', 'money']);
@@ -783,7 +783,7 @@ describe('rounds of Play', () => {
         if (i === 0) main = q.roundSkills().slice(0, 2);
         if (pick.rung === null) { reviews++; continue; }
         asked[pick.skillId!] = (asked[pick.skillId!] ?? 0) + 1;
-        // She gets every one of the first topic's questions wrong.
+        // They get every one of the first topic's questions wrong.
         if (pick.skillId === main[0]) q.missed(pick.question, pick.skillId, pick.rung);
       }
       expect(asked[main[0]], `round ${r}: ${JSON.stringify(asked)}`).toBeGreaterThanOrEqual(4);
@@ -807,9 +807,9 @@ describe('rounds of Play', () => {
   });
 
   it('gives a topic left over from another grade variety turns only', () => {
-    // She started Clocks in first grade and has since been moved to K. It stays
+    // They started Clocks in first grade and have since been moved to K. It stays
     // in reach, but its ceiling there is the ladder's top, so it would always
-    // look climbable and crowd out the topics her grade is about.
+    // look climbable and crowd out the topics their grade is about.
     const p: UserProgress = {
       ...buildInitialProgress(), gradeLevel: 'K',
       skills: { clocks: { ...newSkillState('clocks'), attempts: 12, correct: 9 } },
@@ -836,7 +836,7 @@ describe('rounds of Play', () => {
     }
   });
 
-  it('leads with the topic whose lesson she has just watched', () => {
+  it('leads with the topic whose lesson they have just watched', () => {
     const p = grade1({ adding: { rung: 2 }, 'taking-away': { rung: 2 } });
     for (let i = 0; i < 20; i++) {
       const q = new PracticeQueue(p, 'You', null, ROUND_SIZE, 'counting');
@@ -849,14 +849,14 @@ describe('rounds of Play', () => {
 describe('the grade ceiling', () => {
   it('stops the rung at the ceiling and counts the blocked promotion', () => {
     // First grade tops adding out at rung 4. Acing a full window there must not
-    // promote her into second-grade work.
+    // promote them into second-grade work.
     let state = { skillId: 'adding', rung: 4, recent: [], attempts: 0, correct: 0 } as SkillState;
     for (let i = 0; i < LADDER.window; i++) {
       state = recordSkillAnswer(state, true, 4).state;
     }
     expect(state.rung, 'must not climb past the grade ceiling').toBe(4);
     expect(state.ceilingHits, 'a blocked promotion is recorded for the parent').toBe(1);
-    expect(state.recent, 'window is cleared so she is not stuck facing a demotion').toEqual([]);
+    expect(state.recent, 'window is cleared so they are not stuck facing a demotion').toEqual([]);
   });
 
   it('still promotes below the ceiling', () => {
@@ -870,7 +870,7 @@ describe('the grade ceiling', () => {
 
   it('does not count topping out the real ladder as outgrowing the grade', () => {
     // At the very top of the ladder there is nowhere to be promoted to, which is
-    // not the same thing as the grade holding her back.
+    // not the same thing as the grade holding them back.
     const top = SKILLS_BY_ID.get('comparing')!.rungs.length - 1;
     let state = { skillId: 'comparing', rung: top, recent: [], attempts: 0, correct: 0 } as SkillState;
     for (let i = 0; i < LADDER.window; i++) {
@@ -883,7 +883,7 @@ describe('the grade ceiling', () => {
 describe('answer times', () => {
   const at = (rung: number, times?: number[]): SkillState => ({ ...newSkillState('adding'), rung, ...(times ? { times } : {}) });
 
-  it('keeps how long a right answer at her own rung took', () => {
+  it('keeps how long a right answer at their own rung took', () => {
     const { state } = recordSkillAnswer(at(2), true, undefined, 2, 3400.6);
     expect(state.times).toEqual([3401]);
   });
@@ -905,20 +905,20 @@ describe('answer times', () => {
 
   it('keeps only the latest window of them', () => {
     let state = at(2);
-    // Alternate right and wrong: 4 of 8 neither promotes nor demotes her.
+    // Alternate right and wrong: 4 of 8 neither promotes nor demotes them.
     for (let i = 1; i <= 20; i++) state = recordSkillAnswer(state, i % 2 === 0, undefined, 2, i * 100).state;
     expect(state.rung).toBe(2);
     expect(state.times).toEqual([600, 800, 1000, 1200, 1400, 1600, 1800, 2000]);
   });
 
-  it('starts again when she moves rung', () => {
+  it('starts again when they move rung', () => {
     let state = at(2);
     for (let i = 0; i < LADDER.window; i++) state = recordSkillAnswer(state, true, undefined, 2, 2000).state;
     expect(state.rung).toBe(3);
     expect(state.times).toEqual([]);
   });
 
-  it('keeps them while she sits at the top acing it', () => {
+  it('keeps them while they sit at the top acing it', () => {
     let state = at(4);
     for (let i = 0; i < LADDER.window; i++) state = recordSkillAnswer(state, true, 4, 4, 2000).state;
     expect(state.rung).toBe(4);
@@ -958,9 +958,9 @@ describe('progress migration', () => {
     expect(migrated!.version).toBe(7);
     expect(migrated!.skills).toEqual({});
     expect(migrated!.practiceQuestionsAnswered).toBe(0);
-    expect(migrated!.errorPatterns, 'v6 is additive: she starts accumulating from here').toEqual({});
+    expect(migrated!.errorPatterns, 'v6 is additive: they start accumulating from here').toEqual({});
     expect(migrated!.gradeLevel, 'grade is unset until a parent picks one').toBeNull();
-    // Records are sparse now: nothing is stored for levels she never attempted.
+    // Records are sparse now: nothing is stored for levels they never attempted.
     expect(migrated!.categories).toEqual({});
   });
 
@@ -968,7 +968,7 @@ describe('progress migration', () => {
   // the adding and taking-away ladders, so a saved rung number now means
   // something different. Without the shift a child on "adding within 20" would
   // quietly land back on "adding within 5".
-  it('keeps her ladder position when v4 inserts rungs below her', () => {
+  it('keeps their ladder position when v4 inserts rungs below them', () => {
     const v3 = { ...buildInitialProgress(), version: 3 } as UserProgress;
     v3.skills = {
       adding: { skillId: 'adding', rung: 2, recent: [true], attempts: 9, correct: 7 },
@@ -997,8 +997,8 @@ describe('progress migration', () => {
 
   // The headline bug this redesign exists to fix: level play and practice were
   // two separate worlds, so a child could three-star every level in a category
-  // and still be handed rung 0 the moment she opened Practice.
-  it('seeds the ladder from levels she has already passed', () => {
+  // and still be handed rung 0 the moment they opened Practice.
+  it('seeds the ladder from levels they have already passed', () => {
     const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
     v4.skills = {};
     v4.categories = {
@@ -1035,7 +1035,7 @@ describe('progress migration', () => {
     expect(m.skills.adding.attempts, 'history survives seeding').toBe(40);
   });
 
-  it('does not seed from a level she attempted but failed', () => {
+  it('does not seed from a level they attempted but failed', () => {
     const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
     v4.skills = {};
     v4.categories = {

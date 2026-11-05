@@ -13,7 +13,7 @@ import { ArrowLeft, ArrowRight, Lightbulb, Play, RotateCcw, Star, Volume2, X } f
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
 
 // One lesson, one step at a time: the guide says something, a picture shows it,
-// and every few steps she has a go herself.
+// and every few steps they have a go themselves.
 //
 // Speech is started from inside tap handlers, never from an effect. iPad Safari
 // only lets a page talk in response to a tap, and the Start button is that tap.
@@ -61,8 +61,8 @@ export default function Learn() {
 
   function leave() {
     window.speechSynthesis?.cancel();
-    // Offered from inside Play, the lesson hands her back to Play. Only a Play
-    // path is honoured, so a crafted link cannot send her anywhere else.
+    // Offered from inside Play, the lesson hands them back to Play. Only a Play
+    // path is honoured, so a crafted link cannot send them anywhere else.
     const back = search.get('return');
     if (back && /^\/(practice(\?skill=[a-z-]+)?|sums)$/.test(back)) { navigate(back, { replace: true }); return; }
     navigate(topic ? `/topic/${topic.id}` : '/');
@@ -91,7 +91,7 @@ export default function Learn() {
       say(s.then.say);
       return;
     }
-    // A wrong tap here costs nothing — this is where she is allowed to be wrong.
+    // A wrong tap here costs nothing — this is where they are allowed to be wrong.
     sounds.playWrong();
     const h = s.hints?.[c] ?? 'Not quite. Look at the picture and try again!';
     setTried((t) => [...t, c]);

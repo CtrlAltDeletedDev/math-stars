@@ -25,12 +25,12 @@ interface Props {
 //
 // Play used to be one endless stream, so nothing ever ended and nothing ever
 // visibly moved: a promotion on any one topic came round about once a week.
-// A round is ten questions on two or three topics, and this card is where she
-// sees what they did — each topic's ring where it now stands, a big arrow on
+// A round is ten questions on two or three topics, and this card is where they
+// see what they did — each topic's ring where it now stands, a big arrow on
 // any that went up. It is an ending without being a finish: "Keep going" is the
 // bigger button, and the rings never show a full, done state.
 //
-// Pictures and numbers, not sentences, so she can read it on her own.
+// Pictures and numbers, not sentences, so they can read it on their own.
 
 export default function RoundCard({
   progress, skillIds, levelledUp, correct, total, stars, characterEmoji, onKeepGoing, onHome,

@@ -10,8 +10,8 @@ import { tapTenFrameCell, tenFrameCells, tenFrameLabel, nextTrayCounter } from '
 //
 // In "do" (onChange given) every cell is a big button:
 //   empty cell        -> the next tray counter goes there ('a' first, then 'b').
-//                        It lands where she tapped: no snapping to the first
-//                        empty cell, so the frame shows what she did.
+//                        It lands where they tapped: no snapping to the first
+//                        empty cell, so the frame shows what they did.
 //   counter           -> back to the tray, or with `takeAway`, crossed out
 //                        (tap again to un-cross).
 // See logic-a.ts for the rules, including the endless supply when there is no tray.
@@ -29,7 +29,7 @@ export default function TenFrame({ state, onChange, size = 'big' }: ModelProps<'
   const live = !!onChange;
 
   // When several counters arrive at once (a show step), they pop in one after
-  // another in reading order, so she can see "and 4 more" arrive.
+  // another in reading order, so they can see "and 4 more" arrive.
   const arriving = cells.map((c, i) => c !== null && prev !== undefined && prev[i] !== c);
   const rank: number[] = [];
   let k = 0;

@@ -123,7 +123,7 @@ export function generateWordProblem(characterName: string, type: 'addition' | 's
 const ALL_TEMPLATES = [...ADDITION_TEMPLATES, ...SUBTRACTION_TEMPLATES];
 
 /**
- * Rebuild a word problem from its id, so one she got wrong can come back in
+ * Rebuild a word problem from its id, so one they got wrong can come back in
  * Practice Mistakes. Without this the SRS stored a card it could never show.
  */
 export function wordProblemFromId(id: string, characterName = 'You'): Question | null {

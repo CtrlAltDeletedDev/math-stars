@@ -96,7 +96,7 @@ describe('clock', () => {
     expect(stepMinute(clock(3, 7, 5), -1)).toMatchObject({ hour: 3, minute: 5 });
   });
 
-  it('sets the hour from where she points, allowing for the minutes', () => {
+  it('sets the hour from where they point, allowing for the minutes', () => {
     expect(setHourFromAngle(clock(12, 0), 90)).toMatchObject({ hour: 3 });
     expect(setHourFromAngle(clock(12, 0), 100)).toMatchObject({ hour: 3 });
     // At half past, the hour hand for 3 sits at 105 degrees.
@@ -121,7 +121,7 @@ describe('clock', () => {
 
 describe('coins', () => {
   const coins = (tray: number[]): S<'coins'> => ({ model: 'coins', tray, bank: [1, 5, 10, 25] });
-  it('totals, adds and removes the coin she tapped', () => {
+  it('totals, adds and removes the coin they tapped', () => {
     expect(coinTotal([25, 10, 5, 1, 1])).toBe(42);
     expect(addCoin(coins([10]), 5).tray).toEqual([10, 5]);
     expect(removeCoin(coins([10, 5, 1]), 1).tray).toEqual([10, 1]);

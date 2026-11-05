@@ -21,11 +21,11 @@ const TAG_COPY: Record<Exclude<ErrorTag, 'unknown'>, { label: string; suggestion
   },
   'wrong-operation': {
     label: 'adding when the sign says take away, or the other way round',
-    suggestion: 'Before answering, ask her: "are we getting more, or fewer?" Reading the sign is the whole skill here.',
+    suggestion: 'Before answering, ask them: "are we getting more, or fewer?" Reading the sign is the whole skill here.',
   },
   'answered-a-given-number': {
-    label: 'answering with a number the question already showed her',
-    suggestion: 'A sign she is guessing from what is on screen. Try the same sums with objects she can move.',
+    label: 'answering with a number the question already showed them',
+    suggestion: 'A sign they are guessing from what is on screen. Try the same sums with objects they can move.',
   },
   'answered-the-whole': {
     label: 'giving the whole amount when asked for a part',
@@ -37,7 +37,7 @@ const TAG_COPY: Record<Exclude<ErrorTag, 'unknown'>, { label: string; suggestion
   },
   'wrong-multiple': {
     label: 'landing on the wrong multiple when counting in groups',
-    suggestion: 'Count the pattern out loud together — 5, 10, 15 — before she meets it written down.',
+    suggestion: 'Count the pattern out loud together — 5, 10, 15 — before they meet it written down.',
   },
   'counted-the-wrong-thing': {
     label: 'counting the objects instead of what they are worth',
@@ -45,11 +45,11 @@ const TAG_COPY: Record<Exclude<ErrorTag, 'unknown'>, { label: string; suggestion
   },
   reversed: {
     label: 'giving the leftover instead of the part asked for',
-    suggestion: 'Have her say the question back in her own words before answering it.',
+    suggestion: 'Have them say the question back in their own words before answering it.',
   },
   'added-story-numbers': {
     label: 'adding the two numbers in a story that was really asking "how many more" or "how many are the rest"',
-    suggestion: 'Ask "do we already know the whole?" before she solves it. If the big number is the whole, draw it as a bar with the part she knows underneath — the answer is the gap.',
+    suggestion: 'Ask "do we already know the whole?" before they solve it. If the big number is the whole, draw it as a bar with the part they know underneath — the answer is the gap.',
   },
 };
 
@@ -82,13 +82,13 @@ const SKILL_TAG_COPY: Record<string, Partial<typeof TAG_COPY>> = {
     },
     'answered-a-given-number': {
       label: 'giving back the time the question started from',
-      suggestion: 'She can read the clock; the question is what is slipping. Read "in one hour" aloud and move the hands on together.',
+      suggestion: 'They can read the clock; the question is what is slipping. Read "in one hour" aloud and move the hands on together.',
     },
   },
 };
 
 /**
- * What she keeps getting wrong on one skill, commonest first.
+ * What they keep getting wrong on one skill, commonest first.
  *
  * 'unknown' is excluded rather than ranked: it is a near miss with no story,
  * and putting it in a list headed "what to work on" would be inventing one.
@@ -136,13 +136,13 @@ export interface HardFact {
 }
 
 /**
- * The individual facts she keeps missing.
+ * The individual facts they keep missing.
  *
  * Free: SRS ids are already the fact (`add-8+7`), `easeFactor` already falls
- * every time she gets one wrong, and `questionFromId` already turns an id back
+ * every time they get one wrong, and `questionFromId` already turns an id back
  * into a real question. Nothing new is recorded for this.
  *
- * Only cards below the starting ease appear, so a card she has simply not seen
+ * Only cards below the starting ease appear, so a card they have simply not seen
  * often cannot look like a struggle.
  */
 export function hardestFacts(progress: UserProgress, limit = 5): HardFact[] {
@@ -170,7 +170,7 @@ export interface WorkingOn {
 /**
  * The single topic to name at the top of the screen.
  *
- * Her least accurate in-scope skill with enough evidence to be worth naming —
+ * Their least accurate in-scope skill with enough evidence to be worth naming —
  * which is the one a parent can actually help with this week. Lifetime accuracy,
  * not `recent`: the sliding window is cleared on every promotion and demotion,
  * so right after anything interesting happens it reads 0% of 1.
@@ -182,7 +182,7 @@ export function workingOn(progress: UserProgress): WorkingOn | null {
   for (const skill of SKILLS) {
     const state = progress.skills?.[skill.id];
     if (!state || state.attempts < MIN_ATTEMPTS) continue;
-    // Out of scope for her grade is not hers to work on.
+    // Out of scope for their grade is not theirs to work on.
     if (ceilingFor(skill.id, progress.gradeLevel) === 0 && !progress.skills?.[skill.id]) continue;
     const accuracy = state.correct / state.attempts;
     if (!worst || accuracy < worst.accuracy) worst = { skill, state, accuracy };
@@ -201,7 +201,7 @@ export function workingOn(progress: UserProgress): WorkingOn | null {
   };
 }
 
-/** Days played in the last `n` calendar days, from the history she already has. */
+/** Days played in the last `n` calendar days, from the history they already have. */
 export function daysPlayedIn(progress: UserProgress, days: number, from = new Date()): number {
   const history = new Set(progress.playHistory ?? []);
   let count = 0;

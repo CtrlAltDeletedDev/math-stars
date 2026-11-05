@@ -14,8 +14,8 @@ import { newSkillState, recordSkillAnswer } from './skillLadder';
 // Tricks noticing. Pure functions, so `foldAnswers.test.ts` can hold that shut.
 
 /**
- * One answer as a finished session hands it over: what she was asked, whether
- * she knew it, what she tapped first, and how long that first tap took.
+ * One answer as a finished session hands it over: what they were asked, whether
+ * they knew it, what they tapped first, and how long that first tap took.
  */
 export interface SessionAnswer {
   question: Question;
@@ -24,10 +24,10 @@ export interface SessionAnswer {
   ms?: number;
 }
 
-/** A rung she climbed during a session, for the screen to celebrate. */
+/** A rung they climbed during a session, for the screen to celebrate. */
 export interface LevelUp {
   skillId: string;
-  /** The rung she is standing on now. */
+  /** The rung they are standing on now. */
   rung: number;
 }
 
@@ -68,7 +68,7 @@ export function noteError(
  *
  * Every level is 8 or 10 questions, which is exactly one ladder window, so a
  * replay used to be one guaranteed promote-or-demote. The replay strip offers
- * every level in the grade regardless of where she is standing, so four replays
+ * every level in the grade regardless of where they are standing, so four replays
  * of "Adding 1 more" walked a child from rung 2 to rung 6, "Adding within 100",
  * on nothing harder than n + 1.
  */
@@ -91,7 +91,7 @@ export function foldLevelAnswers(
     if (!correct) errorPatterns = noteError(errorPatterns, skillId, question, chosen);
     // A level teaches one rung of one topic. A question that a mixed level
     // routes to a *second* ladder sits at no known rung there, so it counts
-    // toward her totals and her SRS but must not move her.
+    // toward their totals and their SRS but must not move them.
     const servedRung = skillId === levelSkill ? levelRung ?? null : null;
     const before = next[skillId] ?? newSkillState(skillId);
     const result = recordSkillAnswer(before, correct, ceilingFor(skillId, grade), servedRung, ms);
@@ -102,11 +102,11 @@ export function foldLevelAnswers(
 }
 
 /**
- * Fold a mixed session's answers into the ladders, as evidence about her
- * totals but not about where she is standing.
+ * Fold a mixed session's answers into the ladders, as evidence about them
+ * totals but not about where they are standing.
  *
  * The daily challenge, a Master Mode run and a review session all draw across
- * rungs on purpose, so no answer in them can say whether her *current* rung is
+ * rungs on purpose, so no answer in them can say whether their *current* rung is
  * comfortable — that is what `servedRung: null` means. Before this, these
  * three modes wrote nothing the ladder could read at all, which is the same
  * "two worlds" split CLAUDE.md says the design exists to prevent, just moved

@@ -292,7 +292,7 @@ const takingFrom: Lesson = {
     }),
     ask(storyItem('take', 10, 3)),
   ],
-  // Mostly taking away, with "gets more" mixed in so she has to listen.
+  // Mostly taking away, with "gets more" mixed in so they have to listen.
   practice: mix([3, fresh(['take'], 4, 10)], [1, fresh(['join', 'put'], 4, 10)]),
 };
 
@@ -424,7 +424,7 @@ export const UNIT: Unit = {
   id: 'stories',
   title: 'Story problems',
   emoji: '📖',
-  about: 'Putting together, adding to, taking from, some and the rest, and how many more: stories she hears, pictures, then solves. Within 10, then 20.',
+  about: 'Putting together, adding to, taking from, some and the rest, and how many more: stories they hear, pictures, then solve. Within 10, then 20.',
   colour: '#8D6E63',
   lessons: [putTogether, addingTo, takingFrom, someAndTheRest, howManyMore, numberSentence],
 };

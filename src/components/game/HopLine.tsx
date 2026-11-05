@@ -2,20 +2,20 @@ import { PointerEvent, useRef, useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
 
-// "Show your work!" — a number line she can actually hop along.
+// "Show your work!" — a number line they can actually hop along.
 //
 // The class worksheet prints a 0–20 line under every take-away story and expects
-// her to draw the hops. On paper her hops went the wrong way (from 14 forward to
+// them to draw the hops. On paper their hops went the wrong way (from 14 forward to
 // 20, for "14 balls, 6 are soccer balls") and nobody saw it until the sheet came
-// home marked. Here the hops are drawn as she makes them, forward in one colour
-// and back in another, and the line says out loud which way she went.
+// home marked. Here the hops are drawn as they make them, forward in one colour
+// and back in another, and the line says out loud which way they went.
 //
-// It is scratch paper, not a second way to answer: nothing she does here is
-// scored, and it starts blank so it never hands her the answer.
+// It is scratch paper, not a second way to answer: nothing they do here is
+// scored, and it starts blank so it never hands them the answer.
 
 interface Props {
   max: number;
-  /** Where she starts, already placed. Lessons set it; questions leave it blank. */
+  /** Where they start, already placed. Lessons set it; questions leave it blank. */
   initialStart?: number;
 }
 
@@ -50,7 +50,7 @@ export default function HopLine({ max, initialStart }: Props) {
     if (start === null) { setStart(n); return; }
     if (n === here) return;
     // A tap further along fills in every single hop on the way, because the
-    // hops are what she is meant to count.
+    // hops are what they are meant to count.
     const step = n > here! ? 1 : -1;
     const hops: number[] = [];
     for (let k = here! + step; k !== n + step; k += step) hops.push(k);
@@ -64,7 +64,7 @@ export default function HopLine({ max, initialStart }: Props) {
 
   const forward = path.filter((n, i) => n > (i === 0 ? start! : path[i - 1])).length;
   const back = path.length - forward;
-  // The colour of where she is now: the direction of her last hop.
+  // The colour of where they are now: the direction of their last hop.
   const hereColour = path.length < 1
     ? INK
     : path[path.length - 1] > (path.length > 1 ? path[path.length - 2] : start!) ? FORWARD : BACK;
@@ -111,7 +111,7 @@ export default function HopLine({ max, initialStart }: Props) {
         onPointerDown={tap}
         style={{ width: '100%', maxWidth: 620, touchAction: 'manipulation', cursor: 'pointer', userSelect: 'none' }}
       >
-        {/* The whole height is the hit area: she taps near a number, not on a 2px tick. */}
+        {/* The whole height is the hit area: they tap near a number, not on a 2px tick. */}
         <rect x="0" y="0" width={width} height="100" fill="transparent" />
 
         {path.map((n, i) => {

@@ -86,20 +86,20 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // A save we cannot read is NOT nothing. Starting from a blank profile and
-    // saving over it on her next answer turns a recoverable glitch into every
+    // saving over it on their next answer turns a recoverable glitch into every
     // star gone, with no signal that anything happened — so the raw text is
     // parked under a backup key and the Parent screen is told.
     const result = loadProgressResult();
     if (result.ok) {
       setProgress(result.progress);
       // Write the migrated shape straight back, so an older save on disk
-      // converges to the current schema even if she never finishes a level
+      // converges to the current schema even if they never finish a level
       // this session.
       if (!savePruned(result.progress)) setStorageIssue('cannot-save');
     } else if (result.reason === 'unreadable') {
       setStorageIssue(result.backedUp ? 'unreadable-backed-up' : 'unreadable');
     } else if (!storageWorks()) {
-      // Private browsing, or a full disk: she can play, but nothing will stick.
+      // Private browsing, or a full disk: they can play, but nothing will stick.
       setStorageIssue('cannot-save');
     }
     setIsLoaded(true);
@@ -196,7 +196,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       next = { ...next, consecutiveCorrect };
 
       // Created on first play rather than seeded up front: nothing reads this
-      // map to decide what she may open, so an absent entry just means "not
+      // map to decide what they may open, so an absent entry just means "not
       // played yet".
       const existingCat = next.categories[level.categoryId];
       const catProgress = existingCat
@@ -213,8 +213,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
       const newStarDelta = Math.max(0, stars - prevLevel.starsEarned);
 
-      // Every merge is monotonic, so replaying a level she has already aced can
-      // only ever leave her where she was — never take stars back.
+      // Every merge is monotonic, so replaying a level they have already aced can
+      // only ever leave them where they were — never take stars back.
       catProgress.levels[levelId] = {
         ...prevLevel,
         bestScore: Math.max(prevLevel.bestScore, score),
@@ -278,7 +278,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     let streakBonus = 0;
     // Assigned inside the updater, below the guard. Computing it here meant a
     // second run on the same day discarded the whole session with `return prev`
-    // while still telling her "⭐ Daily bonus: +5 stars!".
+    // while still telling them "⭐ Daily bonus: +5 stars!".
     let dcStreakBonus = 0;
 
     setProgress((prev) => {
@@ -393,8 +393,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return { newBadges, newStickers, streakBonus };
   }
 
-  // One answer in endless practice: move her along the skill ladder, keep the
-  // SRS card current, and hand back whether she just levelled up so the screen
+  // One answer in endless practice: move them along the skill ladder, keep the
+  // SRS card current, and hand back whether they just levelled up so the screen
   // can celebrate it.
   function recordPracticeAnswer(
     skillId: string | null,
@@ -403,7 +403,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     /** The rung the queue served this from; null for an SRS review. */
     servedRung?: number | null,
     /**
-     * The question and the option she picked, so a mistake can say what it
+     * The question and the option they picked, so a mistake can say what it
      * meant, and how long that first tap took.
      */
     picked?: { question: Question; chosen: string; ms?: number },
@@ -456,11 +456,11 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         spendableStars: prev.spendableStars + starsAwarded,
       };
 
-      // First play of the day pays the streak bonus, whichever mode she opened.
+      // First play of the day pays the streak bonus, whichever mode they opened.
       //
       // This used to only mark playHistory, while the bonus lived in
       // recordLevelComplete and was gated on that same field — so opening
-      // Practice first cost her up to seven stars for pressing the "wrong"
+      // Practice first cost them up to seven stars for pressing the "wrong"
       // button, and the reward for identical effort depended on entry order.
       const todayStr = todayString();
       const ph = next.playHistory ?? [];
@@ -612,7 +612,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     return true;
   }
 
-  /** Which grade she is working at. Sets the topics in scope and each ladder's ceiling. */
+  /** Which grade they are working at. Sets the topics in scope and each ladder's ceiling. */
   function setGradeLevel(grade: GradeLevel) {
     setProgress((prev) => {
       const next = { ...prev, gradeLevel: grade };

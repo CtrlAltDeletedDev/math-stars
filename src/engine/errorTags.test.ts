@@ -12,7 +12,7 @@ import { buildTaggedChoices, shuffleChoices } from './choices';
 
 // The generators have always chosen distractors that are specific mistakes --
 // `a+b` on a subtraction question is "added instead of subtracting". That
-// meaning lived in comments and evaporated the moment she tapped one. These
+// meaning lived in comments and evaporated the moment they tapped one. These
 // tests are about it surviving the whole trip to storage.
 
 const TAGGED: [string, () => Question][] = [
@@ -61,10 +61,10 @@ describe('every wrong option carries what picking it would mean', () => {
     expect(meaningful / total).toBeGreaterThan(0.5);
   });
 
-  it('survives the shuffle every question goes through before she sees it', () => {
+  it('survives the shuffle every question goes through before they see it', () => {
     // Keyed by the option's own text, not its index: a question is shuffled at
     // least once between being built and being shown, so an index would point
-    // at the wrong option by the time she taps.
+    // at the wrong option by the time they tap.
     for (let i = 0; i < 300; i++) {
       const q = generateSubtractionQuestion(20);
       const before = q.choices.filter((c) => c !== q.correctAnswer)
@@ -90,7 +90,7 @@ describe('every wrong option carries what picking it would mean', () => {
   });
 });
 
-describe('the tagging never changes what she is asked', () => {
+describe('the tagging never changes what they are asked', () => {
   it('keeps the answer in the options and the options distinct', () => {
     for (const [, gen] of TAGGED) {
       for (let i = 0; i < 200; i++) {

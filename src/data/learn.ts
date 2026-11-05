@@ -7,32 +7,32 @@ import { RUNG_FOR_LEVEL, SKILL_FOR_LEVEL, TOPICS_BY_ID } from './topics';
 //
 // The first lessons in this app were text slides: a title, a paragraph, an
 // example in monospace. Fine for a parent reading aloud, useless to a six-year-
-// old on her own — and nothing on them could be touched. These are built the way
+// old on their own — and nothing on them could be touched. These are built the way
 // first grade is actually taught:
 //
 //   watch   the guide says one short thing out loud while a picture moves —
 //           hops on a number line, counters sliding into a ten frame, two rows
 //           of coins lining up
-//   try     she answers one question about the same picture; a wrong tap gets a
+//   try     they answer one question about the same picture; a wrong tap gets a
 //           hint written for *that* wrong answer ("did you count 17 as a hop?"),
 //           and the right one plays the picture through to show why
 //
 // Every word is spoken. Captions are a few words with the numbers in them, so a
 // non-reader can follow by ear and still see the maths.
 //
-// Nothing in a lesson is scored. Lessons are where she is allowed to be wrong;
-// the ladder and the SRS only hear about what she does in play.
+// Nothing in a lesson is scored. Lessons are where they are allowed to be wrong;
+// the ladder and the SRS only hear about what they do in play.
 //
-// The pictures are the ones her class uses on paper (the "Subtract Using Number
+// The pictures are the ones their class uses on paper (the "Subtract Using Number
 // Line" worksheet, part-whole bars, ten frames), so the lesson and the homework
 // look like the same idea. Characters in examples are named every time, never
-// "he" or "she".
+// a pronoun.
 
 export type Scene =
   /**
    * A number line. `hops` arcs are drawn from `start` in direction `dir`; with
-   * `animate` they appear one at a time. `interactive` hands her the hop line to
-   * work it out herself, starting from `start`.
+   * `animate` they appear one at a time. `interactive` hands them the hop line to
+   * work it out themselves, starting from `start`.
    */
   | { kind: 'numberLine'; max: number; start: number; hops?: number; dir?: 1 | -1; animate?: boolean; interactive?: boolean }
   /** Ten frame: `first` counters, then `second` in another colour, `outside` waiting below. */
@@ -74,7 +74,7 @@ export interface TryStep {
   answer: string;
   /** What to say after a particular wrong choice. */
   hints?: Record<string, string>;
-  /** After she gets it: say why, and usually play the picture through. */
+  /** After they get it: say why, and usually play the picture through. */
   then: { say: string; caption?: string; scene?: Scene };
 }
 
@@ -847,11 +847,11 @@ export function lessonsFor(skillId: string, ceiling: number): Lesson[] {
 }
 
 /**
- * The one lesson to put in front of her for a topic.
+ * The one lesson to put in front of them for a topic.
  *
- *   1. one that teaches against the mistake she keeps making here
- *   2. otherwise the nearest one to her rung she hasn't done
- *   3. otherwise the nearest one to her rung
+ *   1. one that teaches against the mistake they keep making here
+ *   2. otherwise the nearest one to their rung they haven't done
+ *   3. otherwise the nearest one to their rung
  */
 export function recommendedLesson(
   skillId: string,
@@ -874,12 +874,12 @@ export function recommendedLesson(
 }
 
 /**
- * The level "Practice it now" opens, for the topic she opened the lesson from.
+ * The level "Practice it now" opens, for the topic they opened the lesson from.
  *
  * A lesson can sit in two topics — Counting On is an Adding lesson and a Number
  * Tricks one — but `practiceLevelId` names one level. Opened from the other
- * topic it sent her there anyway: out of Number Tricks into "Adding to 20",
- * crediting a ladder she was not working on. `practiceLevelId` still wins in
+ * topic it sent them there anyway: out of Number Tricks into "Adding to 20",
+ * crediting a ladder they were not working on. `practiceLevelId` still wins in
  * its own topic; elsewhere it is that topic's level at the lesson's rung.
  */
 export function practiceLevelFor(lesson: Lesson, fromSkillId?: string | null): Level | null {

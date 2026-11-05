@@ -8,7 +8,7 @@ import { buildDailyChallengeSession, buildMasterSession, buildRungSession } from
 
 // The sessions that used to be built from categories — the daily challenge,
 // Master Mode and Quick Review — and the "Next" button after a level. All of
-// them now read the ladders, so they follow her whichever button she pressed.
+// them now read the ladders, so they follow their whichever button they pressed.
 
 function child(grade: GradeLevel, rungs: Record<string, number>, due: string[] = []): UserProgress {
   const skills: Record<string, SkillState> = {};
@@ -26,9 +26,9 @@ function addends(q: Question): [number, number] | null {
 }
 
 describe('the daily challenge', () => {
-  it('asks a Play-only child questions at her rung, not ten "n + 1"s', () => {
-    // She has never passed a level, so the old category-based builder fell
-    // back to "Adding 1 More" for her every single day.
+  it('asks a Play-only child questions at their rung, not ten "n + 1"s', () => {
+    // They have never passed a level, so the old category-based builder fell
+    // back to "Adding 1 More" for them every single day.
     const qs = buildDailyChallengeSession(child('1', { adding: 4 }));
     expect(qs).toHaveLength(10);
     const pairs = qs.map(addends);
@@ -37,21 +37,21 @@ describe('the daily challenge', () => {
     expect(pairs.every((p) => p![0] + p![1] <= 20)).toBe(true);
   });
 
-  it('mixes every topic she has started', () => {
+  it('mixes every topic they have started', () => {
     const qs = buildDailyChallengeSession(child('1', { adding: 4, clocks: 1, 'counting-up': 2 }));
     expect(qs).toHaveLength(10);
     const types = new Set(qs.map((q) => q.type));
     expect(types).toEqual(new Set(['addition', 'tell_time', 'skip_count']));
   });
 
-  it('starts a brand-new child gently, on the first topic of her grade', () => {
+  it('starts a brand-new child gently, on the first topic of their grade', () => {
     const qs = buildDailyChallengeSession(child('1', {}));
     expect(qs).toHaveLength(10);
     expect(qs.every((q) => q.type === 'addition')).toBe(true);
   });
 
-  it('never reaches above her grade, even with a saved rung above it', () => {
-    // A child whose grade was moved down keeps her saved rung, but is served at the ceiling.
+  it('never reaches above their grade, even with a saved rung above it', () => {
+    // A child whose grade was moved down keeps their saved rung, but is served at the ceiling.
     const qs = buildDailyChallengeSession(child('1', { adding: 7 }));
     expect(qs.every((q) => { const p = addends(q); return p !== null && p[0] + p[1] <= 20; })).toBe(true);
   });
@@ -83,14 +83,14 @@ describe('Master Mode', () => {
     expect(qs.map((q) => q.id)).not.toContain('add-8+7');
   });
 
-  it('reaches no higher than she has climbed', () => {
+  it('reaches no higher than they have climbed', () => {
     // Rungs 0 and 1 of adding are "+ 1" and "+ 2".
     const qs = buildMasterSession(child('1', { adding: 1 }), 'adding');
     expect(qs).toHaveLength(10);
     expect(qs.every((q) => { const p = addends(q); return p !== null && (p[0] <= 2 || p[1] <= 2); })).toBe(true);
   });
 
-  it('draws from every rung she has climbed through, not only the top one', () => {
+  it('draws from every rung they have climbed through, not only the top one', () => {
     // Rung 4 is "within 20"; rungs 0 and 1 hold an addend at 1 or 2.
     const qs = buildMasterSession(child('1', { adding: 4 }), 'adding');
     const small = qs.filter((q) => { const p = addends(q); return p !== null && (p[0] <= 2 || p[1] <= 2); });
@@ -124,7 +124,7 @@ describe('Master Mode', () => {
 });
 
 describe('Quick Review', () => {
-  it('is at her rung, not the topic\'s first level', () => {
+  it('is at their rung, not the topic\'s first level', () => {
     // It used to replay the first level, so Quick Review on Adding was "+ 1" for ever.
     const qs = buildRungSession(child('1', { adding: 4 }), 'adding'); // within 10
     expect(qs).toHaveLength(10);
@@ -182,7 +182,7 @@ describe('"Next" after a level', () => {
     expect(nextLevelInTopic('steps-back-ten', '1')?.id).toBe('subtraction-3');
   });
 
-  it('stops at the edge of her grade', () => {
+  it('stops at the edge of their grade', () => {
     // Category order offered the × 2 table to a first grader after "Count by 10s".
     expect(nextLevelInTopic('skip-10', '1')).toBeNull();
     expect(nextLevelInTopic('skip-10', '2')?.id).toBe('times-2');

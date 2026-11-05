@@ -6,7 +6,7 @@ import { todayString, yesterdayString, daysAgoString } from './dates';
 //
 // The trap: `new Date().toISOString()` is UTC, so from ~17:00 US Pacific the
 // "today" it reports is already tomorrow. A streak written in the evening then
-// looks like a gap the next morning and her streak silently resets.
+// looks like a gap the next morning and their streak silently resets.
 
 const AFTER_UTC_MIDNIGHT_LOCAL_EVENING = new Date(2026, 2, 14, 19, 30, 0); // 14 Mar 2026, 19:30 local
 
@@ -27,7 +27,7 @@ describe('dates are local, never UTC', () => {
   it('an evening of play does not read as yesterday the next morning', () => {
     vi.useFakeTimers();
 
-    vi.setSystemTime(new Date(2026, 2, 14, 21, 0, 0)); // she plays at 9pm
+    vi.setSystemTime(new Date(2026, 2, 14, 21, 0, 0)); // they play at 9pm
     const played = todayString();
 
     vi.setSystemTime(new Date(2026, 2, 15, 8, 0, 0)); // next morning

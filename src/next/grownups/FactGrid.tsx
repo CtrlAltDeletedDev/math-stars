@@ -130,7 +130,7 @@ export default function FactGrid({ kind, facts, quick }: {
             {STATE_WORDS[d.state]}
           </span>
           {d.seen === 0 ? (
-            <p className="muted">She hasn&rsquo;t had this one yet.</p>
+            <p className="muted">They haven&rsquo;t had this one yet.</p>
           ) : (
             <dl>
               <dt>Seen</dt><dd>{d.seen === 1 ? 'once' : `${d.seen} times`}</dd>

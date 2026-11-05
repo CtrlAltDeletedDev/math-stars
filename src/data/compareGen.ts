@@ -12,7 +12,7 @@ import { randomInt, shuffle } from '@/engine/choices';
 //                     is not a strategy.
 //
 // Ids: gcmp-sign-<a>-<b>, gcmp-more-<a>-<b>, gcmp-less-<a>-<b>, numbers in the
-// order she sees them.
+// order they see them.
 
 type Sign = '<' | '>' | '=';
 
@@ -25,7 +25,7 @@ const signOf = (a: number, b: number): Sign => (a > b ? '>' : a < b ? '<' : '=')
 const leadingDigit = (n: number) => Number(String(n)[0]);
 
 /**
- * The signs she would choose if she lost track of a ten — the comparing
+ * The signs they would choose if they lost track of a ten — the comparing
  * mistake that means something:
  *   - looked only at the ones: 12 ☐ 9 reads as "2 is less than 9";
  *     20 ☐ 10 reads as "0 and 0, the same";
@@ -108,7 +108,7 @@ function unequalPair(max: number): [number, number] {
   return Math.random() < 0.5 ? [a, b] : [b, a];
 }
 
-// Equal often enough that '=' is a real answer, not a sign she learns to skip.
+// Equal often enough that '=' is a real answer, not a sign they learn to skip.
 const EQUAL_SHARE = 0.3;
 
 /**

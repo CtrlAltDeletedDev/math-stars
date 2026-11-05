@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, House, Lightbulb, Play, RotateCcw, Volume2, X, Hand, Zap } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
-import { LESSON_BY_ID, unitOf } from '@/learn/course';
+import { LESSON_BY_ID, lessonNumber, unitOf } from '@/learn/course';
 import { DoStep, ModelState, ShowStep } from '@/learn/types';
 import Model from '@/learn/models/Model';
 import { passed, recordItem, recordLesson, todaysLesson, touchLesson, warmupItems } from '@/learn/progress';
@@ -19,11 +19,11 @@ import '../walk/walk.css';
 
 // One lesson, card by card: warm-up, show, do, practice, check.
 //
-// Teaching cards wait for her: a "show" card moves on when she taps the arrow
-// (the guide has said its line); a "do" card moves on once she has done the
-// thing. If she is stuck, the bulb says a hint for what she has made so far,
-// and after two hints "Show me how" does it for her -- she should never be
-// stuck on a screen she cannot read her way out of.
+// Teaching cards wait for them: a "show" card moves on when they tap the arrow
+// (the guide has said its line); a "do" card moves on once they have done the
+// thing. If they are stuck, the bulb says a hint for what they have made so far,
+// and after two hints "Show me how" does it for them -- they should never be
+// stuck on a screen they cannot read their way out of.
 
 const STUCK_MS = 25_000;
 
@@ -72,6 +72,20 @@ function LessonRun({ lessonId }: { lessonId: string }) {
           <TopBar onClose={() => navigate(ROUTES.home)} />
         </div>
         <div style={{ fontSize: 22, fontWeight: 600, color: C.inkSoft }}>{unit?.emoji} {unit?.title}</div>
+        {/* Where this lesson sits, so the steps through a unit are visible: dots for
+            the unit's lessons, this one big. */}
+        {unit && (
+          <div aria-label={`Lesson ${lessonNumber(lessonId)} of ${unit.lessons.length}`} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {unit.lessons.map((x, i) => {
+              const here = x.id === lessonId;
+              const done = !!learner.lessons[x.id]?.done;
+              return <span key={x.id} title={`${i + 1}`} style={{
+                width: here ? 18 : 12, height: here ? 18 : 12, borderRadius: '50%',
+                background: done ? accent : here ? '#fff' : C.line, border: here ? `4px solid ${accent}` : 'none',
+              }} />;
+            })}
+          </div>
+        )}
         <div className="nx-bob" style={{ fontSize: 110, lineHeight: 1 }}>{lesson.emoji}</div>
         <div style={{ fontWeight: 700, fontSize: 'clamp(32px, 7vw, 52px)', maxWidth: 560 }}>{lesson.title}</div>
         <div style={{ fontSize: 64 }} aria-hidden>{characterEmoji(learner.profile.characterId)}</div>
@@ -87,7 +101,7 @@ function LessonRun({ lessonId }: { lessonId: string }) {
             setAt(1);
           }}
         />
-        {/* Testing out: what she already knows should never hold her back.
+        {/* Testing out: what they already know should never hold them back.
             Straight to the check; pass it and the stone fills like any other. */}
         <BigButton
           label="I know this!"
@@ -208,7 +222,7 @@ function DoCard({ step, accent, readAloud, sounds, onNext }: { step: DoStep; acc
 
   useEffect(() => { if (readAloud) speak(step.say); }, [step, readAloud]);
 
-  // Stuck for a while: offer the hint without her asking.
+  // Stuck for a while: offer the hint without their asking.
   useEffect(() => {
     if (won) return;
     const id = setInterval(() => {

@@ -19,7 +19,7 @@ const mature = (over: Partial<SRSCard> = {}): SRSCard => ({
 
 describe('a question answered wrong then right in the same session', () => {
   // The retry requeues a missed question a few slots later, so this is the
-  // normal path for every mistake she corrects -- not an edge case.
+  // normal path for every mistake they correct -- not an edge case.
   const saved = { 'add-8+7': mature() };
 
   it('comes back tomorrow, not next week', () => {
@@ -40,7 +40,7 @@ describe('a question answered wrong then right in the same session', () => {
     const afterRight = nextCardInSession('add-8+7', true, saved, inFlight);
 
     // 2.5 - 0.2 for the miss, then + 0.1 for the correction: still below where
-    // she started, because she did not know it.
+    // they started, because they did not know it.
     expect(afterRight.easeFactor).toBeLessThan(saved['add-8+7'].easeFactor);
   });
 
@@ -112,7 +112,7 @@ describe('the spaced-repetition schedule', () => {
     expect(card.easeFactor).toBeLessThanOrEqual(3.0);
   });
 
-  it('grows the gap only once she has got it right more than once', () => {
+  it('grows the gap only once they have got it right more than once', () => {
     let card = createNewSRSCard('add-1+1');
     card = updateSRSCard(card, true);
     expect(card.intervalDays).toBe(1);

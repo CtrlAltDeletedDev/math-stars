@@ -9,8 +9,8 @@ import { GradeLevel, isInGrade } from './grades';
 //
 // Categories teach a topic and finish. Skills never finish: each one is a
 // sequence of rungs, and the practice mode asks questions at whatever rung the
-// child is currently standing on. She advances on evidence rather than on a
-// grade the parent picked, and she can be high on adding while still low on
+// child is currently standing on. They advance on evidence rather than on a
+// grade the parent picked, and they can be high on adding while still low on
 // telling time — which is how children actually are.
 //
 // Two kinds of rung:
@@ -294,14 +294,14 @@ export const SKILLS: Skill[] = [
 /**
  * Which skills endless practice may draw from.
  *
- * This used to be SKILL_TIERS: waves of skills unlocked by how far she had
+ * This used to be SKILL_TIERS: waves of skills unlocked by how far they had
  * climbed on adding or taking away. That existed for one reason — to stop a
  * five-year-old meeting fractions and the seven times table on day one — and
  * the grade band now does that job explicitly, in a table a parent can read.
- * Keeping both would have been a fifth notion of "how advanced is she".
+ * Keeping both would have been a fifth notion of "how advanced are they".
  *
- * Anything she has already started stays available even if the grade moves,
- * so a topic never disappears from under her mid-week.
+ * Anything they have already started stays available even if the grade moves,
+ * so a topic never disappears from under their mid-week.
  */
 export function unlockedSkillIds(
   skills: Record<string, { rung: number }> | undefined,
@@ -313,7 +313,7 @@ export function unlockedSkillIds(
 
 export const SKILLS_BY_ID = new Map(SKILLS.map((s) => [s.id, s]));
 
-/** Kid-facing rank for a rung index. Growth she can see without reading much. */
+/** Kid-facing rank for a rung index. Growth they can see without reading much. */
 export const RANKS = ['🌱', '🌿', '🌳', '⭐', '🌟', '👑', '🏆'] as const;
 
 export function rankFor(rung: number): string {

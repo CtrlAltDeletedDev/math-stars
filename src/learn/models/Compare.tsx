@@ -3,7 +3,7 @@ import { COL, MotionStyles, tap } from './a-shared';
 import { compareLabel } from './logic-a';
 
 // Two rows lined up in the same columns, so "which has more?" is something
-// she can see. `matched` draws a line between each pair, one after another,
+// they can see. `matched` draws a line between each pair, one after another,
 // and gently lights up the extras that have no partner.
 //
 // In "do" a tap anywhere on it matches them up (and a second tap un-matches),

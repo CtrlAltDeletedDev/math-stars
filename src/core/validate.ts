@@ -6,8 +6,8 @@ import { TrackState } from './track';
 // Reading a saved learner back without trusting it.
 //
 // A backup file is chosen by a grown-up and can be anything; a damaged save is
-// rare but real. Repair what can be repaired -- her stage is the valuable part
-// -- and drop what cannot, so nothing here can crash a screen behind her.
+// rare but real. Repair what can be repaired -- their stage is the valuable part
+// -- and drop what cannot, so nothing here can crash a screen behind them.
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
@@ -91,6 +91,7 @@ export function parseLearner(raw: unknown): Learner | null {
         best: Math.max(0, Math.min(1, num(r.best, 0))),
         done: isDay(r.done) ? r.done : null,
         last: isDay(r.last) ? r.last : '',
+        ...(r.placed === true ? { placed: true } : {}),
       };
     }
   }
@@ -101,6 +102,7 @@ export function parseLearner(raw: unknown): Learner | null {
     profile,
     lessons,
     pinnedLesson: typeof raw.pinnedLesson === 'string' && /^[a-z0-9-]{1,60}$/.test(raw.pinnedLesson) ? raw.pinnedLesson : null,
+    placedOn: isDay(raw.placedOn) ? raw.placedOn : null,
     tracks,
     facts,
     days,

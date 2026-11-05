@@ -2,17 +2,17 @@ import { SKILLS_BY_ID } from './skills';
 
 // What's in scope, and how far up.
 //
-// The ladder in skillLadder.ts decides how *hard* a question is from her answers.
-// It has never had an opinion about what she should be meeting at all — which is
-// why a five-year-old could be served the seven times table in her first session.
-// A grade is the missing bound: the parent says which year she is in, and that
+// The ladder in skillLadder.ts decides how *hard* a question is from their answers.
+// It has never had an opinion about what they should be meeting at all — which is
+// why a five-year-old could be served the seven times table in their first session.
+// A grade is the missing bound: the parent says which year they are in, and that
 // picks both the set of topics and the highest rung of each one.
 //
-// Deliberately NOT a difficulty setting. Within the band she still moves on
+// Deliberately NOT a difficulty setting. Within the band they still move on
 // evidence, exactly as before. The grade only draws the edges of the box.
 //
-// The ceiling is soft: hitting it doesn't stop her playing, it just stops the
-// rung going up (see recordSkillAnswer) and tells the parent she's ready to move
+// The ceiling is soft: hitting it doesn't stop them playing, it just stops the
+// rung going up (see recordSkillAnswer) and tells the parent they're ready to move
 // on. A child is never blocked, only bounded.
 
 export type GradeLevel = 'K' | '1' | '2';

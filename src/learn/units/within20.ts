@@ -20,7 +20,7 @@ const either = (x: number, y: number): [number, number] => (Math.random() < 0.5 
 /** The two numbers of a sum in their own frames: how the make-a-ten lessons picture a + b. */
 const apart = (a: number, b: number): FrameState => frames2([a, 0], [0, b]);
 
-/** The same, ready for her to move counters between the frames. */
+/** The same, ready for them to move counters between the frames. */
 const toMove = (a: number, b: number): FrameState => frames2([a, 0], [0, b], { tray: { a: 0, b: 0 } });
 
 // --- 1. Teen numbers take away ------------------------------------------------
@@ -345,7 +345,7 @@ const CHOOSE_A_WAY: Lesson = {
   goal: 'Picks a strategy for any fact within 20: a double, make a ten, or go back through ten.',
   standard: '1.OA.6',
   emoji: '🧠',
-  // Mixed plus and minus: known only once she is past both.
+  // Mixed plus and minus: known only once they are past both.
   placedBy: [{ track: 'plus', stage: 9 }, { track: 'minus', stage: 9 }],
   teach: [
     { type: 'show', say: '7 plus 8. The numbers sit next to each other. A near double! 7 plus 7, and 1 more.', caption: '7 + 8 = 7 + 7 + 1', model: apart(7, 8) },

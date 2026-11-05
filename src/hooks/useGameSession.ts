@@ -33,7 +33,7 @@ export function useGameSession(
 
   // What this session has already decided about each card. A requeued question
   // is answered twice, and the second answer has to build on the first rather
-  // than on the card as it stood before she started.
+  // than on the card as it stood before they started.
   const inFlightCards = useRef<Record<string, SRSCard>>({});
 
   const [state, setState] = useState<SessionState>({
@@ -92,7 +92,7 @@ export function useGameSession(
   /**
    * Put a missed question back into the queue, a few slots ahead.
    *
-   * The moment she is most ready to fix a mistake is a minute later, not
+   * The moment they are most ready to fix a mistake is a minute later, not
    * tomorrow — but a wrong answer only used to set a one-day spaced-repetition
    * interval, so the correction never got tested while it was fresh. The session
    * length is unchanged: the requeued question replaces a later one rather than

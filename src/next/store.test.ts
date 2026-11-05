@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { LEARNER_KEY, getLearner, setLearner, resetLearnerCache, importBackup, exportBackup, saveIssue, usesNewApp, setUsesNewApp } from './store';
 import { buildInitialProgress } from '@/store/storage';
 
-// The new app's save. The rules that protect her progress:
-//   - the first run on a device brings her across from the old save, once
+// The new app's save. The rules that protect their progress:
+//   - the first run on a device brings them across from the old save, once
 //   - it never writes, changes or deletes the old save
-//   - an unreadable new save is parked, not lost, and she restarts from the old one
+//   - an unreadable new save is parked, not lost, and they restart from the old one
 
 const OLD_KEY = 'mathstars_progress_v2';
 
@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 
 describe('the new save', () => {
-  it('brings her across from the old save the first time, and keeps her place', () => {
+  it('brings them across from the old save the first time, and keeps their place', () => {
     storage.data.set(OLD_KEY, oldSave(4));
     const l = getLearner();
     expect(l.tracks.plus.stage).toBe(4);

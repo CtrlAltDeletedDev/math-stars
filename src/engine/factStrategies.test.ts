@@ -102,7 +102,7 @@ describe('strategy hints', () => {
         const hint = subtractionHint(a, b);
         const answer = a - b;
         expect(hint, `${a} - ${b}`).toBeTruthy();
-        // The answer may appear only as a number she was already shown
+        // The answer may appear only as a number they were already shown
         // ("6 - 3": count back 3), or as one hop of going back through ten.
         const incidental = answer === a || answer === b || hint.startsWith('Go back to 10');
         if (!incidental) expect(numbersIn(hint), `${a} - ${b}: ${hint}`).not.toContain(answer);

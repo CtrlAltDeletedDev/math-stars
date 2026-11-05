@@ -11,7 +11,7 @@ interface Props {
 }
 
 // One picture, one ring, one word. Nothing is ever locked, so there is no
-// padlock, no "N/M levels", and no NEW! flag competing for her attention.
+// padlock, no "N/M levels", and no NEW! flag competing for their attention.
 //
 // A plain <button>: the old CategoryCard had to be a role="button" div because
 // Master Mode was nested inside it, which cost keyboard support and the
@@ -40,7 +40,7 @@ export default function TopicTile({ topic, mastery, onPress }: Props) {
         transform: pressed ? 'scale(0.96)' : 'scale(1)',
         transition: 'transform 120ms ease, box-shadow 120ms ease',
         cursor: 'pointer',
-        // Comfortably past the 44px minimum in both directions — she taps with
+        // Comfortably past the 44px minimum in both directions — they tap with
         // a whole fingertip, not a cursor.
         minHeight: 132,
         width: '100%',

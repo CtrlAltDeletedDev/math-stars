@@ -93,7 +93,7 @@ export default function Game() {
     answeringRef.current = true;
     stopCountdown();
 
-    // Gentle retry: she gets another go on screen. What changed is that the
+    // Gentle retry: they get another go on screen. What changed is that the
     // first wrong tap is no longer *discarded* — see below. Throwing it away
     // meant blind guessing scored ~50% and, worse, fed the adaptive ladder a
     // clean correct, promoting a child who was guessing into harder work.
@@ -122,7 +122,7 @@ export default function Game() {
     // time, so an answer found on the retry needs no clock of its own.
     const ms = triedChoices.length === 0 ? performance.now() - shownAt.current : undefined;
 
-    // Record what she actually did first. She still sees the encouraging
+    // Record what they actually did first. They still see the encouraging
     // feedback for finding the answer, but the score, the SRS card and the
     // ladder all hear the truth: this one wasn't known.
     const answeredChoice = triedChoices.length > 0 ? triedChoices[0] : choice;
@@ -141,8 +141,8 @@ export default function Game() {
     if (hintTimer.current) clearTimeout(hintTimer.current);
 
     const nextConsecutive = correct ? consecutiveCorrect + 1 : 0;
-    // What she sees follows "did she find it"; what is recorded follows
-    // "did she know it". Finding it on the second try still gets the happy
+    // What they see follows "did they find it"; what is recorded follows
+    // "did they know it". Finding it on the second try still gets the happy
     // sound, but it is not scored as a clean correct.
     if (foundIt) {
       sounds.playCorrect();

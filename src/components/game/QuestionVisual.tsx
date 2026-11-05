@@ -2,7 +2,7 @@ import { QuestionVisual as VisualSpec } from '@/types';
 import HopLine from './HopLine';
 
 // Drawn illustrations for questions where a picture is the explanation.
-// "1/4" is meaningless to a six-year-old until she has seen a quarter of a pizza.
+// "1/4" is meaningless to a six-year-old until they have seen a quarter of a pizza.
 
 const SHADE = '#FF8A3D';
 const EMPTY = '#F1F4F8';
@@ -83,7 +83,7 @@ function Coins({ coins }: { coins: number[] }) {
   );
 }
 
-/** Every option drawn, so comparing is a thing she can see rather than guess. */
+/** Every option drawn, so comparing is a thing they can see rather than guess. */
 function FractionSet({ fractions }: { fractions: [number, number][] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
@@ -153,7 +153,7 @@ function Clock({ hour, minute }: { hour: number; minute: number }) {
         );
       })}
       {/* Hour hand short and fat, minute hand long and thin — the distinction
-          she actually has to learn. */}
+          they actually have to learn. */}
       <line x1={c} y1={c} x2={h.x2} y2={h.y2} stroke={LINE} strokeWidth="9" strokeLinecap="round" />
       <line x1={c} y1={c} x2={m.x2} y2={m.y2} stroke={SHADE} strokeWidth="5.5" strokeLinecap="round" />
       <circle cx={c} cy={c} r="7" fill={LINE} />

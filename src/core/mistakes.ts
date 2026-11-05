@@ -3,8 +3,8 @@ import { ErrorTag, Question } from '@/types';
 // What a typed wrong answer means.
 //
 // With four choices, each wrong option carried its meaning because we wrote
-// it. With a number pad she can type anything, which is better evidence: 12
-// for 9 − 3 is her adding instead, not an option we happened to offer. These
+// it. With a number pad they can type anything, which is better evidence: 12
+// for 9 − 3 is their adding instead, not an option we happened to offer. These
 // are the same mistakes the old distractors modelled.
 
 function parts(prompt: string): { a: number; b: number; op: '+' | '-' } | null {

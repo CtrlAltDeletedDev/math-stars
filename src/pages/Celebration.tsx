@@ -76,7 +76,7 @@ export default function Celebration() {
 
   // After passing, the natural next action is the next level — not replaying
   // this one, and certainly not backing out to the map to hunt for it. The next
-  // level of the same topic, that is, inside her grade (see nextLevelInTopic).
+  // level of the same topic, that is, inside their grade (see nextLevelInTopic).
   const nextLevel: Level | null =
     passed && !isDailyChallenge && !isMasterMode && realCategory
       ? nextLevelInTopic(levelId, progress.gradeLevel)

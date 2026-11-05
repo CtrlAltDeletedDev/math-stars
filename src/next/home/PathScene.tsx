@@ -32,8 +32,8 @@ const fadeFor = (ahead: number) => (ahead <= 0 ? 1 : ahead === 1 ? 0.9 : ahead =
 const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, layout, character, pad = 0, onLesson, onUnit }, ref) {
   const { height, spots, trail, fogEnd } = layout;
   const trailD = smoothPath(trail);
-  const her = spots[view.hers];
-  const herNode = view.nodes[view.hers];
+  const cur = spots[view.current];
+  const curNode = view.nodes[view.current];
 
   const tap = (node: PathNode) => {
     if (node.kind === 'lesson') onLesson(node.id);
@@ -67,14 +67,14 @@ const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, la
         {view.nodes.map((n, i) => n.kind === 'lesson' && n.friend && (
           <Friend key={`f${i}`} at={friendSpot(spots[i])} emoji={n.friend} />
         ))}
-        {her && herNode?.kind === 'lesson' && herNode.state === 'today' && (
-          <circle cx={her.x} cy={her.y} r={her.r + 15} fill="#FFF0BC" className="np-glow" />
+        {cur && curNode?.kind === 'lesson' && curNode.state === 'today' && (
+          <circle cx={cur.x} cy={cur.y} r={cur.r + 15} fill="#FFF0BC" className="np-glow" />
         )}
       </g>
 
       {/* Top to bottom, so a lower stone's shadow never sits on the one above. */}
       {view.nodes.map((node, i) => ({ node, i })).reverse().map(({ node, i }) => (
-        <Node key={i} node={node} spot={spots[i]} hers={i === view.hers} onTap={() => tap(node)} />
+        <Node key={i} node={node} spot={spots[i]} current={i === view.current} onTap={() => tap(node)} />
       ))}
 
       {/* Fog over the far end: the path keeps going, it never ends. */}
@@ -84,14 +84,14 @@ const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, la
         <Cloud x={PATH_W * 0.72} y={88} scale={0.8} />
       </g>
 
-      {her && view.progress && <Progress spot={her} progress={view.progress} />}
+      {cur && view.progress && <Progress spot={cur} progress={view.progress} />}
 
-      {her && (
+      {cur && (
         <text
-          x={her.x} y={her.y - her.r + 2} fontSize={62} textAnchor="middle" className="np-bob"
+          x={cur.x} y={cur.y - cur.r + 2} fontSize={62} textAnchor="middle" className="np-bob"
           aria-hidden="true"
-          style={{ cursor: herNode?.kind === 'lesson' ? 'pointer' : undefined }}
-          onClick={herNode ? () => tap(herNode) : undefined}
+          style={{ cursor: curNode?.kind === 'lesson' ? 'pointer' : undefined }}
+          onClick={curNode ? () => tap(curNode) : undefined}
         >
           {character}
         </text>
@@ -102,7 +102,7 @@ const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, la
 
 export default PathScene;
 
-function Node({ node, spot, hers, onTap }: { node: PathNode; spot: StoneSpot; hers: boolean; onTap: () => void }) {
+function Node({ node, spot, current, onTap }: { node: PathNode; spot: StoneSpot; current: boolean; onTap: () => void }) {
   if (node.kind === 'start') {
     return (
       <g aria-hidden="true">
@@ -121,20 +121,20 @@ function Node({ node, spot, hers, onTap }: { node: PathNode; spot: StoneSpot; he
     <g role="button" tabIndex={0} aria-label={label} onClick={onTap} onKeyDown={onKey}
       className="np-node" style={{ cursor: 'pointer' }} opacity={fadeFor(node.ahead)}>
       {node.kind === 'lesson'
-        ? <Stone stone={node} spot={spot} hers={hers} />
+        ? <Stone stone={node} spot={spot} current={current} />
         : <Sign sign={node} spot={spot} />}
     </g>
   );
 }
 
-function Stone({ stone, spot, hers }: { stone: LessonStone; spot: StoneSpot; hers: boolean }) {
+function Stone({ stone, spot, current }: { stone: LessonStone; spot: StoneSpot; current: boolean }) {
   const { x, y, r } = spot;
   const col = stone.colour;
   const inner = r * 0.66;
-  const emojiSize = (hers ? 1.05 : 0.95) * r;
+  const emojiSize = (current ? 1.05 : 0.95) * r;
   return (
     <g>
-      {/* A generous, invisible hit area: her finger, not the stone's edge. */}
+      {/* A generous, invisible hit area: their finger, not the stone's edge. */}
       <circle className="np-hit" cx={x} cy={y} r={r + 10} fill="#000" fillOpacity={0} stroke="none" />
       <circle cx={x} cy={y + 5} r={r} fill={STONE_SHADOW} />
       {stone.state === 'done' && <circle cx={x} cy={y} r={r} fill={col} />}
@@ -204,7 +204,7 @@ function GradeSign({ spot, text }: { spot: StoneSpot; text: string }) {
   );
 }
 
-/** Lessons done in today's unit, as dots beside her stone. */
+/** Lessons done in today's unit, as dots beside their stone. */
 function Progress({ spot, progress }: { spot: StoneSpot; progress: UnitProgress }) {
   const slots = Math.max(1, progress.total);
   const w = pebblePillWidth(slots);

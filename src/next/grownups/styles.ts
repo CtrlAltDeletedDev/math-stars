@@ -3,8 +3,8 @@ import { C, ADULT_FONT } from '../theme';
 // The grown-ups screen's look, as one stylesheet. Media queries (iPad, print)
 // and :focus-visible are the reason it is CSS and not inline styles.
 //
-// Plain white, one readable font, the plus / minus colours from her screens so
-// a grown-up learns the same code she does.
+// Plain white, one readable font, the plus / minus colours from their screens so
+// a grown-up learns the same code they do.
 
 export const INK = '#24252F';
 export const SOFT = '#5E6072';
@@ -55,7 +55,7 @@ export const css = `
 .gu-summary { margin-top: 16px; font-size: 16px; }
 .gu-today { margin-top: 4px; font-size: 14px; color: ${SOFT}; }
 
-/* where she is */
+/* where they are */
 .gu-two { display: grid; grid-template-columns: 1fr; gap: 22px; }
 .gu-track .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .gu-track .nm { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; }
@@ -84,7 +84,7 @@ export const css = `
 .gu .gu-group + .gu-groupsub { margin: 2px 0 0; font-size: 15px; color: ${SOFT}; }
 .gu-groupsub + .gu-sec, .gu-group + .gu-sec { border-top: 0; }
 
-/* her course */
+/* their course */
 .gu-today-card { background: ${TILE}; border-radius: 16px; padding: 14px 16px; }
 .gu-today-card .lbl { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: ${C.goDark}; }
 .gu-today-card .lbl svg { vertical-align: -2px; }
@@ -95,7 +95,7 @@ export const css = `
 .gu-grade .gh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
 .gu-grade .gh h3 { font-size: 18px; }
 .gu-grade .place { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 9px; background: ${TRACK_BG}; color: ${SOFT}; }
-.gu-grade .place.hers { background: ${C.goSoft}; color: #174D2E; }
+.gu-grade .place.current { background: ${C.goSoft}; color: #174D2E; }
 .gu-grade .cnt { margin-left: auto; font-size: 14px; color: ${SOFT}; }
 .gu-units { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
 .gu-unit { min-width: 0; border: 1.5px solid ${RULE}; border-radius: 14px; background: #fff; }

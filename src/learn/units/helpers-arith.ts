@@ -7,7 +7,7 @@ import { Choice, CounterColour, Item, ModelState } from '../types';
 //
 // The model states here follow the comments in ../types.ts. Three readings of
 // those comments matter for "do" tasks, and every solution below respects them
-// so that a sequence of her taps can actually reach it:
+// so that a sequence of their taps can actually reach it:
 //
 //   - A ten frame's tray hands out its `a` counters first, then its `b` ones.
 //     Tapping a counter sends it back to the tray (or crosses it out when
@@ -299,7 +299,7 @@ export function pictureChoice(value: string, model: ModelState): Choice {
   return { value, label: '', say: 'This one?', model };
 }
 
-/** "Which ten frame shows n?", with the frames she would really confuse it with. */
+/** "Which ten frame shows n?", with the frames they would really confuse it with. */
 export function whichFrame(n: number, picture: (k: number) => ModelState = (k) => frame(k)): Item {
   // One off from counting, and the empty spaces counted instead of the counters.
   const wrong = shuffle([n - 1, n + 1, 10 - n, n + 2].filter((k) => k >= 0 && k <= 20 && k !== n));

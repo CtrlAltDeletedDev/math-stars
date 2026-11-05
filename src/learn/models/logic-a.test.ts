@@ -19,7 +19,7 @@ describe('ten frame', () => {
     expect(tenFrameCells(tf({ cells: Array(14).fill('a') }))).toHaveLength(10);
   });
 
-  it('places tray counters a first, then b, where she taps', () => {
+  it('places tray counters a first, then b, where they tap', () => {
     let s = tf({ tray: { a: 1, b: 1 } });
     s = placeCounter(s, 7);
     expect(s.cells[7]).toBe('a');
@@ -162,7 +162,7 @@ describe('number line', () => {
     expect(w.hi - w.lo + 1).toBe(9);
   });
 
-  it('keeps where she is in view when the hops outgrow the window', () => {
+  it('keeps where they are in view when the hops outgrow the window', () => {
     const path = Array.from({ length: 15 }, (_, i) => 1 + i);
     const w = numberLineWindow(nl({ start: 0, path }), 11);
     expect(w.hi).toBeGreaterThanOrEqual(15);

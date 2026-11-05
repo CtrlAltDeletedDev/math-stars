@@ -107,13 +107,13 @@ export function todayLine(l: Learner, today: string): string {
   return `Today: ${plural(r.walks, 'walk')}, ${plural(r.answered, 'sum')}`;
 }
 
-/** The most recent day she answered anything, or null. */
+/** The most recent day they answered anything, or null. */
 export function lastPlayed(l: Learner): string | null {
   const played = Object.entries(l.days).filter(([, r]) => r.answered > 0).map(([d]) => d).sort();
   return played.length ? played[played.length - 1] : null;
 }
 
-/** Each move up in the last 7 days: the stone she reached and the day. */
+/** Each move up in the last 7 days: the stone they reached and the day. */
 export function movesThisWeek(l: Learner, today: string): { track: TrackId; to: number; day: string }[] {
   const from = addDays(today, -6);
   const out: { track: TrackId; to: number; day: string }[] = [];
@@ -156,7 +156,7 @@ function practiceSummary(l: Learner, today: string): string {
   return moved ? `${moved} ${tally}` : tally;
 }
 
-// --- Where she is --------------------------------------------------------------
+// --- Where they are --------------------------------------------------------------
 
 const median = (xs: number[]): number => {
   const s = [...xs].sort((a, b) => a - b);
@@ -175,16 +175,16 @@ export interface TrackReport {
   label: string;
   /** 1-based, as a grown-up counts. */
   step: number;
-  /** Steps in her grade: ceilingFor + 1. */
+  /** Steps in their grade: ceilingFor + 1. */
   of: number;
-  /** Stones below her, and any she was ever moved up from. */
+  /** Stones below them, and any they were ever moved up from. */
   passed: Set<number>;
   recentRight: number;
   recentCount: number;
-  /** Median ms over her recent right answers on this track's facts, or null. */
+  /** Median ms over their recent right answers on this track's facts, or null. */
   typicalMs: number | null;
   next: { label: string; example: string } | null;
-  /** At the top of her grade and earning moves the grade will not give. */
+  /** At the top of their grade and earning moves the grade will not give. */
   ready: boolean;
   /** The most common recent mistake on this track, if it happened at least twice. */
   mistake: { tag: ErrorTag; count: number } | null;
@@ -238,11 +238,11 @@ const MISTAKE_WORDS: Partial<Record<ErrorTag, Record<TrackId, string>>> = {
   'place-value': { plus: 'was ten out', minus: 'was ten out' },
 };
 
-/** "On 3 facts she added instead of taking away." */
+/** "On 3 facts they added instead of taking away." */
 export function mistakeSentence(r: TrackReport): string | null {
   if (!r.mistake) return null;
   const words = MISTAKE_WORDS[r.mistake.tag]?.[r.track];
-  return words ? `On ${r.mistake.count} facts she ${words}.` : null;
+  return words ? `On ${r.mistake.count} facts they ${words}.` : null;
 }
 
 // --- Facts -----------------------------------------------------------------------
@@ -289,7 +289,7 @@ export function factDetail(facts: Record<string, FactRecord>, id: string, quick 
     seen: f?.seen ?? 0,
     pctRight: f && f.seen > 0 ? Math.round((f.right / f.seen) * 100) : null,
     typicalMs: f && f.recent.length ? median(f.recent.map((r) => r.ms)) : null,
-    // What she said only matters while it is still wrong; a fact she now knows
+    // What they said only matters while it is still wrong; a fact they now know
     // keeps its old `said`, and showing it would be unfair.
     said: f && f.said !== undefined && f.box === 0 ? f.said : null,
   };
@@ -308,7 +308,7 @@ export interface TrickyFact {
   idea: string;
 }
 
-/** One thing to try together, from the kind of mistake she made. */
+/** One thing to try together, from the kind of mistake they made. */
 export function ideaFor(id: string, tag: ErrorTag | null | undefined): string {
   const p = parseFact(id);
   const minus = p?.op === '-';
@@ -328,7 +328,7 @@ export function ideaFor(id: string, tag: ErrorTag | null | undefined): string {
     case 'place-value':
       return 'Build it with tens and ones';
     case 'answered-a-given-number':
-      return 'Read the whole sum aloud together before she answers';
+      return 'Read the whole sum aloud together before they answer';
     default:
       if (p && !minus && p.a === p.b) return 'Doubles: show it with fingers on two hands';
       if (p && !minus && (p.a === 9 || p.b === 9)) return 'Make 10 first: 9 is one away from ten';
@@ -338,7 +338,7 @@ export function ideaFor(id: string, tag: ErrorTag | null | undefined): string {
 }
 
 /**
- * Facts she is stuck on: under 70% right, or still learning. Most-missed
+ * Facts they are stuck on: under 70% right, or still learning. Most-missed
  * first, then lowest hit rate, so the top of the list is where to start.
  */
 export function trickyFacts(l: Learner, n = 6): TrickyFact[] {
@@ -381,8 +381,8 @@ function shuffle<T>(xs: T[], rnd: () => number): T[] {
 }
 
 /**
- * Twenty sums for the fridge: her tricky facts (up to half), the rest from the
- * stone she is on in each track -- or this week's pick, if a grown-up made one.
+ * Twenty sums for the fridge: their tricky facts (up to half), the rest from the
+ * stone they are on in each track -- or this week's pick, if a grown-up made one.
  */
 export function worksheet(l: Learner, today: string, count = 20, rnd: () => number = Math.random): WorksheetItem[] {
   const seen = new Set<string>();
@@ -414,17 +414,18 @@ export function worksheet(l: Learner, today: string, count = 20, rnd: () => numb
 /** The backup file's name, by local date. */
 export const backupFileName = (today: string) => `math-stars-backup-${today}.json`;
 
-// --- Her course -------------------------------------------------------------------
+// --- Their course -------------------------------------------------------------------
 //
-// Lessons, by unit, by grade. "Done" is `lessonDone`: she passed the check, or
-// her plus/minus path already put her past it. The second kind has no record,
-// so it reads "already knew this" rather than a date she never had.
+// Lessons, by unit, by grade. "Done" is `lessonDone`: they passed the check, or
+// their plus/minus path already put them past it. The second kind has no record,
+// so it reads "already knew this" rather than a date they never had.
 // Every function takes the course so tests can hand it a fixture; units with
 // no lessons yet are left out, so a unit still being written never shows as 0 of 0.
 
 export type LessonStatus =
   | { kind: 'passed'; on: string }
-  | { kind: 'placed' }
+  /** Known without passing its own check: found in placement, or below their plus/minus path. */
+  | { kind: 'placed'; how: 'placement' | 'path'; on?: string }
   | { kind: 'started' }
   | { kind: 'new' };
 
@@ -432,7 +433,7 @@ export interface LessonRow {
   lesson: Lesson;
   status: LessonStatus;
   tries: number;
-  /** Best check score as a whole percent, or null before her first check. */
+  /** Best check score as a whole percent, or null before their first check. */
   best: number | null;
 }
 
@@ -449,8 +450,8 @@ export interface GradeRow {
   units: UnitRow[];
   done: number;
   total: number;
-  /** Where she is against this grade: below her setting, hers, or ahead of it. */
-  place: 'earlier' | 'hers' | 'ahead';
+  /** Where they are against this grade: below their setting, theirs, or ahead of it. */
+  place: 'earlier' | 'current' | 'ahead';
 }
 
 export function lessonRow(l: Learner, lesson: Lesson): LessonRow {
@@ -458,8 +459,9 @@ export function lessonRow(l: Learner, lesson: Lesson): LessonRow {
   const tries = r?.tries ?? 0;
   const best = r && tries > 0 ? Math.round(r.best * 100) : null;
   let status: LessonStatus;
-  if (r?.done) status = { kind: 'passed', on: r.done };
-  else if (lessonDone(l, lesson)) status = { kind: 'placed' };
+  if (r?.done && r.placed) status = { kind: 'placed', how: 'placement', on: r.done };
+  else if (r?.done) status = { kind: 'passed', on: r.done };
+  else if (lessonDone(l, lesson)) status = { kind: 'placed', how: 'path' };
   else if (r) status = { kind: 'started' };
   else status = { kind: 'new' };
   return { lesson, status, tries, best };
@@ -468,7 +470,7 @@ export function lessonRow(l: Learner, lesson: Lesson): LessonRow {
 const isDone = (r: LessonRow) => r.status.kind === 'passed' || r.status.kind === 'placed';
 
 export function courseReport(l: Learner, course: GradeCourse[] = COURSE): GradeRow[] {
-  const hers = l.profile.grade;
+  const current = l.profile.grade;
   return course.map((g) => {
     const units = g.units
       .filter((u) => u.lessons.length > 0)
@@ -482,7 +484,7 @@ export function courseReport(l: Learner, course: GradeCourse[] = COURSE): GradeR
       units,
       done: units.reduce((s, u) => s + u.done, 0),
       total: units.reduce((s, u) => s + u.total, 0),
-      place: g.grade === hers ? 'hers' : gradeAtLeast(g.grade, hers) ? 'ahead' : 'earlier',
+      place: g.grade === current ? 'current' : gradeAtLeast(g.grade, current) ? 'ahead' : 'earlier',
     };
   });
 }
@@ -490,10 +492,10 @@ export function courseReport(l: Learner, course: GradeCourse[] = COURSE): GradeR
 /** "Mostly done" for suggesting the next grade: four lessons in five. */
 export const MOSTLY_DONE = 0.8;
 
-/** The grade to suggest moving her to, when her own grade's lessons are mostly done. */
+/** The grade to suggest moving them to, when their own grade's lessons are mostly done. */
 export function suggestNextGrade(l: Learner, course: GradeCourse[] = COURSE): Grade | null {
   const next = NEXT_GRADE[l.profile.grade];
-  const mine = courseReport(l, course).find((g) => g.place === 'hers');
+  const mine = courseReport(l, course).find((g) => g.place === 'current');
   if (!next || !mine || mine.total === 0) return null;
   return mine.done / mine.total >= MOSTLY_DONE ? next : null;
 }
@@ -506,7 +508,7 @@ export function unitInCourse(lessonId: string, course: GradeCourse[] = COURSE): 
   return null;
 }
 
-/** Lessons whose check she passed in the last 7 days, oldest first. */
+/** Lessons whose check they passed in the last 7 days, oldest first. */
 export function lessonsPassedThisWeek(l: Learner, today: string, course: GradeCourse[] = COURSE): Lesson[] {
   const from = addDays(today, -6);
   const all = course.flatMap((g) => g.units.flatMap((u) => u.lessons));

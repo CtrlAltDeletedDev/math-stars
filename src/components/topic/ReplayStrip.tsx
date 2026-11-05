@@ -2,7 +2,7 @@ import { Level, LevelState } from '@/types';
 
 interface Props {
   levels: Level[];
-  /** Sparse — a missing entry simply means she has not played it yet. */
+  /** Sparse — a missing entry simply means they have not played it yet. */
   states: Record<string, LevelState | undefined>;
   onPlay: (levelId: string) => void;
 }
@@ -24,10 +24,10 @@ function Stars({ n }: { n: number }) {
 // This replaces the vertical LevelMap, where five of six nodes were padlocks and
 // the only way to reach the sixth was to beat the one above it. Maths facts are
 // not a story: a child working on +2 in class this week should be able to tap +2
-// today, whether or not she has finished -1.
+// today, whether or not they have finished -1.
 //
-// Stars mark what she has already earned rather than gating what comes next, so
-// a level she has three-starred stays as playable as one she has never opened.
+// Stars mark what they have already earned rather than gating what comes next, so
+// a level they have three-starred stays as playable as one they have never opened.
 
 export default function ReplayStrip({ levels, states, onPlay }: Props) {
   if (levels.length === 0) return null;

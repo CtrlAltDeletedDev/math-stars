@@ -8,7 +8,7 @@ import { backupFileName } from './report';
 
 type Result = { ok: boolean; text: string } | null;
 
-/** Save her progress to a file, bring one back, or go back to the old app. */
+/** Save their progress to a file, bring one back, or go back to the old app. */
 export default function Backup() {
   const navigate = useNavigate();
   const file = useRef<HTMLInputElement>(null);
@@ -48,7 +48,7 @@ export default function Backup() {
     if (!pending) return;
     const ok = importBackup(pending.text);
     setResult(ok
-      ? { ok: true, text: `Restored her progress from ${pending.name}.` }
+      ? { ok: true, text: `Restored their progress from ${pending.name}.` }
       : { ok: false, text: `${pending.name} isn’t a Math Stars backup. Nothing was changed.` });
     setPending(null);
   };
@@ -69,9 +69,9 @@ export default function Backup() {
       </div>
 
       {pending && (
-        <div className="gu-panel" role="alertdialog" aria-label="Replace her progress?">
+        <div className="gu-panel" role="alertdialog" aria-label="Replace their progress?">
           <p style={{ marginBottom: 10 }}>
-            Replace her progress on this device with <b>{pending.name}</b>? What is here now will be overwritten.
+            Replace their progress on this device with <b>{pending.name}</b>? What is here now will be overwritten.
           </p>
           <div className="gu-row">
             <button type="button" className="gu-btn primary" onClick={restore}>Replace</button>
@@ -86,7 +86,7 @@ export default function Backup() {
           <div className="gu-panel">
             <p style={{ marginBottom: 10 }}>
               The old version opens on this device from now on. Each version keeps its own progress from today,
-              so what she does in one won&rsquo;t show in the other.
+              so what they do in one won&rsquo;t show in the other.
             </p>
             <div className="gu-row">
               <button type="button" className="gu-btn primary" onClick={() => { setUsesNewApp(false); navigate('/'); }}>

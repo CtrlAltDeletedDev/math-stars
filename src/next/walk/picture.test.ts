@@ -15,11 +15,11 @@ const item = (stage: number | null, kind: WalkItem['kind'] = 'fresh'): WalkItem 
   ({ question: STAGES.plus[stage ?? 0].make(), track: 'plus', stage, kind });
 
 describe('the picture', () => {
-  it('is drawn on a stone she is new to, or getting wrong', () => {
+  it('is drawn on a stone they are new to, or getting wrong', () => {
     expect(pictureMode(at(4, []), item(4))).toBe('show');
     expect(pictureMode(at(4, [true, false, false, true]), item(4))).toBe('show');
   });
-  it('waits behind Show me once she is steady there', () => {
+  it('waits behind Show me once they are steady there', () => {
     expect(pictureMode(at(4, [true, true, true, false]), item(4))).toBe('tap');
   });
   it('waits behind Show me for a look back, and is drawn for new ground', () => {

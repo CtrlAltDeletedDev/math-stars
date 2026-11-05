@@ -72,7 +72,7 @@ export function useChangeKey(value: unknown): number {
   return st.key;
 }
 
-/** A big, picture-only button for her: white, chunky, pressed-in on tap. */
+/** A big, picture-only button for them: white, chunky, pressed-in on tap. */
 export function bigButton(size: number, disabled?: boolean): CSSProperties {
   return {
     minWidth: size, height: size, padding: '0 10px', borderRadius: 20,

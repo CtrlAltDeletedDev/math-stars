@@ -7,6 +7,8 @@ export const ROUTES = {
   more: '/next/more',
   start: '/next/start',
   lesson: (id: string) => `/next/lesson/${id}`,
-  /** Every model, for the people building them. Not linked from her screens. */
+  /** "Let's find your level!" */
+  placement: '/next/placement',
+  /** Every model, for the people building them. Not linked from their screens. */
   gallery: '/next/gallery',
 } as const;

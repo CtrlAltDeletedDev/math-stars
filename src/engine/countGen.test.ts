@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Question } from '@/types';
 import { generateCountQuestion, countFromId, COUNT_ID_PATTERN } from '@/data/countGen';
 
-// Every check here re-derives the answer from what she sees — the objects in
+// Every check here re-derives the answer from what they see — the objects in
 // the picture, the numbers in the sequence, the words of the prompt — and
 // never from `correctAnswer`.
 
@@ -227,14 +227,14 @@ describe.each(RUNGS.map((r, i) => [r.label, r, SAMPLES[i]] as const))('%s', (_la
       expect(says(q.hint!, s.answer), `${q.id} hint: ${q.hint}`).toBe(false);
       expect(says(q.speakText!, s.answer), `${q.id} speakText: ${q.speakText}`).toBe(false);
       if (s.shape === 'count' || s.shape === 'kind') {
-        // Names the objects in words (she can't hear an emoji), and gives no number away.
+        // Names the objects in words (they can't hear an emoji), and gives no number away.
         const m = q.speakText!.match(/^(?:Count only the ([a-z]+)\. )?How many ([a-z]+) are there\?$/);
         expect(m, `${q.id}: ${q.speakText}`).not.toBeNull();
         if (s.shape === 'kind') expect(m![1], q.id).toBe(m![2]);
         else expect(m![1], q.id).toBeUndefined();
         expect(q.hint, q.id).not.toMatch(/\d/);
       } else {
-        // Every number she needs is spoken.
+        // Every number they need is spoken.
         const needed = s.shape === 'before' ? [s.shown[0]] : s.shown;
         for (const n of needed) expect(says(q.speakText!, n), `${q.id}: says ${n}`).toBe(true);
       }
@@ -316,7 +316,7 @@ describe.each(RUNGS.map((r, i) => [r.label, r, SAMPLES[i]] as const))('%s', (_la
 });
 
 describe('the counting pictures', () => {
-  it('are laid out in groups of five she can keep her place in', () => {
+  it('are laid out in groups of five they can keep their place in', () => {
     for (const q of [...SAMPLES[0], ...SAMPLES[1]]) {
       if (!q.prompt.startsWith('How many')) continue;
       const groups = q.promptEmoji!.split(' ');
@@ -377,7 +377,7 @@ describe('what each rung asks', () => {
     expect(qs.every((q) => q.type === 'number_order')).toBe(true);
     const t = shapes(qs);
     for (const s of ['next', 'before', 'missing', 'on'] as const) expect(t[s], s).toBeGreaterThan(SAMPLE * 0.1);
-    // The decade crossings — 39 to 40 — are where she slips, so they come up often.
+    // The decade crossings — 39 to 40 — are where they slip, so they come up often.
     const crossing = qs.map(solve).filter((s) =>
       (s.shape === 'next' && s.answer % 10 === 0) || (s.shape === 'before' && s.answer % 10 === 9));
     expect(crossing.length / SAMPLE).toBeGreaterThan(0.1);
