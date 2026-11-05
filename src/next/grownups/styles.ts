@@ -21,7 +21,6 @@ export const STATE_COLOURS = {
 } as const;
 
 export const css = `
-.gu-root { height: 100%; height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #fff; }
 .gu { font-family: ${ADULT_FONT}; color: ${INK}; font-size: 16px; line-height: 1.4; -webkit-text-size-adjust: 100%; }
 .gu *, .gu *::before, .gu *::after { box-sizing: border-box; }
 .gu button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -83,7 +82,7 @@ export const css = `
 /* group headings: the course, then facts practice */
 .gu .gu-group { font-size: 22px; font-weight: 700; color: ${INK}; letter-spacing: 0; text-transform: none; margin: 0; padding: 26px 0 2px; border-top: 2px solid ${INK}; }
 .gu .gu-group + .gu-groupsub { margin: 2px 0 0; font-size: 15px; color: ${SOFT}; }
-.gu-group-wrap > .gu-sec:first-of-type { border-top: 0; }
+.gu-groupsub + .gu-sec, .gu-group + .gu-sec { border-top: 0; }
 
 /* her course */
 .gu-today-card { background: ${TILE}; border-radius: 16px; padding: 14px 16px; }
@@ -229,6 +228,7 @@ export const css = `
 }
 @media print {
   html, body, #root, .gu-root { height: auto !important; overflow: visible !important; background: #fff !important; }
+  .gu-root > div { height: auto !important; overflow: visible !important; }
   .gu-root > div, .gu-root > div > div { min-height: 0 !important; }
   /* global.css hides body * when printing (the old app's certificate). */
   .gu-sheet, .gu-sheet * { visibility: visible !important; }

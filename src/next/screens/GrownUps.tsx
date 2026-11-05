@@ -15,6 +15,7 @@ import FactGrid, { Legend } from '../grownups/FactGrid';
 import Settings from '../grownups/Settings';
 import Backup from '../grownups/Backup';
 import Worksheet from '../grownups/Worksheet';
+import Course from '../grownups/Course';
 import { Section } from '../grownups/ui';
 import { css } from '../grownups/styles';
 import { GRADE_NAMES, addDays, lastPlayed, trickyFacts, whenSaid } from '../grownups/report';
@@ -63,7 +64,16 @@ function Report({ onPrint }: { onPrint: () => void }) {
         <Week learner={learner} today={today} />
       </section>
 
-      <Section title="Where she is" id="gu-where">
+      <h2 className="gu-group" id="gu-course">Her course</h2>
+      <p className="gu-groupsub">Lessons that teach: show, do it together, practise, then a short check.</p>
+      <section className="gu-sec" aria-labelledby="gu-course" style={{ borderTop: 0, paddingTop: 12 }}>
+        <Course learner={learner} />
+      </section>
+
+      <h2 className="gu-group" id="gu-practice">Facts practice</h2>
+      <p className="gu-groupsub">Her walks on the plus and minus path, and the facts she meets there.</p>
+
+      <Section title="Where she is on plus and minus" id="gu-where">
         <div className="gu-two">
           {TRACKS.map((t) => <TrackBlock key={t} learner={learner} track={t} today={today} />)}
         </div>
@@ -103,6 +113,8 @@ function Report({ onPrint }: { onPrint: () => void }) {
         </button>
       </Section>
 
+      <h2 className="gu-group" id="gu-more">Settings and backup</h2>
+
       <Section title="Settings" id="gu-settings">
         <Settings learner={learner} />
       </Section>
@@ -120,12 +132,13 @@ export default function GrownUps() {
   const [unlocked, setUnlocked] = useState(false);
   const [printing, setPrinting] = useState(false);
 
-  const scroller = useRef<HTMLDivElement>(null);
-  useEffect(() => { scroller.current?.scrollTo(0, 0); }, [unlocked, printing]);
+  const wrap = useRef<HTMLDivElement>(null);
+  // Page is the scroller; start each view (PIN, report, worksheet) at its top.
+  useEffect(() => { wrap.current?.firstElementChild?.nextElementSibling?.scrollTo(0, 0); }, [unlocked, printing]);
 
-  // The app's body never scrolls (global.css), so this screen scrolls itself.
+  // The wrapper is only there so print styles can unclip Page's scroll box.
   return (
-    <div ref={scroller} className="gu-root">
+    <div ref={wrap} className="gu-root">
       <style>{css}</style>
       <Page wide background="#FFFFFF">
         {!unlocked ? (

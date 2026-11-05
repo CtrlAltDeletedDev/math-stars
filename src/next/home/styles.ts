@@ -12,6 +12,9 @@ export const HOME_CSS = `
 .np-twinkle { animation: np-twinkle 1.8s ease-in-out infinite; }
 .np-press { transition: transform .08s ease, box-shadow .08s ease; -webkit-tap-highlight-color: transparent; }
 .np-press:active { transform: translateY(5px); }
+/* Stones and signs are SVG buttons: a green ring for keyboard focus, not the browser's box. */
+.np-node { outline: none; -webkit-tap-highlight-color: transparent; }
+.np-node:focus-visible .np-hit { stroke: #2E9E5B; stroke-width: 4; stroke-opacity: 1; }
 .np-scroll { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .np-scroll::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
