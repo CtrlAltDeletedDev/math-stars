@@ -155,6 +155,13 @@ describe('number line', () => {
     expect(big.hi).toBeGreaterThanOrEqual(51);
   });
 
+  it('keeps the start and all the hops in view while they fit', () => {
+    const w = numberLineWindow(nl({ start: 14, path: [13, 12, 11, 10, 9, 8] }), 9);
+    expect(w.lo).toBeLessThanOrEqual(8);
+    expect(w.hi).toBeGreaterThanOrEqual(14);
+    expect(w.hi - w.lo + 1).toBe(9);
+  });
+
   it('keeps where she is in view when the hops outgrow the window', () => {
     const path = Array.from({ length: 15 }, (_, i) => 1 + i);
     const w = numberLineWindow(nl({ start: 0, path }), 11);

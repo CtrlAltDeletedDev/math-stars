@@ -162,8 +162,9 @@ export interface LineWindow { lo: number; hi: number; step: number }
 /**
  * The stretch of line to draw so the numbers stay readable: `room` is how
  * many tick marks fit across the width. If the whole line fits it is all
- * drawn; otherwise a window around the start and the hops (with two to spare
- * either side), at least `room` ticks wide where the line allows.
+ * drawn; otherwise a window `room` ticks wide around the start and the hops
+ * (with up to two to spare either side). Hops wider than the room keep where
+ * she is now in view.
  * The tick step is `jumps` (0–100 by tens draws 11 ticks), else 1.
  */
 export function numberLineWindow(s: NumberLineState, room: number): LineWindow {
@@ -178,8 +179,13 @@ export function numberLineWindow(s: NumberLineState, room: number): LineWindow {
   if (!seen.length) {
     lo = 0; hi = room - 1;
   } else {
-    lo = Math.max(0, Math.min(...seen.map(toTick)) - 2);
-    hi = Math.min(last, Math.max(...seen.map(toTick)) + 2);
+    const first = Math.min(...seen.map(toTick));
+    const end = Math.max(...seen.map(toTick));
+    // Two to spare either side, else one, else none: the start and every hop
+    // stay in view while they can.
+    const spare = [2, 1, 0].find((m) => end - first + 1 + 2 * m <= room) ?? 0;
+    lo = Math.max(0, first - spare);
+    hi = Math.min(last, end + spare);
     // The hops are wider than the room: keep where she is now in view.
     if (hi - lo + 1 > room) {
       const here = toTick(hereOf(s)!);
