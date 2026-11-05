@@ -104,7 +104,7 @@ describe('what her mistakes meant', () => {
     const p = normalizeProgress(old)!;
     expect(p).not.toBeNull();
     expect(p.errorPatterns).toEqual({});
-    expect(p.version).toBe(6);
+    expect(p.version).toBe(7);
   });
 
   it('keeps real counts untouched', () => {

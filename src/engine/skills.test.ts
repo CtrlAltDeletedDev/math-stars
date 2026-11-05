@@ -318,20 +318,20 @@ describe('the fast lane', () => {
   });
 
   it('fills the ring at the rate the fast lane is paying, and at the ordinary rate after', () => {
-    // Grade 1 Adding has 5 rungs in scope, so one rung is a fifth of the ring.
+    // Grade 1 Adding has 10 rungs in scope, so one rung is a tenth of the ring.
     const progress = (state: SkillState): UserProgress => ({ ...buildInitialProgress(), gradeLevel: '1', skills: { adding: state } });
     const placing = { ...newSkillState('adding'), recent: [true, true] };
-    expect(masteryFor('adding', progress(placing)).fill).toBeCloseTo((2 / LADDER.fastLane) / 5);
+    expect(masteryFor('adding', progress(placing)).fill).toBeCloseTo((2 / LADDER.fastLane) / 10);
     const placed = { ...placing, demotions: 1 };
-    expect(masteryFor('adding', progress(placed)).fill).toBeCloseTo((2 / LADDER.promoteAt) / 5);
+    expect(masteryFor('adding', progress(placed)).fill).toBeCloseTo((2 / LADDER.promoteAt) / 10);
   });
 
   it('never shows a full ring at the top of her grade', () => {
-    // First grade tops adding out at rung 4. Six or seven right answers in a
+    // First grade tops adding out at rung 9. Six or seven right answers in a
     // window that has not yet reset used to draw the ring full.
     const at = (recent: boolean[]): UserProgress => ({
       ...buildInitialProgress(), gradeLevel: '1',
-      skills: { adding: { ...newSkillState('adding'), rung: 4, demotions: 1, recent } },
+      skills: { adding: { ...newSkillState('adding'), rung: 9, demotions: 1, recent } },
     });
     for (let n = 0; n < LADDER.window; n++) {
       const m = masteryFor('adding', at(Array(n).fill(true)));
@@ -340,7 +340,7 @@ describe('the fast lane', () => {
     }
     let state = at([]).skills.adding;
     for (let i = 0; i < 3 * LADDER.window; i++) {
-      state = recordSkillAnswer(state, true, 4).state;
+      state = recordSkillAnswer(state, true, 9).state;
       expect(masteryFor('adding', at(state.recent)).fill).toBeLessThan(1);
     }
   });
@@ -465,17 +465,17 @@ describe('a practice pick says which rung it came from', () => {
   });
 
   it('reports the ceiling, not the saved rung, when her grade clamps her', () => {
-    // Her ladder says rung 7 but first grade tops out at 4, so that is the rung
+    // Her ladder says rung 12 but first grade tops out at 9, so that is the rung
     // she is actually served -- and therefore the one her answers are about.
     const p = buildInitialProgress();
     p.gradeLevel = '1';
     p.practiceFocus = ['adding'];
-    p.skills = { adding: { skillId: 'adding', rung: 7, recent: [], attempts: 0, correct: 0 } };
+    p.skills = { adding: { skillId: 'adding', rung: 12, recent: [], attempts: 0, correct: 0 } };
     const q = new PracticeQueue(p);
     let sawFresh = false;
     for (let i = 0; i < 40; i++) {
       const pick = q.next();
-      if (pick?.skillId === 'adding' && pick.rung !== null) { sawFresh = true; expect(pick.rung).toBe(4); }
+      if (pick?.skillId === 'adding' && pick.rung !== null) { sawFresh = true; expect(pick.rung).toBe(9); }
     }
     expect(sawFresh).toBe(true);
   });
@@ -643,7 +643,7 @@ describe('practice queue', () => {
 
   it('asks questions at the rung she is actually on', () => {
     const p = buildInitialProgress();
-    p.skills = { adding: { skillId: 'adding', rung: 6, recent: [], attempts: 0, correct: 0 } };
+    p.skills = { adding: { skillId: 'adding', rung: 11, recent: [], attempts: 0, correct: 0 } };
     const q = new PracticeQueue(p);
     let maxSeen = 0;
     for (let i = 0; i < 600; i++) {
@@ -651,7 +651,7 @@ describe('practice queue', () => {
       if (pick?.skillId !== 'adding') continue;
       for (const n of pick.question.prompt.match(/\d+/g) ?? []) maxSeen = Math.max(maxSeen, Number(n));
     }
-    // Rung 6 of adding is "within 100"; the bottom rungs could never produce
+    // Rung 11 of adding is "within 100"; the bottom rungs could never produce
     // numbers this big.
     expect(maxSeen).toBeGreaterThan(20);
   });
@@ -952,7 +952,7 @@ describe('progress migration', () => {
     expect(migrated).not.toBeNull();
     expect(migrated!.totalStars).toBe(87);
     expect(migrated!.spendableStars).toBe(40);
-    expect(migrated!.version).toBe(6);
+    expect(migrated!.version).toBe(7);
     expect(migrated!.skills).toEqual({});
     expect(migrated!.practiceQuestionsAnswered).toBe(0);
     expect(migrated!.errorPatterns, 'v6 is additive: she starts accumulating from here').toEqual({});
@@ -987,7 +987,9 @@ describe('progress migration', () => {
   it('does not shift a save that is already v4', () => {
     const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
     v4.skills = { adding: { skillId: 'adding', rung: 3, recent: [], attempts: 0, correct: 0 } };
-    expect(normalizeProgress(v4)!.skills.adding.rung).toBe(3);
+    // Rung 3 of a v4 save is "within 10"; v7 moved it, but no v4 shift on top.
+    const rung = normalizeProgress(v4)!.skills.adding.rung;
+    expect(SKILLS_BY_ID.get('adding')!.rungs[rung].label).toBe('Adding within 10');
   });
 
   // The headline bug this redesign exists to fix: level play and practice were
@@ -1016,6 +1018,7 @@ describe('progress migration', () => {
 
   it('never demotes a ladder that is already above the seed', () => {
     const v4 = { ...buildInitialProgress(), version: 4 } as UserProgress;
+    // Rung 6 of a v4 save is "within 100", rung 11 since v7.
     v4.skills = { adding: { skillId: 'adding', rung: 6, recent: [true], attempts: 40, correct: 33 } };
     v4.categories = {
       addition: {
@@ -1025,7 +1028,7 @@ describe('progress migration', () => {
     } as UserProgress['categories'];
 
     const m = normalizeProgress(v4)!;
-    expect(m.skills.adding.rung).toBe(6);
+    expect(SKILLS_BY_ID.get('adding')!.rungs[m.skills.adding.rung].label).toBe('Adding within 100');
     expect(m.skills.adding.attempts, 'history survives seeding').toBe(40);
   });
 

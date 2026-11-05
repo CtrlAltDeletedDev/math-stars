@@ -104,8 +104,8 @@ const COUNT_ON: Lesson = {
   title: 'Counting On',
   emoji: '🐸',
   // Also Number Tricks' "Counting on within 20", which had no lesson at all.
-  places: [{ skillId: 'adding', rung: 4 }, { skillId: 'strategies', rung: 3 }],
-  practiceLevelId: 'addition-3',
+  places: [{ skillId: 'adding', rung: 3 }, { skillId: 'strategies', rung: 3 }],
+  practiceLevelId: 'steps-count-on',
   helpsWith: ['off-by-one', 'answered-a-given-number'],
   steps: [
     {
@@ -171,8 +171,8 @@ const HOP_BACK: Lesson = {
   id: 'hop-back',
   title: 'Hop Back to Take Away',
   emoji: '⬅️',
-  places: [{ skillId: 'taking-away', rung: 4 }],
-  practiceLevelId: 'subtraction-3',
+  places: [{ skillId: 'taking-away', rung: 8 }],
+  practiceLevelId: 'steps-back-ten',
   helpsWith: ['off-by-one', 'wrong-operation'],
   steps: [
     {

@@ -32,7 +32,7 @@ Two tables are the spine:
 
 - `src/data/categories.ts` — every level, each naming either a `questionBankIds` list
   (hand-written) or `generatorParams` (procedurally generated).
-- `src/data/topics.ts` — maps all 62 levels onto the 17 skill ladders, one topic per skill.
+- `src/data/topics.ts` — maps all 72 levels onto the 17 skill ladders, one topic per skill.
   `src/data/grades.ts` then says which topics a grade covers and how far up each goes.
 
 The child-facing screens are Home (one Play button + a grid of topics),
@@ -59,7 +59,20 @@ mid-evening in US time zones and silently breaks streaks. `npm test` guards this
 *index* into `Skill.rungs`, so adding a rung anywhere but the top silently moves every
 child already above it — she loses her place and re-climbs ground she had. v4 added two
 rungs to the bottom of `adding` and `taking-away` and shifts saved rungs by two to
-compensate; see `normalizeProgress` in `src/store/storage.ts`. `npm test` guards this.
+compensate; v7 inserted the fact-strategy rungs mid-ladder and remaps through
+`RUNG_REMAP_V7`. See `normalizeProgress` in `src/store/storage.ts`. `npm test` guards this.
+
+**Adding and taking away climb one family of facts at a time.** Between "+2" and "within 20"
+the ladders go count on 1–3 (with turnarounds) → within 10 → ten and some more → doubles and
+near doubles → +9 → make a ten → within 20, and the take-away mirror of each
+(`generateAdditionPattern` / `generateSubtractionPattern`). "Within 20" in one step was mostly
+facts that cross ten, which counting can't replace. Every sum carries a strategy hint
+(`additionHint` / `subtractionHint`) that names the strategy and never states the answer.
+
+**The counting picture fades.** Facts within 20 draw ten frames (`TenFrameAid`), not loose dots.
+In Play, once her recent answers at a rung are mostly right the picture waits behind "Show me"
+and returns after a wrong tap (`src/engine/scaffold.ts`); a picture that is always there gets
+counted forever. It is never scored either way.
 
 **The catalogue says what exists; saved state only says what happened.** Nothing derives
 *availability* from `progress`. `LevelState` has no `status` and no `unlockedAt` — whether

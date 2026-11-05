@@ -16,7 +16,19 @@ const STORAGE_KEY = 'mathstars_progress_v2';
 export const CORRUPT_BACKUP_KEY = 'mathstars_progress_unreadable';
 /** Rungs added below the existing ones on the adding/taking-away ladders in v4. */
 const LADDER_RUNGS_INSERTED_IN_V4 = 2;
-const CURRENT_VERSION = 6;
+/**
+ * v7 inserted the fact-strategy rungs (count on, +10, doubles, +9, make ten and
+ * their take-away mirrors) into the middle of the adding and taking-away
+ * ladders. Index = her saved v6 rung, value = the same rung in v7. Every rung
+ * that existed before keeps its meaning; only its index moves.
+ */
+export const RUNG_REMAP_V7: Record<string, readonly number[]> = {
+  //          +1 +2 ≤5 ≤10 ≤20 ≤50 ≤100 ≤200
+  adding: [0, 1, 2, 4, 9, 10, 11, 12],
+  //               -1 -2 ≤5 ≤10 ≤20 ≤50 ≤100
+  'taking-away': [0, 1, 2, 4, 9, 10, 11],
+};
+const CURRENT_VERSION = 7;
 const OLDEST_MIGRATABLE = 2;
 
 // Patch missing fields on a saved/imported progress object so the rest of
@@ -179,6 +191,21 @@ export function normalizeProgress(parsed: UserProgress): UserProgress | null {
       const state = parsed.skills[id];
       if (state && typeof state.rung === 'number') {
         state.rung = state.rung + LADDER_RUNGS_INSERTED_IN_V4;
+      }
+    }
+  }
+  // v6 → v7: fact-strategy rungs inserted mid-ladder. Before the v5 seeding
+  // below, on purpose: by this point every older save's rungs are in v6
+  // positions (the v4 shift above saw to that), and the seeding reads the v7
+  // topic table, so remapping here is the one place that converts them all
+  // exactly once. A child on "within 20" stays on "within 20"; one on
+  // "within 10" now meets +10, doubles, +9 and make-ten on the way up instead
+  // of the whole of within 20 at once.
+  if (fromVersion < 7) {
+    for (const [id, map] of Object.entries(RUNG_REMAP_V7)) {
+      const state = parsed.skills[id];
+      if (state && Number.isInteger(state.rung) && state.rung >= 0) {
+        state.rung = map[Math.min(state.rung, map.length - 1)];
       }
     }
   }

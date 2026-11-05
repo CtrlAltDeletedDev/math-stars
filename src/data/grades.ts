@@ -38,8 +38,8 @@ export const DEFAULT_GRADE: GradeLevel = '1';
 const K_CEILINGS: Record<string, number> = {
   counting: 2, // counting to 20, ordering numbers
   comparing: 0, // comparing to 10
-  adding: 3, // within 10
-  'taking-away': 3, // within 10
+  adding: 4, // within 10
+  'taking-away': 4, // within 10
   'number-bonds': 0, // bonds to 5 and 10
   strategies: 0, // doubles to 10
   shapes: 1,
@@ -49,8 +49,9 @@ const K_CEILINGS: Record<string, number> = {
 const GRADE_1_CEILINGS: Record<string, number> = {
   ...K_CEILINGS,
   comparing: 1, // to 20
-  adding: 4, // within 20
-  'taking-away': 4, // within 20
+  // Within 20, by way of every fact strategy: count on, +10, doubles, +9, make ten.
+  adding: 9, // within 20
+  'taking-away': 9, // within 20
   'number-bonds': 1, // bonds to 20
   strategies: 4, // doubles, make ten, count on, make twenty
   shapes: 2,
@@ -71,8 +72,8 @@ const GRADE_1_CEILINGS: Record<string, number> = {
 
 const GRADE_2_CEILINGS: Record<string, number> = {
   ...GRADE_1_CEILINGS,
-  adding: 7, // within 200
-  'taking-away': 6, // within 100
+  adding: 12, // within 200
+  'taking-away': 11, // within 100
   'mystery-number': 3,
   'place-value': 2,
   clocks: 2, // quarter past and quarter to

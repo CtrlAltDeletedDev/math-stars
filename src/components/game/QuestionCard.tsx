@@ -1,13 +1,43 @@
+import { useState } from 'react';
 import { Question } from '@/types';
-import DotAid from './DotAid';
+import TenFrameAid, { hasTenFrames } from './TenFrameAid';
 import QuestionVisual from './QuestionVisual';
 import NumberLine from './NumberLine';
 import HopLine from './HopLine';
-import { Volume2 } from 'lucide-react';
+import { Eye, Volume2 } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
+import { AidMode } from '@/engine/scaffold';
 
 interface Props {
   question: Question;
+  /**
+   * Whether the counting picture (ten frames) is drawn or waits behind a
+   * "Show me" button. See engine/scaffold.ts. Every screen but Play leaves it
+   * drawn, as it always was.
+   */
+  aid?: AidMode;
+  /** Draw the picture now whatever `aid` says: she has just tapped a wrong answer. */
+  revealAid?: boolean;
+}
+
+/** The ten frames, or a button that brings them up. Keyed per question by the card. */
+function FadingAid({ question, mode, reveal }: { question: Question; mode: AidMode; reveal: boolean }) {
+  const [opened, setOpened] = useState(false);
+  if (mode === 'show' || opened || reveal) {
+    return <div className={mode === 'tap' ? 'anim-pop' : undefined}><TenFrameAid prompt={question.prompt} type={question.type} /></div>;
+  }
+  return (
+    <button
+      onClick={() => setOpened(true)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8, minHeight: 48, padding: '8px 18px',
+        background: '#EEF4FF', color: '#3D6FD9', border: 'none', borderRadius: 14, cursor: 'pointer',
+        fontFamily: 'Nunito', fontWeight: 800, fontSize: 17,
+      }}
+    >
+      <Eye size={22} strokeWidth={ICON_STROKE} aria-hidden /> Show me
+    </button>
+  );
 }
 
 function speak(text: string) {
@@ -47,16 +77,19 @@ function glyphCount(text: string): number {
 
 // A one-line sum wants to be huge; a three-sentence story at that size runs off
 // a phone screen and pushes the answers out of reach.
-function promptFontSize(prompt: string): number {
+function promptFontSize(prompt: string): number | string {
+  // A bare fact ("8 + 5 = ?") is the thing she is looking at: as big as the
+  // screen allows. On a phone that is about 40px, on an iPad 64.
+  if (prompt.length <= 14 && !prompt.includes('\n')) return 'clamp(40px, 11vw, 64px)';
   if (prompt.length > 110) return 20;
   if (prompt.length > 70) return 22;
   if (prompt.length > 40) return 25;
   return 30;
 }
 
-export default function QuestionCard({ question }: Props) {
+export default function QuestionCard({ question, aid = 'show', revealAid = false }: Props) {
   const speakText = question.speakText ?? question.prompt;
-  const showDots = question.type === 'addition' || question.type === 'subtraction';
+  const showDots = hasTenFrames(question.prompt, question.type);
   const showNumberLine = question.type === 'skip_count';
   const hopMax = hopLineMax(question);
   const isLong = question.prompt.length > 40;
@@ -108,7 +141,9 @@ export default function QuestionCard({ question }: Props) {
         textAlign: 'center',
         lineHeight: 1.3,
         whiteSpace: 'pre-line', // some prompts set context on its own line
-        paddingRight: showDots || showNumberLine ? 0 : 40,
+        // Clear of the read-aloud button. A bare sum is centred and short
+        // enough not to reach it.
+        paddingRight: question.type === 'addition' || question.type === 'subtraction' || showNumberLine ? 0 : 40,
       }}>
         {question.prompt}
       </div>
@@ -117,7 +152,7 @@ export default function QuestionCard({ question }: Props) {
       {/* Keyed by question so scratch work never carries over to the next one. */}
       {question.visual && <QuestionVisual key={question.id} visual={question.visual} />}
 
-      {showDots && <DotAid prompt={question.prompt} type={question.type} />}
+      {showDots && <FadingAid key={question.id} question={question} mode={aid} reveal={revealAid} />}
       {hopMax !== null && <HopLine key={question.id} max={hopMax} />}
       {showNumberLine && <NumberLine prompt={question.prompt} />}
     </div>
