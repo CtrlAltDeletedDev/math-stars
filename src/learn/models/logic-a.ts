@@ -328,7 +328,9 @@ export function textPieces(text: string, tone?: TextState['tone']): TextPiece[] 
     let kind: TextPiece['kind'] = 'plain';
     if (part === '+' && tone !== 'plain' && tone !== 'minus') kind = 'plus';
     if (part === '−' && tone !== 'plain' && tone !== 'plus') kind = 'minus';
-    out.push({ text: part, kind });
+    const prev = out[out.length - 1];
+    if (kind === 'plain' && prev?.kind === 'plain') prev.text += part;
+    else out.push({ text: part, kind });
   }
   return out;
 }
