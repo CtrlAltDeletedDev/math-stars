@@ -256,12 +256,18 @@ describe('their course', () => {
       x.lessons['fx-count-back'] = rec(null, 0.5, 1);
     });
     const [plusOne, both, makeTen, countBack] = FIXTURE[0].units[0].lessons.map((x) => lessonRow(l, x));
-    expect(plusOne.status).toEqual({ kind: 'placed' });
+    expect(plusOne.status).toEqual({ kind: 'placed', how: 'path' });
     expect(both.status).toEqual({ kind: 'new' }); // past plus 1, not past minus 1
     expect(makeTen).toMatchObject({ status: { kind: 'passed', on: ago(2) }, best: 75, tries: 2 });
     expect(countBack).toMatchObject({ status: { kind: 'started' }, best: 50, tries: 1 });
     l.tracks.minus.stage = 2;
-    expect(lessonRow(l, both.lesson).status).toEqual({ kind: 'placed' });
+    expect(lessonRow(l, both.lesson).status).toEqual({ kind: 'placed', how: 'path' });
+  });
+
+  it('tells a lesson found known by "Find their level" from one passed by its check', () => {
+    const l = learner((x) => { x.lessons['fx-make-ten'] = { ...rec(ago(1), 1, 0), placed: true }; });
+    const makeTen = FIXTURE[0].units[0].lessons.map((x) => lessonRow(l, x))[2];
+    expect(makeTen.status).toEqual({ kind: 'placed', how: 'placement', on: ago(1) });
   });
 
   it('calls a passed lesson passed even when their path would also cover it', () => {

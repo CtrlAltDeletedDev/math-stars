@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, House, Lightbulb, Play, RotateCcw, Volume2, X, Hand, Zap } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
-import { LESSON_BY_ID, unitOf } from '@/learn/course';
+import { LESSON_BY_ID, lessonNumber, unitOf } from '@/learn/course';
 import { DoStep, ModelState, ShowStep } from '@/learn/types';
 import Model from '@/learn/models/Model';
 import { passed, recordItem, recordLesson, todaysLesson, touchLesson, warmupItems } from '@/learn/progress';
@@ -72,6 +72,20 @@ function LessonRun({ lessonId }: { lessonId: string }) {
           <TopBar onClose={() => navigate(ROUTES.home)} />
         </div>
         <div style={{ fontSize: 22, fontWeight: 600, color: C.inkSoft }}>{unit?.emoji} {unit?.title}</div>
+        {/* Where this lesson sits, so the steps through a unit are visible: dots for
+            the unit's lessons, this one big. */}
+        {unit && (
+          <div aria-label={`Lesson ${lessonNumber(lessonId)} of ${unit.lessons.length}`} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {unit.lessons.map((x, i) => {
+              const here = x.id === lessonId;
+              const done = !!learner.lessons[x.id]?.done;
+              return <span key={x.id} title={`${i + 1}`} style={{
+                width: here ? 18 : 12, height: here ? 18 : 12, borderRadius: '50%',
+                background: done ? accent : here ? '#fff' : C.line, border: here ? `4px solid ${accent}` : 'none',
+              }} />;
+            })}
+          </div>
+        )}
         <div className="nx-bob" style={{ fontSize: 110, lineHeight: 1 }}>{lesson.emoji}</div>
         <div style={{ fontWeight: 700, fontSize: 'clamp(32px, 7vw, 52px)', maxWidth: 560 }}>{lesson.title}</div>
         <div style={{ fontSize: 64 }} aria-hidden>{characterEmoji(learner.profile.characterId)}</div>

@@ -19,7 +19,13 @@ each keeps its own progress.
   Adding to 10, Taking away to 10, Story problems, Tens and ones, Adding and taking away to 20,
   Length, Graphs, Time, Shapes and halves, Coins (60 lessons). Done lessons are filled in; their
   friend stands on today's; any stone can be tapped. Second grade comes next on the same road.
-- **Go opens today's lesson.** Every lesson goes the same way:
+- **The first Go finds their level.** "Let's find your level!" asks a few questions, unit by
+  unit (two from each unit's hardest lesson; if those are right, the whole unit is known). Every
+  answer gets the same friendly "Okay!", and "I'm not sure" is always there. It ends on "You
+  start here!", and every lesson already known fills in on the path, so nothing they know is
+  taught again. A grown-up can run it again from the grown-ups screen.
+- **Go opens today's lesson.** The dots on each lesson's first screen show where it sits in its
+  unit. Every lesson goes the same way:
   1. **Warm-up**: a couple of questions from lessons they did before.
   2. **Show**: their friend explains with a moving picture (counters filling a ten frame, hops
      on a number line, blocks snapping into a ten), every word spoken.

@@ -24,7 +24,9 @@ function statusText(r: LessonRow): string {
   const score = r.best !== null ? ` · best ${r.best}% · ${tries}` : '';
   switch (r.status.kind) {
     case 'passed': return `Passed ${shortDate(r.status.on)}${score}`;
-    case 'placed': return 'Already knew this (from their path)';
+    case 'placed': return r.status.how === 'placement'
+      ? `Already knew this (found by "Find their level"${r.status.on ? `, ${shortDate(r.status.on)}` : ''})`
+      : 'Already knew this (from their plus and minus path)';
     case 'started': return r.best !== null ? `Not passed yet${score}` : 'Started, not reached the check yet';
     default: return 'Not yet';
   }
@@ -68,7 +70,17 @@ function Today({ learner }: { learner: Learner }) {
                 <X size={16} strokeWidth={ICON_STROKE} />Clear
               </button>
             )}
+            {!picking && (
+              <button type="button" className="gu-btn" onClick={() => navigate(ROUTES.placement)}>
+                Find their level again
+              </button>
+            )}
           </div>
+          <p className="muted" style={{ marginTop: 8 }}>
+            {learner.placedOn
+              ? `"Find their level" last ran ${shortDate(learner.placedOn)}. Running it again only skips more lessons they turn out to know; nothing they have passed is undone.`
+              : 'Their first Go runs "Find their level": a few questions that skip the lessons they already know.'}
+          </p>
         </>
       ) : (
         <p>

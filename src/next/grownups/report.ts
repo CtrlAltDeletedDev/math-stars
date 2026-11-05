@@ -424,7 +424,8 @@ export const backupFileName = (today: string) => `math-stars-backup-${today}.jso
 
 export type LessonStatus =
   | { kind: 'passed'; on: string }
-  | { kind: 'placed' }
+  /** Known without passing its own check: found in placement, or below their plus/minus path. */
+  | { kind: 'placed'; how: 'placement' | 'path'; on?: string }
   | { kind: 'started' }
   | { kind: 'new' };
 
@@ -458,8 +459,9 @@ export function lessonRow(l: Learner, lesson: Lesson): LessonRow {
   const tries = r?.tries ?? 0;
   const best = r && tries > 0 ? Math.round(r.best * 100) : null;
   let status: LessonStatus;
-  if (r?.done) status = { kind: 'passed', on: r.done };
-  else if (lessonDone(l, lesson)) status = { kind: 'placed' };
+  if (r?.done && r.placed) status = { kind: 'placed', how: 'placement', on: r.done };
+  else if (r?.done) status = { kind: 'passed', on: r.done };
+  else if (lessonDone(l, lesson)) status = { kind: 'placed', how: 'path' };
   else if (r) status = { kind: 'started' };
   else status = { kind: 'new' };
   return { lesson, status, tries, best };
