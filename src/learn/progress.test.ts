@@ -69,3 +69,18 @@ describe('lesson progress', () => {
     expect(warmupItems(l, 3).length).toBe(1);
   });
 });
+
+describe('growing with her', () => {
+  it('starts today\'s lesson at her grade, and carries on into the next grade', async () => {
+    const { COURSE } = await import('./course');
+    const first = COURSE.find((g) => g.grade === '1')!.units.flatMap((u) => u.lessons);
+    const second = COURSE.find((g) => g.grade === '2')!.units.flatMap((u) => u.lessons);
+    if (first.length === 0 || second.length === 0) return; // still being written
+    const inSecond = { ...newLearner(), profile: { ...newLearner().profile, grade: '2' as const } };
+    expect(second.map((x) => x.id)).toContain(todaysLesson(inSecond)!.id);
+    // Every first-grade lesson done: she carries on into second grade.
+    let l = newLearner();
+    for (const lesson of first) l = recordLesson(l, lesson.id, 4, 4);
+    expect(second.map((x) => x.id)).toContain(todaysLesson(l)!.id);
+  });
+});

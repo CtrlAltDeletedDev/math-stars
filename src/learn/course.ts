@@ -1,9 +1,22 @@
 import { Lesson, Unit } from './types';
-import { UNITS } from './units';
+import { Grade } from '@/core/stages';
+import { COURSE, UNITS } from './units';
 
 // The whole course, flattened, and where each lesson lives.
 
-export { UNITS };
+export { COURSE, UNITS };
+
+const GRADE_ORDER: Grade[] = ['K', '1', '2'];
+const GRADE_OF_UNIT = new Map(COURSE.flatMap((g) => g.units.map((u) => [u.id, g.grade] as const)));
+
+export function gradeOfUnit(unitId: string): Grade | undefined {
+  return GRADE_OF_UNIT.get(unitId);
+}
+
+/** Is this grade at or above that one? */
+export function gradeAtLeast(grade: Grade, from: Grade): boolean {
+  return GRADE_ORDER.indexOf(grade) >= GRADE_ORDER.indexOf(from);
+}
 
 export const LESSONS: Lesson[] = UNITS.flatMap((u) => u.lessons);
 

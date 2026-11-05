@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, House, Lightbulb, Play, RotateCcw, Volume2, X, Hand } from 'lucide-react';
+import { ArrowRight, House, Lightbulb, Play, RotateCcw, Volume2, X, Hand, Zap } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
 import { LESSON_BY_ID, unitOf } from '@/learn/course';
 import { DoStep, ModelState, ShowStep } from '@/learn/types';
@@ -83,6 +83,20 @@ function LessonRun({ lessonId }: { lessonId: string }) {
             setLearner((l) => touchLesson(l, lessonId));
             speak(`Let's learn ${lesson.title}!`);
             setAt(1);
+          }}
+        />
+        {/* Testing out: what she already knows should never hold her back.
+            Straight to the check; pass it and the stone fills like any other. */}
+        <BigButton
+          label="I know this!"
+          quiet
+          icon={<Zap size={30} strokeWidth={ICON_STROKE} color="#C99700" />}
+          onClick={() => {
+            unlockSpeech();
+            sound.unlock();
+            setLearner((l) => touchLesson(l, lessonId));
+            speak("Let's see! Show me what you know.");
+            setAt(cards.findIndex((c) => c.kind === 'item' && c.phase === 'check'));
           }}
         />
       </Page>

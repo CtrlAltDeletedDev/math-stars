@@ -2,7 +2,7 @@ import { todayString, daysAgoString } from '@/engine/dates';
 import { Learner, applyAnswer, bumpStreak, standingOn } from '@/core/learner';
 import { trackOfFact } from '@/core/stages';
 import { classifyTyped } from '@/core/mistakes';
-import { LESSONS, LESSON_BY_ID } from './course';
+import { LESSONS, LESSON_BY_ID, gradeAtLeast, gradeOfUnit, unitOf } from './course';
 import { Item, Lesson } from './types';
 
 // Where she is in the course, and recording what she does in a lesson.
@@ -20,10 +20,21 @@ export function lessonDone(l: Learner, lesson: Lesson): boolean {
   return !!p && standingOn(l, p.track) > p.stage;
 }
 
+/**
+ * Today's lesson: a grown-up's pin, else the first lesson not yet done from
+ * her grade onward. Grades below hers are behind her (still tappable, and
+ * back as review once done); grades above are ahead, and she carries on into
+ * them by herself when her own grade's lessons are done -- the course grows
+ * with her instead of stopping.
+ */
 export function todaysLesson(l: Learner): Lesson | null {
   const pinned = l.pinnedLesson ? LESSON_BY_ID.get(l.pinnedLesson) : undefined;
   if (pinned && !l.lessons[pinned.id]?.done) return pinned;
-  return LESSONS.find((lesson) => !lessonDone(l, lesson)) ?? null;
+  const fromHerGrade = (lesson: Lesson) => {
+    const g = gradeOfUnit(unitOf(lesson.id)?.id ?? '');
+    return !g || gradeAtLeast(g, l.profile.grade);
+  };
+  return LESSONS.find((lesson) => fromHerGrade(lesson) && !lessonDone(l, lesson)) ?? null;
 }
 
 export function passed(right: number, total: number): boolean {
