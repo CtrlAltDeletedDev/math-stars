@@ -80,6 +80,51 @@ export const css = `
 .gu-focus .pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: ${TILE}; border-radius: 12px; padding: 10px; }
 .gu-focus select { font: inherit; font-size: 15px; min-height: 44px; padding: 6px 10px; border-radius: 10px; border: 2px solid #E2D9C7; background: #fff; color: ${INK}; flex: 1 1 220px; min-width: 0; }
 
+/* group headings: the course, then facts practice */
+.gu .gu-group { font-size: 22px; font-weight: 700; color: ${INK}; letter-spacing: 0; text-transform: none; margin: 0; padding: 26px 0 2px; border-top: 2px solid ${INK}; }
+.gu .gu-group + .gu-groupsub { margin: 2px 0 0; font-size: 15px; color: ${SOFT}; }
+.gu-group-wrap > .gu-sec:first-of-type { border-top: 0; }
+
+/* her course */
+.gu-today-card { background: ${TILE}; border-radius: 16px; padding: 14px 16px; }
+.gu-today-card .lbl { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: ${C.goDark}; }
+.gu-today-card .lbl svg { vertical-align: -2px; }
+.gu-today-card .unit { text-transform: none; letter-spacing: 0; font-weight: 400; color: ${SOFT}; font-size: 14px; }
+.gu-today-card .ttl { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; margin-top: 6px; line-height: 1.2; }
+.gu-today-card .goal { margin-top: 4px; font-size: 16px; color: #45475A; }
+.gu-grade { margin-top: 20px; }
+.gu-grade .gh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
+.gu-grade .gh h3 { font-size: 18px; }
+.gu-grade .place { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 9px; background: ${TRACK_BG}; color: ${SOFT}; }
+.gu-grade .place.hers { background: ${C.goSoft}; color: #174D2E; }
+.gu-grade .cnt { margin-left: auto; font-size: 14px; color: ${SOFT}; }
+.gu-units { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: start; }
+.gu-unit { border: 1.5px solid ${RULE}; border-radius: 14px; background: #fff; }
+.gu-unit.open { border-color: #DCD3C1; }
+.gu .gu-unit .hd { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 12px 12px 12px 14px; border-radius: 14px; min-height: 56px; }
+.gu-unit .em { font-size: 26px; line-height: 1; width: 30px; text-align: center; flex: none; margin-top: 2px; }
+.gu-unit .mid { flex: 1; min-width: 0; display: block; }
+.gu-unit .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.gu-unit .t { font-weight: 700; font-size: 16px; }
+.gu-unit .n { font-size: 14px; color: ${SOFT}; white-space: nowrap; }
+.gu-unit .bar { display: block; height: 8px; border-radius: 4px; background: #EEE8DC; margin: 6px 0 5px; overflow: hidden; }
+.gu-unit .bar b { display: block; height: 100%; border-radius: 4px; }
+.gu-unit .about { display: block; font-size: 14px; color: ${SOFT}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gu-unit.open .about { white-space: normal; }
+.gu-unit .chev { flex: none; color: ${MUTE}; margin-top: 4px; transition: transform .15s; }
+.gu-unit.open .chev { transform: rotate(180deg); }
+.gu-unit .lessons { list-style: none; margin: 0; padding: 0 12px 6px 14px; }
+.gu-unit .lessons li { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; border-top: 1px solid ${RULE}; }
+.gu-unit .num { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: ${SOFT}; margin-top: 1px; }
+.gu-unit .body { flex: 1; min-width: 0; }
+.gu-unit .body .t { font-size: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.gu-unit .tag { font-size: 12px; font-weight: 700; background: ${C.go}; color: #fff; border-radius: 999px; padding: 1px 8px; }
+.gu-unit .body .goal { font-size: 14px; color: #45475A; margin-top: 1px; }
+.gu-unit .body .st { font-size: 13px; color: ${MUTE}; margin-top: 3px; }
+.gu-unit li.done .body .st { color: #22663F; }
+.gu .gu-btn.go { flex: none; min-height: 40px; padding: 6px 10px; font-size: 14px; }
+.gu .gu-btn.go .w { display: none; }
+
 /* the grids */
 .gu-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: ${SOFT}; margin-bottom: 14px; }
 .gu-legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -146,6 +191,9 @@ export const css = `
 
 @media (min-width: 720px) {
   .gu h1 { font-size: 32px; }
+  .gu .gu-btn.go .w { display: inline; }
+  .gu-units { grid-template-columns: 1fr 1fr; }
+  .gu-unit.open { grid-column: 1 / -1; }
   .gu-two { grid-template-columns: 1fr 1fr; gap: 32px; }
   .gu-gridbox { --cell: 30px; --gap: 3px; }
   .gu-chips { grid-template-columns: 1fr 1fr; }

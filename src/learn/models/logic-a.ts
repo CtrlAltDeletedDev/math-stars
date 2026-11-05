@@ -239,6 +239,16 @@ function mulberry32(seed: number) {
 }
 
 /**
+ * The loose grid a heap of `count` is laid on: a few spare cells (about one
+ * in five) so it looks scattered, not so many that it has holes in it.
+ */
+export function scatterGrid(count: number): { cols: number; rows: number } {
+  const cells = count + Math.max(1, Math.round(count * 0.2));
+  const cols = Math.max(2, Math.ceil(Math.sqrt(cells * 4 / 3)));
+  return { cols, rows: Math.ceil(cells / cols) };
+}
+
+/**
  * Where scattered things sit, as fractions (0–1) of a 4:3 box, the same
  * every time for the same count. Each is a cell of a loose grid nudged off
  * centre, so nothing overlaps and the heap still looks like a heap.
@@ -246,8 +256,7 @@ function mulberry32(seed: number) {
 export function scatterPositions(count: number): { x: number; y: number }[] {
   if (count <= 0) return [];
   const rand = mulberry32(count * 7919 + 13);
-  const cols = Math.max(2, Math.ceil(Math.sqrt(count * 4 / 3)));
-  const rows = Math.ceil(count / cols) + (count > 3 ? 1 : 0);
+  const { cols, rows } = scatterGrid(count);
   const cells = Array.from({ length: cols * rows }, (_, k) => k);
   // Shuffle the cells, then keep the first `count`.
   for (let k = cells.length - 1; k > 0; k--) {

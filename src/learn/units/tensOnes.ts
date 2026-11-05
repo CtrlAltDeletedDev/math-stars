@@ -70,7 +70,7 @@ const countTo120: Lesson = {
     show('10, 20, 30, 40, 50.', '10, 20, 30, 40, 50', tensLine([10, 20, 30, 40, 50])),
     show('60, 70, 80, 90, 100! Ten tens make 100.', '100', tensLine(range(1, 10).map((k) => k * 10))),
     show('The numbers keep going after 100: 110, 120.', '110, 120', tensLine(range(1, 12).map((k) => k * 10))),
-    show('Now by ones from 100: 101, 102, 103, 104, 105. Just like 1, 2, 3, 4, 5 again, with 100 in front.', '101, 102, 103 …',
+    show('Now by ones from 100: 101, 102, 103, 104, 105. Like 1, 2, 3, 4, 5 again.', '101, 102, 103 …',
       { model: 'numberLine', min: 100, max: 120, start: 100, path: [101, 102, 103, 104, 105] }),
     doStep({
       say: 'Count by tens to 70. Tap 0, then hop by tens.',
@@ -279,9 +279,8 @@ function moreOrLess(pictured: boolean) {
     const more = Math.random() < 0.6;
     const answer = more ? Math.max(a, b) : Math.min(a, b);
     const other = more ? Math.min(a, b) : Math.max(a, b);
-    const [lo, hi] = [Math.min(a, b), Math.max(a, b)];
     return choiceItem({
-      id: `pv-${more ? 'more' : 'less'}-${lo}-${hi}`,
+      id: `pv-${more ? 'more' : 'less'}-${a}-${b}`,
       say: more ? `Which is more, ${a} or ${b}?` : `Which is less, ${a} or ${b}?`,
       prompt: more ? 'Which is more?' : 'Which is less?',
       answer: numChoice(answer, pictured),
@@ -418,16 +417,16 @@ function addTens(pictured: boolean) {
         picture: pictured ? blocks(t, o) : undefined,
       });
     }
-    const a = randomInt(1, 8);
-    const b = kind === 1 ? randomInt(1, 9 - a) : randomInt(1, a);
+    // 50 + 30 or 80 − 30: tens and tens, everything within 90.
     const plus = kind === 1;
+    const whole = randomInt(2, 9), b = randomInt(1, whole - 1), a = whole - b;
     return numberItem({
-      id: plus ? `tens-add-${a * 10}-${b * 10}` : `tens-sub-${(a + b) * 10}-${b * 10}`,
-      say: plus ? `What is ${a * 10} plus ${b * 10}?` : `What is ${(a + b) * 10} minus ${b * 10}?`,
-      prompt: plus ? `${a * 10} + ${b * 10} = ?` : `${(a + b) * 10} − ${b * 10} = ?`,
-      answer: plus ? (a + b) * 10 : a * 10,
-      hint: plus ? `Think in tens: ${tensWord(a)} and ${tensWord(b)}.` : `Think in tens: ${tensWord(a + b)} take away ${tensWord(b)}.`,
-      picture: pictured ? blocks(plus ? a : a + b, 0) : undefined,
+      id: plus ? `tens-add-${a * 10}-${b * 10}` : `tens-sub-${whole * 10}-${b * 10}`,
+      say: plus ? `What is ${a * 10} plus ${b * 10}?` : `What is ${whole * 10} minus ${b * 10}?`,
+      prompt: plus ? `${a * 10} + ${b * 10} = ?` : `${whole * 10} − ${b * 10} = ?`,
+      answer: plus ? whole * 10 : a * 10,
+      hint: plus ? `Think in tens: ${tensWord(a)} and ${tensWord(b)}.` : `Think in tens: ${tensWord(whole)} take away ${tensWord(b)}.`,
+      picture: pictured ? blocks(plus ? a : whole, 0) : undefined,
     });
   };
 }
@@ -439,15 +438,15 @@ const addingTens: Lesson = {
   standard: '1.NBT.4',
   emoji: '🦘',
   teach: [
-    show('34 + 20. Start at 34.', '34', { model: 'numberLine', min: 0, max: 100, start: 34, path: [], jumps: 10 }),
-    show('20 is 2 tens: hop 10, then 10 more. 44, 54.', '34 + 20 = 54', { model: 'numberLine', min: 0, max: 100, start: 34, path: [44, 54], jumps: 10 }),
-    show('The tens went from 3 to 5. The ones stayed 4.', '3 tens + 2 tens = 5 tens', { model: 'numberLine', min: 0, max: 100, start: 34, path: [44, 54], jumps: 10 }),
-    show('Taking away tens works the same way. 54 − 30: hop back 3 tens. 44, 34, 24.', '54 − 30 = 24', { model: 'numberLine', min: 0, max: 100, start: 54, path: [44, 34, 24], jumps: 10 }),
+    show('34 + 20. Start at 34.', '34', { model: 'numberLine', min: 4, max: 94, start: 34, path: [], jumps: 10 }),
+    show('20 is 2 tens: hop 10, then 10 more. 44, 54.', '34 + 20 = 54', { model: 'numberLine', min: 4, max: 94, start: 34, path: [44, 54], jumps: 10 }),
+    show('The tens went from 3 to 5. The ones stayed 4.', '3 tens + 2 tens = 5 tens', { model: 'numberLine', min: 4, max: 94, start: 34, path: [44, 54], jumps: 10 }),
+    show('Taking away tens works the same way. 54 − 30: hop back 3 tens. 44, 34, 24.', '54 − 30 = 24', { model: 'numberLine', min: 4, max: 94, start: 54, path: [44, 34, 24], jumps: 10 }),
     doStep({
       say: 'Find 23 + 30. Tap 23, then hop by tens.',
       caption: '23 + 30',
-      model: { model: 'numberLine', min: 0, max: 100, start: null, path: [], jumps: 10 },
-      solution: { model: 'numberLine', min: 0, max: 100, start: 23, path: [33, 43, 53], jumps: 10 },
+      model: { model: 'numberLine', min: 3, max: 93, start: null, path: [], jumps: 10 },
+      solution: { model: 'numberLine', min: 3, max: 93, start: 23, path: [33, 43, 53], jumps: 10 },
       goal: (s) => s.start === 23 && s.path.length === 3 && last(s.path) === 53,
       hint: (s) => (s.start !== 23 ? 'Tap 23 to start.' : '30 is 3 tens: make 3 hops of ten.'),
       then: '33, 43, 53. 23 + 30 = 53.',

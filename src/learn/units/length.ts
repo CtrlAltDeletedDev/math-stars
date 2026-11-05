@@ -154,7 +154,7 @@ const shortestToLongest: Lesson = {
       { model: 'graph', rows: [{ emoji: '🟥', label: 'ribbon', count: 9 }, { emoji: '🟨', label: 'crayon', count: 4 }, { emoji: '🟦', label: 'pencil', count: 6 }] }),
     show('Shortest to longest: crayon, pencil, ribbon.', 'crayon, pencil, ribbon',
       { model: 'graph', rows: [{ emoji: '🟨', label: 'crayon', count: 4 }, { emoji: '🟦', label: 'pencil', count: 6 }, { emoji: '🟥', label: 'ribbon', count: 9 }] }),
-    show('The ribbon is longer than the pencil, and the pencil is longer than the crayon. So the ribbon is longer than the crayon too!', 'ribbon > pencil > crayon',
+    show('Ribbon beats pencil, and pencil beats crayon. So the ribbon is longer than the crayon too!', 'ribbon > pencil > crayon',
       { model: 'graph', rows: [{ emoji: '🟨', label: 'crayon', count: 4 }, { emoji: '🟦', label: 'pencil', count: 6 }, { emoji: '🟥', label: 'ribbon', count: 9 }] }),
     layStep(THINGS[2], 9, 'Measure the ribbon with cubes.', 'The ribbon is 9 cubes long, the longest of the three.'),
     doStep({

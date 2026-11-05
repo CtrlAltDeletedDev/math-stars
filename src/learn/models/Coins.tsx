@@ -82,7 +82,7 @@ export default function Coins({ state, onChange, size = 'big' }: ModelProps<'coi
 
   const totalPill = state.showTotal && (
     <div key={bumpKey} className="mb-bump" aria-hidden style={{
-      alignSelf: 'center', fontFamily: KID_FONT, fontWeight: 700, fontSize: small ? 20 : 36, lineHeight: 1,
+      justifySelf: 'center', fontFamily: KID_FONT, fontWeight: 700, fontSize: small ? 20 : 36, lineHeight: 1,
       color: C.ink, background: C.card, border: `3px solid ${C.line}`, borderRadius: 999, padding: small ? '3px 10px' : '6px 18px',
     }}>{total}¢</div>
   );

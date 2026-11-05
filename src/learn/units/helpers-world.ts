@@ -96,15 +96,17 @@ export function modelItem<K extends ModelState['model']>(o: ItemBase & {
 /**
  * Four number choices: the answer and the caller's plausible mistakes, topped
  * up and balanced above and below by `buildTaggedChoices` so the answer's rank
- * among them never gives it away.
+ * among them never gives it away. `prefer` is the one mistake the question
+ * exists to catch: whenever a wrong answer is offered on its side of the
+ * answer, it is that one.
  */
-export function numberChoices(answer: number, mistakes: Candidate[], opts: { format?: (n: number) => string; say?: (n: number) => string; step?: number; max?: number } = {}): { answer: Choice; wrong: Choice[] } {
+export function numberChoices(answer: number, mistakes: Candidate[], opts: { format?: (n: number) => string; say?: (n: number) => string; step?: number; max?: number; prefer?: number[] } = {}): { answer: Choice; wrong: Choice[] } {
   const format = opts.format ?? String;
   const { choices } = buildTaggedChoices(answer, mistakes, {
     format,
     step: opts.step ?? 1,
     isValid: (n) => n >= 0 && n <= (opts.max ?? 200),
-    prefer: mistakes.map((m) => (typeof m === 'number' ? m : m[0])),
+    prefer: opts.prefer ?? [],
   });
   const toChoice = (label: string): Choice => {
     const n = Number(label.replace(/[^\d]/g, ''));

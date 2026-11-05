@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import { ModelProps } from './types';
 import { ICON_STROKE } from '@/components/ui/icons';
@@ -21,8 +21,8 @@ import { hereOf, hop, hopsOf, numberLineLabel, numberLineWindow, tapNumberLine, 
 // that cannot hit "13" exactly can still make every hop.
 
 const DIM = {
-  big: { h: 156, lineY: 106, pad: 24, minUnit: 32, ideal: 48, maxW: 760, font: 20, hopFont: 15, lift: 22, guess: 360, btn: 56 },
-  small: { h: 90, lineY: 62, pad: 14, minUnit: 21, ideal: 28, maxW: 340, font: 13, hopFont: 10, lift: 12, guess: 180, btn: 44 },
+  big: { h: 156, lineY: 106, pad: 24, minUnit: 27, ideal: 48, maxW: 760, font: 20, hopFont: 15, lift: 32, guess: 360, btn: 56 },
+  small: { h: 90, lineY: 62, pad: 14, minUnit: 21, ideal: 28, maxW: 340, font: 13, hopFont: 10, lift: 20, guess: 180, btn: 44 },
 };
 const HOP_MS = 380;
 
@@ -83,6 +83,22 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
   const canFwd = here !== null && hop(state, 1) !== state;
   const canUndo = undoHop(state, keepStart) !== state;
 
+  // On a line that scrolls, the edge that has more beyond it fades out, so
+  // the cut reads as "keeps going" rather than clipped.
+  const [edges, setEdges] = useState({ l: false, r: false });
+  const readEdges = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !scroll) { setEdges((e) => (e.l || e.r ? { l: false, r: false } : e)); return; }
+    const l = el.scrollLeft > 2;
+    const r = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    setEdges((e) => (e.l === l && e.r === r ? e : { l, r }));
+  }, [scroll]);
+  useEffect(readEdges, [readEdges, W, visible]);
+  const fade = 28;
+  const mask = scroll && (edges.l || edges.r)
+    ? `linear-gradient(to right, ${edges.l ? 'transparent' : '#000'} 0, #000 ${fade}px, #000 calc(100% - ${fade}px), ${edges.r ? 'transparent' : '#000'} 100%)`
+    : undefined;
+
   // Keep where she is in view on a line that scrolls.
   const hereX = here === null ? null : x(here);
   useEffect(() => {
@@ -117,7 +133,12 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
       <MotionStyles />
       <div
         ref={scrollRef}
-        style={scroll ? { width: '100%', overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', overscrollBehaviorX: 'contain' } : { width: '100%' }}
+        data-scrolls={scroll ? '' : undefined}
+        onScroll={scroll ? readEdges : undefined}
+        style={scroll ? {
+          width: '100%', overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', overscrollBehaviorX: 'contain',
+          maskImage: mask, WebkitMaskImage: mask,
+        } : { width: '100%' }}
       >
       <svg
         viewBox={`0 0 ${W} ${D.h}`}
@@ -132,44 +153,6 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
         <rect x="0" y="0" width={W} height={D.h} fill="transparent" />
 
         <g>
-          {hops.map((h, i) => {
-            const x1 = x(h.from), x2 = x(h.to);
-            const span = Math.abs(x2 - x1);
-            const lift = Math.min(span * 0.55 + D.lift * 0.6, L - D.hopFont * 2.2) + levels[i] * D.lift;
-            const peakY = Math.max(D.hopFont + 6, L - 4 - lift);
-            const mid = (x1 + x2) / 2;
-            const fwd = h.to > h.from;
-            const colour = fwd ? COL.forward : COL.back;
-            const isNew = i >= firstNew;
-            const delay = isNew ? (i - firstNew) * HOP_MS : 0;
-            const head = size === 'big' ? 7 : 4.5;
-            const dir = fwd ? -1 : 1;
-            return (
-              <g key={i}>
-                <path
-                  d={`M ${x1} ${L - 4} Q ${mid} ${2 * peakY - (L - 4)} ${x2} ${L - 4}`}
-                  pathLength={1}
-                  strokeDasharray="1"
-                  className={isNew ? 'ma-draw' : undefined}
-                  style={{ animationDelay: `${delay}ms` }}
-                  fill="none" stroke={colour} strokeWidth={size === 'big' ? 4 : 2.5} strokeLinecap="round"
-                />
-                {/* Arrowhead where she lands. */}
-                <path
-                  d={`M ${x2 + dir * head} ${L - 4 - head * 1.5} L ${x2} ${L - 4} L ${x2 + dir * head * 1.6} ${L - 4 - head * 0.2}`}
-                  className={isNew ? 'ma-fade' : undefined}
-                  style={{ animationDelay: `${delay + HOP_MS * 0.7}ms` }}
-                  fill="none" stroke={colour} strokeWidth={size === 'big' ? 4 : 2.5} strokeLinecap="round" strokeLinejoin="round"
-                />
-                <text
-                  x={mid} y={peakY - (size === 'big' ? 7 : 4)}
-                  textAnchor="middle"
-                  className={isNew ? 'ma-fade' : undefined}
-                  style={{ animationDelay: `${delay + HOP_MS * 0.5}ms`, fontWeight: 600, fontSize: D.hopFont, fill: colour }}
-                >{i + 1}</text>
-              </g>
-            );
-          })}
 
           <line x1={4} y1={L} x2={W - 4} y2={L} stroke={COL.ink} strokeWidth={size === 'big' ? 3 : 2} strokeLinecap="round" />
           {/* Arrow ends: the line keeps going. */}
@@ -180,7 +163,7 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
             <line key={`m${n}`} x1={x(n)} y1={L - 5} x2={x(n)} y2={L + 5} stroke={COL.soft} strokeOpacity={0.55} strokeWidth={1.5} />
           ))}
           {tickValues.map((n) => {
-            const big = (n - win.lo) % (win.step * 5) === 0 || n === 0;
+            const big = n % (win.step * 5) === 0;
             const isHere = n === here && hops.length > 0;
             return (
               <g key={n}>
@@ -216,12 +199,59 @@ export default function NumberLine({ state, onChange, size = 'big' }: ModelProps
               fill="none" stroke={COL.b} strokeWidth={size === 'big' ? 3 : 2}
             />
           )}
+          {/* Where she is: on the line, under the arcs, so the last arrowhead stays crisp. */}
           {here !== null && (
             <g style={{ transform: `translateX(${x(here)}px)`, transition: `transform .3s ease ${hops.length > firstNew ? dotDelay - 220 : 0}ms` }}>
               <circle cx={0} cy={L} r={size === 'big' ? 9 : 5.5} fill={hereColour} stroke="#fff" strokeWidth={size === 'big' ? 3 : 2}
                 style={{ transition: `fill .2s ease ${dotDelay}ms` }} />
             </g>
           )}
+          {hops.map((h, i) => {
+            const x1 = x(h.from), x2 = x(h.to);
+            const span = Math.abs(x2 - x1);
+            const lift = Math.min(span * 0.55 + D.lift * 0.4, L - D.hopFont * 2.2) + levels[i] * D.lift;
+            const peakY = Math.max(D.hopFont + 6, L - 4 - lift);
+            const mid = (x1 + x2) / 2;
+            const fwd = h.to > h.from;
+            const colour = fwd ? COL.forward : COL.back;
+            const isNew = i >= firstNew;
+            const delay = isNew ? (i - firstNew) * HOP_MS : 0;
+            // The arrowhead follows the curve's own direction where she lands.
+            const cy = 2 * peakY - (L - 4);
+            const tx = x2 - mid, ty = (L - 4) - cy;
+            const tl = Math.hypot(tx, ty) || 1;
+            const ux = tx / tl, uy = ty / tl;
+            const head = size === 'big' ? 10 : 6;
+            const wing = (a: number) => {
+              const c = Math.cos(a), sn = Math.sin(a);
+              return `${x2 - head * (ux * c - uy * sn)} ${L - 4 - head * (ux * sn + uy * c)}`;
+            };
+            return (
+              <g key={i}>
+                <path
+                  d={`M ${x1} ${L - 4} Q ${mid} ${2 * peakY - (L - 4)} ${x2} ${L - 4}`}
+                  pathLength={1}
+                  strokeDasharray="1"
+                  className={isNew ? 'ma-draw' : undefined}
+                  style={{ animationDelay: `${delay}ms` }}
+                  fill="none" stroke={colour} strokeWidth={size === 'big' ? 4 : 2.5} strokeLinecap="round"
+                />
+                {/* Arrowhead where she lands. */}
+                <path
+                  d={`M ${wing(0.5)} L ${x2} ${L - 4} L ${wing(-0.5)}`}
+                  className={isNew ? 'ma-fade' : undefined}
+                  style={{ animationDelay: `${delay + HOP_MS * 0.7}ms` }}
+                  fill="none" stroke={colour} strokeWidth={size === 'big' ? 4 : 2.5} strokeLinecap="round" strokeLinejoin="round"
+                />
+                <text
+                  x={mid} y={peakY - (size === 'big' ? 7 : 4)}
+                  textAnchor="middle"
+                  className={isNew ? 'ma-fade' : undefined}
+                  style={{ animationDelay: `${delay + HOP_MS * 0.5}ms`, fontWeight: 600, fontSize: D.hopFont, fill: colour }}
+                >{i + 1}</text>
+              </g>
+            );
+          })}
         </g>
       </svg>
       </div>

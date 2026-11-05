@@ -17,7 +17,7 @@ export default function Compare({ state, onChange, size = 'big' }: ModelProps<'c
   const matched = !!state.matched;
   const live = !!onChange;
   const emojiPx = `${(100 / cols) * 0.6}cqw`;
-  const lineGap = size === 'big' ? 34 : 14;
+  const lineGap = size === 'big' ? 26 : 12;
 
   const row = (r: { emoji: string; count: number }, which: 0 | 1) =>
     Array.from({ length: r.count }, (_, i) => {
@@ -27,7 +27,7 @@ export default function Compare({ state, onChange, size = 'big' }: ModelProps<'c
           key={`${which}-${i}`}
           style={{
             gridRow: which === 0 ? 1 : 3, gridColumn: i + 1,
-            aspectRatio: '1', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            aspectRatio: '1 / 0.86', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
           {/* The extras, with no partner, get a soft amber glow once the lines are in. */}
@@ -35,7 +35,7 @@ export default function Compare({ state, onChange, size = 'big' }: ModelProps<'c
             aria-hidden
             className={extra ? 'ma-glow' : undefined}
             style={{
-              position: 'absolute', inset: '7%', borderRadius: '50%',
+              position: 'absolute', inset: '8% 12%', borderRadius: '50%',
               background: extra ? COL.unknownSoft : 'transparent',
               transition: 'background .4s ease',
               transitionDelay: extra ? `${pairs * 70 + 150}ms` : '0ms',

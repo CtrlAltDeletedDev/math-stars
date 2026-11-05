@@ -69,7 +69,7 @@ function nameItem(): Item {
     answer: nameChoice(v),
     wrong: VALUES.filter((w) => w !== v).map(nameChoice),
     figure: coins([v]),
-    hint: 'Look at its size and colour. The penny is brown; the dime is the smallest silver coin.',
+    hint: 'Look at its size and its colour. Is it brown or silver? Is it small or big?',
   });
 }
 
@@ -82,7 +82,7 @@ function worthItem(): Item {
     answer: worthChoice(v),
     wrong: VALUES.filter((w) => w !== v).map(worthChoice),
     figure: coins([v]),
-    hint: 'Penny 1, nickel 5, dime 10, quarter 25. Size does not tell you.',
+    hint: 'Size does not tell you what a coin is worth. Say its name first, then think what that coin is worth.',
   });
 }
 
@@ -163,10 +163,10 @@ function likeCoins(asChoices: boolean) {
       figure: coins(many(n, v)),
       hint: v === 10 ? 'Each dime is 10 cents. Count by tens.' : 'Each nickel is 5 cents. Count by fives.',
     };
-    if (!asChoices) return numberItem({ ...base, answer: total });
+    if (!asChoices) return numberItem({ ...base, id: `${base.id}-typed`, answer: total });
     // Each coin counted as 1 cent; one coin too many or too few; nickels counted as dimes.
     const mistakes = [n, total + v, total - v, ...(v === 5 ? [n * 10] : [])];
-    return choiceItem({ ...base, ...numberChoices(total, mistakes, { format: cents, say: centsSaid, step: v }) });
+    return choiceItem({ ...base, ...numberChoices(total, mistakes, { format: cents, say: centsSaid, step: v, prefer: [n] }) });
   };
 }
 
@@ -190,11 +190,11 @@ const fivesAndTens: Lesson = {
 
 // --- 4. Counting mixed coins ---------------------------------------------------------------------
 
-/** Dimes, nickels and pennies, at least two kinds. */
+/** Dimes, nickels and pennies: at least two kinds, and at least four coins. */
 function mixedTray(): number[] {
   for (;;) {
     const d = randomInt(1, 4), k = randomInt(0, 2), p = randomInt(0, 4);
-    if ((k > 0 ? 1 : 0) + (p > 0 ? 1 : 0) === 0) continue;
+    if ((k > 0 ? 1 : 0) + (p > 0 ? 1 : 0) === 0 || d + k + p < 4) continue;
     return [...many(d, 10), ...many(k, 5), ...many(p, 1)];
   }
 }
@@ -204,6 +204,7 @@ function mixedItem(asChoices: boolean) {
     const tray = mixedTray();
     const total = sum(tray);
     const nick = tray.filter((v) => v === 5).length;
+    const dimes = tray.filter((v) => v === 10).length;
     const base = {
       id: `coins-mixed-${sorted(tray).join('-')}`,
       say: 'How many cents are these coins worth?',
@@ -212,13 +213,14 @@ function mixedItem(asChoices: boolean) {
       figure: coins(asChoices ? sorted(tray) : shuffle(tray)),
       hint: 'Start with the dimes and count by tens. Then the nickels by fives, then the pennies by ones.',
     };
-    if (!asChoices) return numberItem({ ...base, answer: total });
+    if (!asChoices) return numberItem({ ...base, id: `${base.id}-typed`, answer: total });
     const mistakes = [
       tray.length, // every coin counted as 1 cent
       total - Math.min(...tray), // a coin missed
       ...(nick > 0 ? [total + nick * 5] : []), // nickels taken for dimes
+      total - dimes * 5, // dimes taken for nickels: the bigger coin must be worth more
     ];
-    return choiceItem({ ...base, ...numberChoices(total, mistakes, { format: cents, say: centsSaid }) });
+    return choiceItem({ ...base, ...numberChoices(total, mistakes, { format: cents, say: centsSaid, prefer: [tray.length] }) });
   };
 }
 

@@ -4,8 +4,10 @@
 export const PATH_W = 375;
 export const STONE_R = 30;
 export const HER_R = 42;
+/** A unit's sign: a rounded board on the trail. */
+export const SIGN = { w: 112, h: 62 } as const;
 
-/** The pill of pebbles beside her stone. */
+/** The pill of progress dots beside her stone. */
 export const PEBBLE = { r: 6.5, step: 17, chip: 26, pad: 10, h: 34 } as const;
 
 export function pebblePillWidth(slots: number): number {
@@ -20,21 +22,30 @@ const GAP = 96; // between two ordinary stones
 const GAP_ABOVE_HERS = 152; // room for her character to stand
 const GAP_BELOW_HERS = 106;
 const FOG = 170; // trail running on into the cloud above the last stone
-const BOTTOM = 78; // grass below stone 0
+const BOTTOM = 78; // grass below the first stone
 
-export interface StoneSpot { x: number; y: number; r: number }
+export type SpotKind = 'lesson' | 'unit' | 'start';
+
+export interface StoneSpot {
+  x: number;
+  y: number;
+  /** Half the height: a stone's radius, or half a sign's height. */
+  r: number;
+  kind: SpotKind;
+}
 
 export interface PathLayout {
   height: number;
   spots: StoneSpot[];
-  /** The top of the last stone drawn: where the fog starts thinning out. */
+  /** The top of the last thing drawn: where the fog starts thinning out. */
   fogEnd: number;
   /** The trail's points, from below the bottom edge up into the fog. */
   trail: [number, number][];
 }
 
-export function layoutPath(count: number, hers: number): PathLayout {
-  // Walk up from stone 0, then shift everything so the top is y = 0.
+export function layoutPath(kinds: SpotKind[], hers: number): PathLayout {
+  const count = kinds.length;
+  // Walk up from the first node, then shift everything so the top is y = 0.
   const raw: number[] = [];
   let y = 0;
   for (let i = 0; i < count; i++) {
@@ -43,12 +54,13 @@ export function layoutPath(count: number, hers: number): PathLayout {
   }
   const top = (raw[count - 1] ?? 0) - FOG;
   const height = -top + BOTTOM;
-  const spots = raw.map((ry, i) => ({
+  const spots = raw.map((ry, i): StoneSpot => ({
     x: Math.round(XS[i % XS.length] * PATH_W),
     y: ry - top,
-    r: i === hers ? HER_R : STONE_R,
+    r: kinds[i] === 'unit' ? SIGN.h / 2 : i === hers ? HER_R : STONE_R,
+    kind: kinds[i],
   }));
-  const lastSpot = spots[count - 1] ?? { x: PATH_W / 2, y: height - BOTTOM, r: STONE_R };
+  const lastSpot = spots[count - 1] ?? { x: PATH_W / 2, y: height - BOTTOM, r: STONE_R, kind: 'start' };
   const trail: [number, number][] = [
     [PATH_W * 0.16, height + 40],
     ...spots.map((s) => [s.x, s.y] as [number, number]),
@@ -74,15 +86,14 @@ export function smoothPath(pts: [number, number][]): string {
   return d;
 }
 
-/** Friends sit on the outside of the bend, away from the middle of the page. */
-export function friendSpot(s: StoneSpot): { x: number; y: number } {
-  const left = s.x < PATH_W / 2;
-  const off = s.r + 24;
-  const x = left ? s.x - off : s.x + off;
-  return { x: Math.max(20, Math.min(PATH_W - 20, x)), y: s.y + 4 };
+/** Which side of a spot has more room. */
+export function roomySide(s: StoneSpot): 'left' | 'right' {
+  return s.x <= PATH_W / 2 ? 'right' : 'left';
 }
 
-/** Her pebbles go on whichever side of her stone has the room. */
-export function pebbleSide(s: StoneSpot): 'left' | 'right' {
-  return s.x <= PATH_W / 2 ? 'right' : 'left';
+/** Friends sit on the outside of the bend, away from the middle of the page. */
+export function friendSpot(s: StoneSpot): { x: number; y: number } {
+  const off = s.r + 24;
+  const x = roomySide(s) === 'right' ? s.x - off : s.x + off;
+  return { x: Math.max(20, Math.min(PATH_W - 20, x)), y: s.y + 4 };
 }

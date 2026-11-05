@@ -1,39 +1,44 @@
-import { forwardRef } from 'react';
-import { TrackId } from '@/core/stages';
+import { KeyboardEvent, forwardRef } from 'react';
+import { Volume2 } from 'lucide-react';
+import { ICON_STROKE } from '@/components/ui/icons';
 import { C, KID_FONT } from '../theme';
-import { Half, PathView, StoneView } from './path';
+import { CourseView, LessonStone, PathNode, UnitProgress, UnitSign } from './path';
 import {
-  PATH_W, PEBBLE, PathLayout, StoneSpot, friendSpot, pebblePillWidth, pebbleSide, smoothPath,
+  PATH_W, PEBBLE, PathLayout, SIGN, StoneSpot, friendSpot, pebblePillWidth, roomySide, smoothPath,
 } from './layout';
 
 // The path itself, as one SVG in matte cut-paper: flat fills, each shape
-// lifted off the page by a darker copy of itself just below it.
+// lifted off the page by a darker copy of itself just below it. Every stone
+// and sign is a button: nothing on the path is locked.
 
 const STONE_BASE = '#F1E8D6';
 const STONE_SHADOW = '#CDBD9B';
 const TRAIL_EDGE = '#DCCBA8';
 const TRAIL = '#EADDC2';
 const TRAIL_TOP = '#F4ECDB';
-const MUTED = '#B9AA8A';
-
-const TRACK_COLOUR: Record<TrackId, { solid: string; soft: string }> = {
-  plus: { solid: C.plus, soft: C.plusSoft },
-  minus: { solid: C.minus, soft: C.minusSoft },
-};
-const SIGN: Record<TrackId, string> = { plus: '+', minus: '−' };
 
 interface Props {
-  view: PathView;
+  view: CourseView;
   layout: PathLayout;
   character: string;
   /** Extra drawing units on each side, so the grass and fog reach the screen's edges. */
   pad?: number;
+  onLesson: (id: string) => void;
+  onUnit: (sign: UnitSign) => void;
 }
 
-const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, layout, character, pad = 0 }, ref) {
+const fadeFor = (ahead: number) => (ahead <= 0 ? 1 : ahead === 1 ? 0.9 : ahead === 2 ? 0.7 : 0.5);
+
+const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, layout, character, pad = 0, onLesson, onUnit }, ref) {
   const { height, spots, trail, fogEnd } = layout;
   const trailD = smoothPath(trail);
   const her = spots[view.hers];
+  const herNode = view.nodes[view.hers];
+
+  const tap = (node: PathNode) => {
+    if (node.kind === 'lesson') onLesson(node.id);
+    else if (node.kind === 'unit') onUnit(node);
+  };
 
   return (
     <svg
@@ -41,7 +46,6 @@ const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, la
       viewBox={`${-pad} 0 ${PATH_W + 2 * pad} ${height}`}
       width="100%"
       style={{ display: 'block', flexShrink: 0 }}
-      aria-hidden="true"
       fontFamily={KID_FONT}
     >
       <defs>
@@ -50,41 +54,45 @@ const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, la
           <stop offset="0.35" stopColor="#F7FBFB" stopOpacity="0.95" />
           <stop offset="1" stopColor="#F7FBFB" stopOpacity="0" />
         </linearGradient>
-        {spots.map((s, i) => (
-          <clipPath key={i} id={`np-stone-${i}`}><circle cx={s.x} cy={s.y} r={s.r} /></clipPath>
-        ))}
       </defs>
 
-      <Hills height={height} spots={spots} pad={pad} />
+      <g aria-hidden="true">
+        <Hills height={height} spots={spots} pad={pad} />
+        {/* The trail: a paper strip with stepping marks along it. */}
+        <path d={trailD} fill="none" stroke={TRAIL_EDGE} strokeWidth={40} strokeLinecap="round" transform="translate(0 4)" />
+        <path d={trailD} fill="none" stroke={TRAIL} strokeWidth={38} strokeLinecap="round" />
+        <path d={trailD} fill="none" stroke={TRAIL_TOP} strokeWidth={26} strokeLinecap="round" />
+        <path d={trailD} fill="none" stroke={TRAIL} strokeWidth={9} strokeLinecap="round" strokeDasharray="1 19" />
+        <Flowers spots={spots} />
+        {view.nodes.map((n, i) => n.kind === 'lesson' && n.friend && (
+          <Friend key={`f${i}`} at={friendSpot(spots[i])} emoji={n.friend} />
+        ))}
+        {her && herNode?.kind === 'lesson' && herNode.state === 'today' && (
+          <circle cx={her.x} cy={her.y} r={her.r + 15} fill="#FFF0BC" className="np-glow" />
+        )}
+      </g>
 
-      {/* The trail: a paper strip with stepping marks along it. */}
-      <path d={trailD} fill="none" stroke={TRAIL_EDGE} strokeWidth={40} strokeLinecap="round" transform="translate(0 4)" />
-      <path d={trailD} fill="none" stroke={TRAIL} strokeWidth={38} strokeLinecap="round" />
-      <path d={trailD} fill="none" stroke={TRAIL_TOP} strokeWidth={26} strokeLinecap="round" />
-      <path d={trailD} fill="none" stroke={TRAIL} strokeWidth={9} strokeLinecap="round" strokeDasharray="1 19" />
-
-      <Flowers spots={spots} />
-
-      {view.stones.map((st) => st.friend && (
-        <Friend key={`f${st.index}`} at={friendSpot(spots[st.index])} emoji={st.friend} />
+      {/* Top to bottom, so a lower stone's shadow never sits on the one above. */}
+      {view.nodes.map((node, i) => ({ node, i })).reverse().map(({ node, i }) => (
+        <Node key={i} node={node} spot={spots[i]} hers={i === view.hers} onTap={() => tap(node)} />
       ))}
-
-      {her && <circle cx={her.x} cy={her.y} r={her.r + 15} fill="#FFF0BC" className="np-glow" />}
-
-      {[...view.stones].reverse().map((st) => <Stone key={st.index} stone={st} spot={spots[st.index]} />)}
 
       {/* Fog over the far end: the path keeps going, it never ends. */}
-      <rect x={-pad - 2} y={0} width={PATH_W + 2 * pad + 4} height={Math.max(0, fogEnd)} fill="url(#np-fog)" pointerEvents="none" />
-      <Cloud x={PATH_W * 0.3} y={58} scale={1} />
-      <Cloud x={PATH_W * 0.72} y={88} scale={0.8} />
+      <g aria-hidden="true" pointerEvents="none">
+        <rect x={-pad - 2} y={0} width={PATH_W + 2 * pad + 4} height={Math.max(0, fogEnd)} fill="url(#np-fog)" />
+        <Cloud x={PATH_W * 0.3} y={58} scale={1} />
+        <Cloud x={PATH_W * 0.72} y={88} scale={0.8} />
+      </g>
 
-      {her && view.pebbles.map((row, k) => (
-        <Pebbles key={row.track} spot={her} track={row.track} filled={row.filled} slots={row.slots}
-          dy={view.pebbles.length === 2 ? (k === 0 ? -21 : 21) : 0} />
-      ))}
+      {her && view.progress && <Progress spot={her} progress={view.progress} />}
 
       {her && (
-        <text x={her.x} y={her.y - her.r + 2} fontSize={62} textAnchor="middle" className="np-bob">
+        <text
+          x={her.x} y={her.y - her.r + 2} fontSize={62} textAnchor="middle" className="np-bob"
+          aria-hidden="true"
+          style={{ cursor: herNode?.kind === 'lesson' ? 'pointer' : undefined }}
+          onClick={herNode ? () => tap(herNode) : undefined}
+        >
           {character}
         </text>
       )}
@@ -94,91 +102,127 @@ const PathScene = forwardRef<SVGSVGElement, Props>(function PathScene({ view, la
 
 export default PathScene;
 
-function halfPath(s: StoneSpot, side: 'left' | 'right') {
-  const sweep = side === 'left' ? 0 : 1;
-  return `M${s.x} ${s.y - s.r} A${s.r} ${s.r} 0 0 ${sweep} ${s.x} ${s.y + s.r} Z`;
-}
-
-function HalfFace({ half, track, spot, index }: { half: Half; track: TrackId; spot: StoneSpot; index: number }) {
-  const side = track === 'plus' ? 'left' : 'right';
-  const d = halfPath(spot, side);
-  const col = TRACK_COLOUR[track];
-  switch (half.state) {
-    case 'passed':
-      return <path d={d} fill={col.solid} />;
-    case 'here': {
-      // Filling from the bottom as her right answers come in.
-      const level = Math.max(0.1, half.fill);
-      const h = spot.r * 2 * level;
-      const x = side === 'left' ? spot.x - spot.r : spot.x;
-      return (
-        <g>
-          <path d={d} fill={col.soft} />
-          <g clipPath={`url(#np-stone-${index})`}>
-            <rect x={x} y={spot.y + spot.r - h} width={spot.r} height={h} fill={col.solid} opacity={0.85} />
-          </g>
-          <path d={d} fill="none" stroke={col.solid} strokeWidth={3.5} strokeLinejoin="round" />
-        </g>
-      );
-    }
-    case 'ahead':
-      return (
-        <g>
-          <path d={d} fill={STONE_BASE} />
-          <path d={d} fill="none" stroke={col.solid} strokeOpacity={0.45} strokeWidth={2.5} strokeDasharray="5 5" />
-        </g>
-      );
-    default:
-      return <path d={d} fill={STONE_BASE} />;
+function Node({ node, spot, hers, onTap }: { node: PathNode; spot: StoneSpot; hers: boolean; onTap: () => void }) {
+  if (node.kind === 'start') {
+    return (
+      <g aria-hidden="true">
+        <circle cx={spot.x} cy={spot.y + 5} r={spot.r} fill={STONE_SHADOW} />
+        <circle cx={spot.x} cy={spot.y} r={spot.r} fill={STONE_BASE} />
+      </g>
+    );
   }
-}
-
-function Stone({ stone, spot }: { stone: StoneView; spot: StoneSpot }) {
-  const { x, y, r } = spot;
-  const opacity = stone.ahead === 0 ? 1 : stone.ahead === 1 ? 0.9 : 0.6;
-  const big = stone.hers;
-  const len = stone.label.length;
-  const labelSize = (big ? 30 : 21) * (len >= 3 ? 0.7 : len === 2 ? 0.9 : 1);
-  const signSize = big ? 17 : 13;
-  const signFill = (h: Half, t: TrackId) =>
-    h.state === 'passed' ? '#FFFFFF' : h.state === 'here' ? (h.fill >= 0.6 ? '#FFFFFF' : TRACK_COLOUR[t].solid) : MUTED;
+  const label = node.kind === 'lesson'
+    ? `${node.title}${node.state === 'done' ? ', done' : node.state === 'today' ? ', today' : ''}`
+    : node.title;
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(); }
+  };
   return (
-    <g opacity={opacity}>
-      <circle cx={x} cy={y + 5} r={r} fill={STONE_SHADOW} />
-      <circle cx={x} cy={y} r={r} fill={STONE_BASE} />
-      <HalfFace half={stone.plus} track="plus" spot={spot} index={stone.index} />
-      <HalfFace half={stone.minus} track="minus" spot={spot} index={stone.index} />
-      <circle cx={x} cy={y} r={r * 0.6} fill="#FFFFFF" />
-      <circle cx={x} cy={y + 1.5} r={r * 0.6} fill="none" stroke="#000" strokeOpacity={0.05} strokeWidth={2} />
-      {stone.plus.state !== 'none' && (
-        <text x={x - r * 0.8} y={y + signSize * 0.36} fontSize={signSize} fontWeight={700} textAnchor="middle" fill={signFill(stone.plus, 'plus')}>+</text>
-      )}
-      {stone.minus.state !== 'none' && (
-        <text x={x + r * 0.8} y={y + signSize * 0.36} fontSize={signSize} fontWeight={700} textAnchor="middle" fill={signFill(stone.minus, 'minus')}>−</text>
-      )}
-      <text x={x} y={y + labelSize * 0.36} fontSize={labelSize} fontWeight={600} textAnchor="middle" fill={C.ink}>{stone.label}</text>
+    <g role="button" tabIndex={0} aria-label={label} onClick={onTap} onKeyDown={onKey}
+      className="np-node" style={{ cursor: 'pointer' }} opacity={fadeFor(node.ahead)}>
+      {node.kind === 'lesson'
+        ? <Stone stone={node} spot={spot} hers={hers} />
+        : <Sign sign={node} spot={spot} />}
     </g>
   );
 }
 
-function Pebbles({ spot, track, filled, slots, dy }: { spot: StoneSpot; track: TrackId; filled: number; slots: number; dy: number }) {
-  const w = pebblePillWidth(slots);
-  const side = pebbleSide(spot);
-  const gap = 12;
-  const rawX = side === 'right' ? spot.x + spot.r + gap : spot.x - spot.r - gap - w;
-  const x0 = Math.max(4, Math.min(PATH_W - 4 - w, rawX));
-  const cy = spot.y + dy;
-  const col = TRACK_COLOUR[track].solid;
-  const firstDot = x0 + PEBBLE.pad + PEBBLE.chip + PEBBLE.step / 2 - 2;
+function Stone({ stone, spot, hers }: { stone: LessonStone; spot: StoneSpot; hers: boolean }) {
+  const { x, y, r } = spot;
+  const col = stone.colour;
+  const inner = r * 0.66;
+  const emojiSize = (hers ? 1.05 : 0.95) * r;
   return (
     <g>
+      {/* A generous, invisible hit area: her finger, not the stone's edge. */}
+      <circle className="np-hit" cx={x} cy={y} r={r + 10} fill="#000" fillOpacity={0} stroke="none" />
+      <circle cx={x} cy={y + 5} r={r} fill={STONE_SHADOW} />
+      {stone.state === 'done' && <circle cx={x} cy={y} r={r} fill={col} />}
+      {stone.state === 'today' && (
+        <>
+          <circle cx={x} cy={y} r={r} fill={STONE_BASE} />
+          <circle cx={x} cy={y} r={r} fill={col} fillOpacity={0.22} />
+          <circle cx={x} cy={y} r={r - 3} fill="none" stroke={col} strokeWidth={6} />
+        </>
+      )}
+      {stone.state === 'open' && (
+        <>
+          <circle cx={x} cy={y} r={r} fill={STONE_BASE} />
+          <circle cx={x} cy={y} r={r - 2} fill="none" stroke={col} strokeWidth={3.5} />
+        </>
+      )}
+      {stone.state === 'ahead' && (
+        <>
+          <circle cx={x} cy={y} r={r} fill={STONE_BASE} />
+          <circle cx={x} cy={y} r={r - 2} fill="none" stroke={col} strokeOpacity={0.55} strokeWidth={2.5} strokeDasharray="5 5" />
+        </>
+      )}
+      <circle cx={x} cy={y} r={inner} fill="#FFFFFF" />
+      <circle cx={x} cy={y + 1.5} r={inner} fill="none" stroke="#000" strokeOpacity={0.05} strokeWidth={2} />
+      <text x={x} y={y + emojiSize * 0.35} fontSize={emojiSize} textAnchor="middle" opacity={stone.state === 'ahead' ? 0.6 : 1}>
+        {stone.emoji}
+      </text>
+    </g>
+  );
+}
+
+/** A unit begins: a board in its colour with its picture. Tapping it says the unit's name. */
+function Sign({ sign, spot }: { sign: UnitSign; spot: StoneSpot }) {
+  const w = SIGN.w;
+  const h = SIGN.h;
+  const x0 = spot.x - w / 2;
+  const y0 = spot.y - h / 2;
+  return (
+    <g>
+      <rect className="np-hit" x={x0 - 8} y={y0 - 8} width={w + 16} height={h + 16} rx={26} fill="#000" fillOpacity={0} />
+      <rect x={x0} y={y0 + 5} width={w} height={h} rx={20} fill={sign.colour} />
+      <rect x={x0} y={y0 + 5} width={w} height={h} rx={20} fill="#000" opacity={0.22} />
+      <rect x={x0} y={y0} width={w} height={h} rx={20} fill={sign.colour} />
+      <circle cx={x0 + h / 2 + 2} cy={spot.y} r={h / 2 - 7} fill="#FFFFFF" />
+      <text x={x0 + h / 2 + 2} y={spot.y + 11} fontSize={30} textAnchor="middle">{sign.emoji}</text>
+      <Volume2 x={x0 + w - 40} y={spot.y - 13} width={26} height={26} color="#FFFFFF" strokeWidth={ICON_STROKE * 0.85} aria-hidden="true" />
+      {sign.grade && <GradeSign spot={spot} text={sign.grade} />}
+    </g>
+  );
+}
+
+/** "2nd grade", small, beside the sign where a grade's road begins. For the grown-ups. */
+function GradeSign({ spot, text }: { spot: StoneSpot; text: string }) {
+  const w = 18 + text.length * 8.6;
+  const h = 28;
+  const gap = 12;
+  const raw = roomySide(spot) === 'right' ? spot.x + SIGN.w / 2 + gap : spot.x - SIGN.w / 2 - gap - w;
+  const x0 = Math.max(4, Math.min(PATH_W - 4 - w, raw));
+  const y0 = spot.y - h / 2 - 8;
+  return (
+    <g aria-hidden="true">
+      <rect x={x0 + w / 2 - 2.5} y={y0 + h - 2} width={5} height={20} rx={2.5} fill="#B9A47E" />
+      <rect x={x0} y={y0 + 3} width={w} height={h} rx={9} fill="#000" opacity={0.07} />
+      <rect x={x0} y={y0} width={w} height={h} rx={9} fill="#FFFDF7" stroke="#E2D5BB" strokeWidth={1.5} />
+      <text x={x0 + w / 2} y={y0 + h / 2 + 5.5} fontSize={15} fontWeight={600} textAnchor="middle" fill={C.inkSoft}>{text}</text>
+    </g>
+  );
+}
+
+/** Lessons done in today's unit, as dots beside her stone. */
+function Progress({ spot, progress }: { spot: StoneSpot; progress: UnitProgress }) {
+  const slots = Math.max(1, progress.total);
+  const w = pebblePillWidth(slots);
+  const gap = 12;
+  const raw = roomySide(spot) === 'right' ? spot.x + spot.r + gap : spot.x - spot.r - gap - w;
+  const x0 = Math.max(4, Math.min(PATH_W - 4 - w, raw));
+  const cy = spot.y;
+  const col = progress.colour;
+  const chipX = x0 + PEBBLE.pad + PEBBLE.chip / 2 - 3;
+  const firstDot = x0 + PEBBLE.pad + PEBBLE.chip + PEBBLE.step / 2 - 2;
+  return (
+    <g aria-hidden="true" pointerEvents="none">
       <rect x={x0} y={cy - PEBBLE.h / 2 + 3} width={w} height={PEBBLE.h} rx={PEBBLE.h / 2} fill="#000" opacity={0.06} />
       <rect x={x0} y={cy - PEBBLE.h / 2} width={w} height={PEBBLE.h} rx={PEBBLE.h / 2} fill="#FFFFFF" opacity={0.95} />
-      <circle cx={x0 + PEBBLE.pad + PEBBLE.chip / 2 - 3} cy={cy} r={11} fill={TRACK_COLOUR[track].soft} />
-      <text x={x0 + PEBBLE.pad + PEBBLE.chip / 2 - 3} y={cy + 6.5} fontSize={19} fontWeight={700} textAnchor="middle" fill={col}>{SIGN[track]}</text>
+      <text x={chipX} y={cy + 6} fontSize={17} textAnchor="middle">{progress.emoji}</text>
       {Array.from({ length: slots }, (_, k) => (
         <circle key={k} cx={firstDot + k * PEBBLE.step} cy={cy} r={PEBBLE.r}
-          fill={k < filled ? col : '#FFFFFF'} stroke={col} strokeWidth={2.5} />
+          fill={k < progress.done ? col : '#FFFFFF'} stroke={col} strokeWidth={2.5} />
       ))}
     </g>
   );

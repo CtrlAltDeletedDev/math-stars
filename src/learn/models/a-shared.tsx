@@ -28,7 +28,7 @@ const CSS = `
 @keyframes ma-draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
 @keyframes ma-fade { from { opacity: 0 } to { opacity: 1 } }
 @keyframes ma-rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
-@keyframes ma-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(232,163,23,0) } 50% { box-shadow: 0 0 0 7px rgba(232,163,23,.28) } }
+@keyframes ma-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(232,163,23,0) } 50% { box-shadow: 0 0 0 4px rgba(232,163,23,.28) } }
 .ma-pop { animation: ma-pop .34s cubic-bezier(.34,1.56,.64,1) both }
 .ma-draw { animation: ma-draw .36s ease-out both }
 .ma-fade { animation: ma-fade .3s ease both }

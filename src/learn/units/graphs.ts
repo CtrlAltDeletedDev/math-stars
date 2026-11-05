@@ -187,7 +187,7 @@ const howManyMore: Lesson = {
     show('How many more dogs than cats? Look at the two rows lined up.', '🐶 6, 🐱 4', graph(pets, [6, 4, 3])),
     show('The dogs row goes 2 past the end of the cats row. 2 more dogs than cats.', '6 − 4 = 2', graph(pets, [6, 4, 3])),
     show('So there are 2 fewer cats than dogs.', '2 fewer cats', graph(pets, [6, 4, 3])),
-    show('How many pets in all? Put all the rows together: 6, then 4 more is 10, then 3 more is 13.', '6 + 4 + 3 = 13', graph(pets, [6, 4, 3])),
+    show('How many pets in all? Put the rows together: 6 and 4 make 10, and 3 more make 13.', '6 + 4 + 3 = 13', graph(pets, [6, 4, 3])),
     doStep({
       say: 'Add cats until there are as many cats as dogs.',
       caption: 'cats = dogs',

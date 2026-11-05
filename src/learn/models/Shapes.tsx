@@ -118,7 +118,7 @@ export function ShapeArt({ name }: { name: ShapeName }) {
 }
 
 function cols(n: number, small: boolean) {
-  if (small) return Math.min(n, 3);
+  if (small) return n <= 2 ? n : n <= 4 ? 2 : 3;
   if (n <= 4) return n;
   if (n <= 6) return 3;
   return 4;
@@ -129,7 +129,8 @@ export default function Shapes({ state, onChange, size = 'big' }: ModelProps<'sh
   const small = size === 'small';
   const n = state.items.length;
   const c = cols(n, small);
-  const cell = small ? 44 : 104;
+  // Small: one shape alone (a choice tile) is drawn big; a set of them shares about 150px.
+  const cell = small ? (n === 1 ? 110 : n === 2 ? 68 : n <= 4 ? 64 : 44) : 104;
   const gap = small ? 5 : 12;
   const picked = new Set(state.picked);
   const label = `Shapes: ${state.items.map((s, i) => (picked.has(i) ? `${s} (picked)` : s)).join(', ')}`;

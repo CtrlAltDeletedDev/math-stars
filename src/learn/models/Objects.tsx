@@ -2,7 +2,7 @@ import { CSSProperties } from 'react';
 import { ModelProps } from './types';
 import { KID_FONT } from '@/next/theme';
 import { COL, CrossX, MotionStyles, tap } from './a-shared';
-import { countObject, objectsLabel, scatterPositions } from './logic-a';
+import { countObject, objectsLabel, scatterGrid, scatterPositions } from './logic-a';
 
 // Things to count: in rows of five (so 7 is "a row and 2"), or `scattered`
 // in a heap that is the same every time for the same count. Crossed-out
@@ -81,8 +81,7 @@ export default function Objects({ state, onChange, size = 'big' }: ModelProps<'o
 
   if (state.scattered) {
     const pos = scatterPositions(count);
-    const cols = Math.max(2, Math.ceil(Math.sqrt(count * 4 / 3)));
-    const rows = Math.ceil(count / cols) + (count > 3 ? 1 : 0);
+    const { cols, rows } = scatterGrid(count);
     // Each thing gets the space of one cell of the loose grid; the heap is 4:3.
     const cellW = Math.min(1 / cols, 0.75 / rows); // as a fraction of the width
     const boxPx = Math.min(S.box, S.cell * 5);
@@ -114,7 +113,7 @@ export default function Objects({ state, onChange, size = 'big' }: ModelProps<'o
         rowGap: size === 'big' ? 6 : 2,
         containerType: 'inline-size',
       }}>
-        {Array.from({ length: count }, (_, i) => item(i, { aspectRatio: '1', width: '100%' }, `${(100 / cols) * 0.6}cqw`))}
+        {Array.from({ length: count }, (_, i) => item(i, { aspectRatio: '1 / 0.9', width: '100%' }, `${(100 / cols) * 0.6}cqw`))}
       </div>
     </div>
   );

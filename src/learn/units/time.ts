@@ -174,7 +174,7 @@ const halfPast: Lesson = {
     show('Now the long hand goes halfway round, down to 6. That is 30 minutes.', '30 minutes', clock(3, 30)),
     show('Look at the short hand. It moved too: halfway from 3 to 4.', 'between 3 and 4', clock(3, 30)),
     show('It is half past 3. We write 3:30.', 'half past 3 = 3:30', clock(3, 30)),
-    show('The short hand is near 4, but it is not 4 o\'clock yet. The hour is the number it has just passed.', 'still 3', clock(3, 30)),
+    show('The short hand is near 4, but it is not 4 yet. The hour is the number it just passed.', 'still 3', clock(3, 30)),
     setStep(3, 30, clock(3, 0, 30), 'Make it half past 3. Move the long hand halfway round.',
       'Long hand on 6, short hand just past 3. Half past 3.'),
     setStep(7, 30, clock(12, 0, 30), 'Show half past 7.',

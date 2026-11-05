@@ -2,7 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { Learner, newLearner } from '@/core/learner';
 import { FactRecord } from '@/core/facts';
 import { daysAgoString, todayString } from '@/engine/dates';
+import { Lesson, Unit } from '@/learn/types';
+import { GradeCourse } from '@/learn/units';
+import { COURSE } from '@/learn/course';
 import {
+  courseReport, lessonRow, lessonsPassedThisWeek, lessonsSentence, suggestNextGrade, unitInCourse,
   addCellId, addDays, backupFileName, factDetail, factText, lastDays, parseFact, subCellId,
   todayLine, trackReport, trickyFacts, weekStats, weekSummary, whenSaid, worksheet,
 } from './report';
@@ -217,5 +221,114 @@ describe('the worksheet', () => {
 
   it('names the backup by local date', () => {
     expect(backupFileName(TODAY)).toBe('math-stars-backup-2026-11-05.json');
+  });
+});
+
+// A course of our own, so these hold while the real units are still being written.
+const lesson = (id: string, title: string, over: Partial<Lesson> = {}): Lesson => ({
+  id, title, goal: `Can ${title.toLowerCase()}.`, emoji: '🧪', teach: [],
+  practice: () => ({ id: 'add-2+3', say: 's', prompt: '2 + 3 = ?', answer: '5', input: 'number' }),
+  ...over,
+});
+const unit = (id: string, lessons: Lesson[]): Unit => ({ id, title: id, emoji: '🧪', about: `All about ${id}.`, colour: '#123456', lessons });
+const FIXTURE: GradeCourse[] = [
+  {
+    grade: '1', title: '1st grade', units: [
+      unit('u-add', [
+        lesson('fx-plus-one', 'Adding one', { placedBy: { track: 'plus', stage: 0 } }),
+        lesson('fx-both', 'Both ways', { placedBy: [{ track: 'plus', stage: 1 }, { track: 'minus', stage: 1 }] }),
+        lesson('fx-make-ten', 'Make a ten'),
+        lesson('fx-count-back', 'Counting back'),
+      ]),
+      unit('u-empty', []),
+      unit('u-clock', [lesson('fx-clock', 'Telling time')]),
+    ],
+  },
+  { grade: '2', title: '2nd grade', units: [unit('u-later', [])] },
+];
+const rec = (done: string | null, best = 1, tries = 1) => ({ tries, best, done, last: done ?? TODAY });
+
+describe('her course', () => {
+  it('marks each lesson passed, already known from her path, started or not yet', () => {
+    const l = learner((x) => {
+      x.tracks.plus.stage = 3;
+      x.lessons['fx-make-ten'] = rec(ago(2), 0.75, 2);
+      x.lessons['fx-count-back'] = rec(null, 0.5, 1);
+    });
+    const [plusOne, both, makeTen, countBack] = FIXTURE[0].units[0].lessons.map((x) => lessonRow(l, x));
+    expect(plusOne.status).toEqual({ kind: 'placed' });
+    expect(both.status).toEqual({ kind: 'new' }); // past plus 1, not past minus 1
+    expect(makeTen).toMatchObject({ status: { kind: 'passed', on: ago(2) }, best: 75, tries: 2 });
+    expect(countBack).toMatchObject({ status: { kind: 'started' }, best: 50, tries: 1 });
+    l.tracks.minus.stage = 2;
+    expect(lessonRow(l, both.lesson).status).toEqual({ kind: 'placed' });
+  });
+
+  it('calls a passed lesson passed even when her path would also cover it', () => {
+    const l = learner((x) => { x.tracks.plus.stage = 5; x.lessons['fx-plus-one'] = rec(ago(1)); });
+    expect(lessonRow(l, FIXTURE[0].units[0].lessons[0]).status).toEqual({ kind: 'passed', on: ago(1) });
+  });
+
+  it('shows no best score before her first check', () => {
+    const l = learner((x) => { x.lessons['fx-clock'] = { tries: 0, best: 0, done: null, last: TODAY }; });
+    expect(lessonRow(l, FIXTURE[0].units[2].lessons[0])).toMatchObject({ status: { kind: 'started' }, best: null, tries: 0 });
+  });
+
+  it('counts done per unit and grade, leaves out units with no lessons, and knows her grade', () => {
+    const l = learner((x) => { x.tracks.plus.stage = 1; x.lessons['fx-make-ten'] = rec(ago(0)); });
+    const [first, second] = courseReport(l, FIXTURE);
+    expect(first.units.map((u) => [u.unit.id, u.done, u.total])).toEqual([['u-add', 2, 4], ['u-clock', 0, 1]]);
+    expect([first.done, first.total, first.place]).toEqual([2, 5, 'hers']);
+    expect([second.units.length, second.total, second.place]).toEqual([0, 0, 'ahead']);
+    l.profile.grade = '2';
+    expect(courseReport(l, FIXTURE).map((g) => g.place)).toEqual(['earlier', 'hers']);
+  });
+
+  it('suggests the next grade once four in five of her grade are done', () => {
+    const l = learner((x) => {
+      x.tracks.plus.stage = 2;
+      x.tracks.minus.stage = 2;
+      x.lessons['fx-make-ten'] = rec(ago(3));
+    });
+    expect(suggestNextGrade(l, FIXTURE)).toBeNull(); // 3 of 5
+    l.lessons['fx-count-back'] = rec(ago(1));
+    expect(suggestNextGrade(l, FIXTURE)).toBe('2'); // 4 of 5
+    l.profile.grade = '2';
+    expect(suggestNextGrade(l, FIXTURE)).toBeNull(); // nothing above 2nd, and no 2nd grade lessons yet
+  });
+
+  it('finds the unit and grade of a lesson', () => {
+    expect(unitInCourse('fx-clock', FIXTURE)?.unit.id).toBe('u-clock');
+    expect(unitInCourse('fx-clock', FIXTURE)?.grade.grade).toBe('1');
+    expect(unitInCourse('nope', FIXTURE)).toBeNull();
+  });
+
+  it('lists lessons passed in the last seven local days, oldest first', () => {
+    const l = learner((x) => {
+      x.lessons['fx-count-back'] = rec(ago(0));
+      x.lessons['fx-make-ten'] = rec(ago(3));
+      x.lessons['fx-clock'] = rec(ago(7)); // eight days counting today: out
+      x.lessons['fx-plus-one'] = rec(null, 0.5);
+      x.lessons['gone-from-course'] = rec(ago(1));
+    });
+    expect(lessonsPassedThisWeek(l, TODAY, FIXTURE).map((x) => x.id)).toEqual(['fx-make-ten', 'fx-count-back']);
+    expect(lessonsSentence(l, TODAY, FIXTURE)).toBe('Passed 2 lessons this week: Make a ten, Counting back.');
+    expect(lessonsSentence(newLearner(), TODAY, FIXTURE)).toBeNull();
+  });
+
+  it('puts the lessons first in the week summary, in course order, and names only three', () => {
+    const l = learner((x) => {
+      for (const id of ['fx-plus-one', 'fx-both', 'fx-make-ten', 'fx-count-back', 'fx-clock']) x.lessons[id] = rec(ago(1));
+      x.days[ago(1)] = { answered: 20, right: 15, walks: 2 };
+    });
+    expect(weekSummary(l, TODAY, FIXTURE)).toBe(
+      'Passed 5 lessons this week: Adding one, Both ways, Make a ten and 2 more. 20 sums, 75% right first try.',
+    );
+  });
+
+  it('reads the real course without trouble while its units are being written', () => {
+    const report = courseReport(newLearner(), COURSE);
+    expect(report.length).toBe(COURSE.length);
+    for (const g of report) for (const u of g.units) expect(u.total).toBeGreaterThan(0);
   });
 });

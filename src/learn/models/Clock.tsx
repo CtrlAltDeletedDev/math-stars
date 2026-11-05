@@ -18,6 +18,8 @@ const R_CASE = 124;
 const R_FACE = 110;
 const HOUR_LEN = 56;
 const MIN_LEN = 94;
+/** Grab zones along the hands: nearer the middle than this is the hour hand, further out the minute hand. */
+const HOUR_SPLIT = HOUR_LEN + 6;
 export const HOUR_COLOUR = C.navy;
 export const MINUTE_COLOUR = '#EC8526';
 
@@ -34,13 +36,13 @@ function useUnwrapped(angle: number): number {
 
 function HourHand() {
   return <path d={`M${CX - 7.5},${CX + 12} L${CX - 6},${CX - HOUR_LEN + 10} Q${CX},${CX - HOUR_LEN - 4} ${CX + 6},${CX - HOUR_LEN + 10} L${CX + 7.5},${CX + 12} Z`}
-    fill={HOUR_COLOUR} stroke="#FFFDF6" strokeWidth={1.6} paintOrder="stroke" />;
+    fill={HOUR_COLOUR} stroke="#FFFDF6" strokeWidth={1.6} paintOrder="stroke" pointerEvents="none" />;
 }
 
 function MinuteHand() {
   // Thin, with a white edge, so a number it crosses still reads either side of it.
   return <path d={`M${CX - 3.6},${CX + 16} L${CX - 1.8},${CX - MIN_LEN + 6} Q${CX},${CX - MIN_LEN - 3} ${CX + 1.8},${CX - MIN_LEN + 6} L${CX + 3.6},${CX + 16} Z`}
-    fill={MINUTE_COLOUR} stroke="#FFFDF6" strokeWidth={1.6} paintOrder="stroke" />;
+    fill={MINUTE_COLOUR} stroke="#FFFDF6" strokeWidth={1.6} paintOrder="stroke" pointerEvents="none" />;
 }
 
 /** The face, numbers and marks: everything but the hands. */
@@ -140,13 +142,14 @@ export default function Clock({ state, onChange, size = 'big' }: ModelProps<'clo
       <Face small={size === 'small'} />
       <g className="mb-anim" style={handStyle(hourAngle, 'hour')}>
         <HourHand />
-        {live && <line x1={CX} y1={CX} x2={CX} y2={CX - HOUR_LEN - 6} stroke="transparent" strokeWidth={44} strokeLinecap="round"
+        {live && <line x1={CX} y1={CX + 14} x2={CX} y2={CX - HOUR_SPLIT} stroke="transparent" strokeWidth={46}
           style={{ cursor: 'grab' }} onPointerDown={grab('hour')} aria-hidden />}
       </g>
       <g className="mb-anim" style={handStyle(minAngle, 'minute')}>
         <MinuteHand />
-        {live && <line x1={CX} y1={CX - HOUR_LEN - 2} x2={CX} y2={CX - MIN_LEN - 8} stroke="transparent" strokeWidth={44} strokeLinecap="round"
-          style={{ cursor: 'grab' }} onPointerDown={grab('minute')} aria-hidden />}
+        {/* On an o'clock-only clock the minute hand stays on 12, so grabbing it sets the hour instead. */}
+        {live && <line x1={CX} y1={CX - HOUR_SPLIT} x2={CX} y2={CX - MIN_LEN - 14} stroke="transparent" strokeWidth={46}
+          style={{ cursor: 'grab' }} onPointerDown={grab(snap === 60 ? 'hour' : 'minute')} aria-hidden />}
       </g>
       <circle cx={CX} cy={CX} r={10} fill={C.ink} pointerEvents="none" />
       <circle cx={CX} cy={CX} r={3.5} fill="#FFFDF6" pointerEvents="none" />
@@ -159,7 +162,7 @@ export default function Clock({ state, onChange, size = 'big' }: ModelProps<'clo
     <div role="group" aria-label={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, maxWidth: '100%' }}>
       <ModelStyles />
       {face}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Stepper hand="hour" onStep={(by) => onChange!(stepHour(state, by))} />
         {snap !== 60 && <Stepper hand="minute" onStep={(by) => onChange!(stepMinute(state, by))} />}
       </div>
@@ -171,12 +174,12 @@ export default function Clock({ state, onChange, size = 'big' }: ModelProps<'clo
 function Stepper({ hand, onStep }: { hand: 'hour' | 'minute'; onStep: (by: number) => void }) {
   const colour = hand === 'hour' ? HOUR_COLOUR : MINUTE_COLOUR;
   const soft = hand === 'hour' ? '#E3E7F7' : '#FDE8D4';
-  const btn = { ...bigButton(58), fontSize: 36, color: colour, borderColor: colour + '55', boxShadow: `0 4px 0 ${colour}40` };
+  const btn = { ...bigButton(54), fontSize: 34, color: colour, borderColor: colour + '55', boxShadow: `0 4px 0 ${colour}40` };
   const name = hand === 'hour' ? 'hour hand' : 'minute hand';
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: 6, borderRadius: 26, background: soft }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: 5, borderRadius: 26, background: soft }}>
       <button className="mb-btn" style={btn} aria-label={`Move the ${name} back`} onClick={() => onStep(-1)}>−</button>
-      <svg width={44} height={44} viewBox="0 0 44 44" aria-hidden>
+      <svg width={40} height={40} viewBox="0 0 44 44" aria-hidden>
         <circle cx={22} cy={22} r={20} fill="#FFFDF6" stroke="#4FA3D9" strokeWidth={3} />
         {hand === 'hour'
           ? <path d="M18.5,24 L19,13 Q22,9 25,13 L25.5,24 Z" fill={colour} transform="rotate(60 22 22)" />
