@@ -5,6 +5,40 @@ TypeScript strict, no framework beyond that. It runs in a browser and installs a
 there is **no Expo, no React Native, and no native build**. Ignore any older instructions
 saying otherwise.
 
+## Two apps, for now: the Number Path rebuild
+
+`src/core/` + `src/next/` are the new app ("Number Path"), mounted at `/#/next` and opened on a
+device once a grown-up flips the switch (old Parent screen → "Use the new version on this device",
+stored in `mathstars_shell`). The old app below still runs everything else, and the new app's
+"More games" door opens the old topic screens. The plan is to make the new app the default once
+she has used it for a week, then delete the old shell (see the PR that added this).
+
+Rules for the new app:
+
+- **One learner, one key.** `src/core/learner.ts` is the only model: two tracks (plus, minus),
+  one record per fact, days, settings. Pure functions; no React. Saved by `src/next/store.ts`
+  under `mathstars_learner_v1`, synchronously on every change.
+- **Never write the old save.** The new app reads `mathstars_progress_v2` once, on first run, to
+  bring her across (`core/migrate.ts`), and never writes, changes or deletes it. `store.test.ts`
+  guards this. Switching back to the old app must find everything as she left it.
+- **Stages are the old rungs, index for index.** `core/stages.ts` has the v7 adding / taking-away
+  rungs with the same labels in the same order, so migration needs no remap (`core.test.ts`
+  holds the two lists together). Append stages freely; inserting one needs a migration.
+- **She types the answer.** Sums use a number pad (`next/ui/NumberPad.tsx`), never four choices,
+  and there is no auto-submit on digit count. A typed wrong answer is tagged by `classifyTyped`.
+- **First answer is what's recorded.** A wrong first answer gets a kind retry (amber, the sign
+  glows, the picture comes up, the strategy hint is spoken); a second shows and says the answer.
+  Only the first goes to the fact record and the track. Every footprint fills: she found it.
+- **Look-backs are part of every walk.** Every fourth sum is a due review or a warm-up from a
+  stone she passed; neither moves the track window. No warm-ups while a track is still placing
+  her. A grown-up's "this week" pick (`learner.focus`) takes over the walk's turns for 7 days.
+- **Speed is silent.** Answer times decide "knows it" on the grown-ups grid (`core/facts.ts`,
+  measured against her own +1 times, on two days). She never sees a clock.
+- **Speech starts from the Go tap** (`next/platform/speech.ts`, `unlockSpeech`), which is what
+  lets auto-read work on iPad Safari for the rest of the visit.
+- **Days end; the path doesn't.** A walk ends on a card; when today's sun is full the big button
+  is Done. Passed stones show as filled, with a friend; the next stone is always there.
+
 ## Commands
 
 ```

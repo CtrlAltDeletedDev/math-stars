@@ -17,6 +17,7 @@ import InstallBanner from '@/components/ui/InstallBanner';
 import { GAME_CONFIG } from '@/constants/gameConfig';
 import { Medal, Minus, Palette, Plus, ShoppingBag, Shuffle } from 'lucide-react';
 import { ICON_STROKE } from '@/components/ui/icons';
+import { usesNewApp } from '@/next/store';
 
 export default function Home() {
   const { progress, isLoaded, toggleMusic } = useProgress();
@@ -45,6 +46,8 @@ export default function Home() {
 
   // A <Navigate> element, not a navigate() call: routing during render is a side
   // effect in the render phase and React warns about it.
+  // A device switched to the new app opens it, whatever route brought it here.
+  if (usesNewApp()) return <Navigate to="/next" replace />;
   if (!progress.characterId) return <Navigate to="/character-select" replace />;
   // A grown-up picks the grade before anything else, so the topic grid below is
   // already the right size the first time she sees it.

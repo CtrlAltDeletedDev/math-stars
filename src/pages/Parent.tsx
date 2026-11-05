@@ -19,6 +19,7 @@ import { workingOn, topMistakes, hardestFacts, daysPlayedIn } from '@/engine/rep
 import { ArrowLeft, ArrowRight, BookOpen, CalendarDays, ChartColumn, Check, Download, FileText, Flame, Lightbulb, Lock, Medal, Star, Timer, Trophy, Turtle, Upload } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ICON_CENTER, ICON_STROKE } from '@/components/ui/icons';
+import { setUsesNewApp } from '@/next/store';
 
 export default function Parent() {
   const navigate = useNavigate();
@@ -153,6 +154,18 @@ export default function Parent() {
           <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
             <ChartColumn size={28} strokeWidth={ICON_STROKE} aria-hidden /> Parent Dashboard
           </div>
+        </div>
+
+        {/* The new app, behind a per-device switch while she tries it. */}
+        <div style={{ background: '#FBF6EC', borderRadius: 20, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ fontFamily: 'Nunito', fontWeight: 800, fontSize: 19, color: '#22252B' }}>Try the new Math Stars</div>
+          <div style={{ fontFamily: 'Nunito', fontSize: 14, color: '#5B6270' }}>
+            Her path of plus and minus steps, one Go button, and sums she types on a number pad. Her place moves across; nothing here is changed or deleted, and you can switch back any time from its grown-ups screen.
+          </div>
+          <button
+            onClick={() => { setUsesNewApp(true); navigate('/next'); }}
+            style={{ background: '#2E9E5B', color: '#fff', border: 'none', borderRadius: 14, padding: '12px 16px', minHeight: 48, fontFamily: 'Nunito', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}
+          >Use the new version on this device</button>
         </div>
 
         <PlusMinusCard progress={progress} />

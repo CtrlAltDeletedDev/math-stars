@@ -16,6 +16,8 @@ import { X } from 'lucide-react';
 interface Props {
   prompt: string;
   type: string;
+  /** Bigger frames for a big screen. 1 is the size every old screen uses. */
+  scale?: number;
 }
 
 const FIRST = '#2EAD9F';
@@ -23,8 +25,8 @@ const SECOND = '#3D6FD9';
 const CROSS = '#E5484D';
 const FRAME = '#4A5766';
 const EMPTY = '#F4F6FA';
-const CELL = 30;
-const GAP = 4;
+const BASE_CELL = 30;
+const BASE_GAP = 4;
 
 export function parseFact(prompt: string, type: string): [number, number] | null {
   if (type !== 'addition' && type !== 'subtraction') return null;
@@ -48,7 +50,7 @@ export function hasTenFrames(prompt: string, type: string): boolean {
 
 type Cell = { fill: 'first' | 'second' | null; crossed: boolean };
 
-function Frame({ cells }: { cells: Cell[] }) {
+function Frame({ cells, CELL, GAP }: { cells: Cell[]; CELL: number; GAP: number }) {
   const w = CELL * 5 + GAP * 6;
   const h = CELL * 2 + GAP * 3;
   return (
@@ -78,8 +80,10 @@ function Frame({ cells }: { cells: Cell[] }) {
   );
 }
 
-export default function TenFrameAid({ prompt, type }: Props) {
+export default function TenFrameAid({ prompt, type, scale = 1 }: Props) {
   if (!hasTenFrames(prompt, type)) return null;
+  const CELL = Math.round(BASE_CELL * scale);
+  const GAP = Math.round(BASE_GAP * scale);
   const [a, b] = parseFact(prompt, type)!;
   const total = type === 'subtraction' ? a : a + b;
   const frames = total > 10 ? 2 : 1;
@@ -97,7 +101,7 @@ export default function TenFrameAid({ prompt, type }: Props) {
     <div role="img" aria-label={label} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
       {Array.from({ length: frames }, (_, f) => (
         <div key={f} style={{ position: 'relative' }}>
-          <Frame cells={cells.slice(f * 10, f * 10 + 10)} />
+          <Frame cells={cells.slice(f * 10, f * 10 + 10)} CELL={CELL} GAP={GAP} />
           {/* The crosses sit over the SVG so they stay crisp at any size. */}
           {cells.slice(f * 10, f * 10 + 10).map((c, i) => c.crossed && (
             <X
