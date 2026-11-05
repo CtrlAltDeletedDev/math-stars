@@ -314,6 +314,9 @@ describe('her course', () => {
     expect(lessonsPassedThisWeek(l, TODAY, FIXTURE).map((x) => x.id)).toEqual(['fx-make-ten', 'fx-count-back']);
     expect(lessonsSentence(l, TODAY, FIXTURE)).toBe('Passed 2 lessons this week: Make a ten, Counting back.');
     expect(lessonsSentence(newLearner(), TODAY, FIXTURE)).toBeNull();
+    const commas: GradeCourse[] = [{ grade: '1', title: '1st grade', units: [unit('u', [lesson('a', 'More, fewer, the same'), lesson('b', 'Teen numbers')])] }];
+    const both = learner((x) => { x.lessons.a = rec(ago(1)); x.lessons.b = rec(ago(1)); });
+    expect(lessonsSentence(both, TODAY, commas)).toBe('Passed 2 lessons this week: More, fewer, the same; Teen numbers.');
   });
 
   it('puts the lessons first in the week summary, in course order, and names only three', () => {

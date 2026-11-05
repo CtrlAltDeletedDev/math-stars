@@ -371,6 +371,6 @@ export const UNIT: Unit = {
   title: 'Shapes and halves',
   emoji: '🔷',
   about: 'Naming flat and solid shapes, sorting them by sides and corners, and cutting shapes into equal halves and fourths.',
-  colour: '#D81B60',
+  colour: '#AB47BC',
   lessons: [flatShapes, sidesAndCorners, sorting, solids, halves, fourths],
 };

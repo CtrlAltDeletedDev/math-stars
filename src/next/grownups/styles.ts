@@ -77,7 +77,7 @@ export const css = `
 .gu-focus { margin-top: 10px; }
 .gu-focus .on { display: flex; align-items: center; gap: 10px; justify-content: space-between; border-radius: 12px; padding: 8px 8px 8px 12px; font-size: 15px; }
 .gu-focus .pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: ${TILE}; border-radius: 12px; padding: 10px; }
-.gu-focus select { font: inherit; font-size: 15px; min-height: 44px; padding: 6px 10px; border-radius: 10px; border: 2px solid #E2D9C7; background: #fff; color: ${INK}; flex: 1 1 220px; min-width: 0; }
+.gu-focus select { font: inherit; font-size: 15px; min-height: 44px; padding: 6px 10px; border-radius: 10px; border: 2px solid #E2D9C7; background: #fff; color: ${INK}; flex: 1 1 220px; min-width: 0; max-width: 100%; }
 
 /* group headings: the course, then facts practice */
 .gu .gu-group { font-size: 22px; font-weight: 700; color: ${INK}; letter-spacing: 0; text-transform: none; margin: 0; padding: 26px 0 2px; border-top: 2px solid ${INK}; }
@@ -97,8 +97,8 @@ export const css = `
 .gu-grade .place { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 9px; background: ${TRACK_BG}; color: ${SOFT}; }
 .gu-grade .place.hers { background: ${C.goSoft}; color: #174D2E; }
 .gu-grade .cnt { margin-left: auto; font-size: 14px; color: ${SOFT}; }
-.gu-units { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: start; }
-.gu-unit { border: 1.5px solid ${RULE}; border-radius: 14px; background: #fff; }
+.gu-units { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
+.gu-unit { min-width: 0; border: 1.5px solid ${RULE}; border-radius: 14px; background: #fff; }
 .gu-unit.open { border-color: #DCD3C1; }
 .gu .gu-unit .hd { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 12px 12px 12px 14px; border-radius: 14px; min-height: 56px; }
 .gu-unit .em { font-size: 26px; line-height: 1; width: 30px; text-align: center; flex: none; margin-top: 2px; }
@@ -191,7 +191,7 @@ export const css = `
 @media (min-width: 720px) {
   .gu h1 { font-size: 32px; }
   .gu .gu-btn.go .w { display: inline; }
-  .gu-units { grid-template-columns: 1fr 1fr; }
+  .gu-units { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .gu-unit.open { grid-column: 1 / -1; }
   .gu-two { grid-template-columns: 1fr 1fr; gap: 32px; }
   .gu-gridbox { --cell: 30px; --gap: 3px; }

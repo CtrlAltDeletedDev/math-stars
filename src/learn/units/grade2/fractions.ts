@@ -7,6 +7,6 @@ export const UNIT: Unit = {
   title: 'Halves, thirds and fourths',
   emoji: '🍕',
   about: 'Shapes cut into halves, thirds and fourths, and that equal shares can look different.',
-  colour: '#D81B60',
+  colour: '#AB47BC',
   lessons: [],
 };

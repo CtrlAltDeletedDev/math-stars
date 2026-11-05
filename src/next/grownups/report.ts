@@ -523,7 +523,9 @@ export function lessonsSentence(l: Learner, today: string, course: GradeCourse[]
   const done = lessonsPassedThisWeek(l, today, course);
   if (!done.length) return null;
   const SHOW = 3;
-  const names = done.slice(0, SHOW).map((x) => x.title).join(', ');
+  const titles = done.slice(0, SHOW).map((x) => x.title);
+  // "More, fewer, the same" is one title: keep the list readable around it.
+  const names = titles.join(titles.some((t) => t.includes(',')) ? '; ' : ', ');
   const more = done.length > SHOW ? ` and ${done.length - SHOW} more` : '';
   return `Passed ${plural(done.length, 'lesson')} this week: ${names}${more}.`;
 }

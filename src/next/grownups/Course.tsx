@@ -24,7 +24,7 @@ function statusText(r: LessonRow): string {
   const score = r.best !== null ? ` · best ${r.best}% · ${tries}` : '';
   switch (r.status.kind) {
     case 'passed': return `Passed ${shortDate(r.status.on)}${score}`;
-    case 'placed': return 'Already knew this, from her plus and minus path';
+    case 'placed': return 'Already knew this (from her path)';
     case 'started': return r.best !== null ? `Not passed yet${score}` : 'Started, not reached the check yet';
     default: return 'Not yet';
   }
