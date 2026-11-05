@@ -44,9 +44,25 @@ export interface Focus {
   until: string;
 }
 
+/** How a lesson went. Sparse: an entry exists once she has started it. */
+export interface LessonRecord {
+  /** Times she has reached the check. */
+  tries: number;
+  /** Her best check score, 0..1. */
+  best: number;
+  /** The day she first passed the check; null until then. */
+  done: string | null;
+  /** The last day she worked on it. */
+  last: string;
+}
+
 export interface Learner {
   schema: typeof LEARNER_SCHEMA;
   profile: Profile;
+  /** The course: how each lesson she has started went. See src/learn/progress.ts. */
+  lessons: Record<string, LessonRecord>;
+  /** A grown-up's pick for today's lesson, until she passes it. */
+  pinnedLesson: string | null;
   tracks: Record<TrackId, TrackState>;
   facts: Record<string, FactRecord>;
   days: Record<string, DayRecord>;
@@ -63,6 +79,8 @@ export function newLearner(): Learner {
       name: '', characterId: null, grade: '1', readAloud: true, sound: true,
       walkLength: 10, pictures: 'auto', pin: null, dailyWalks: 3,
     },
+    lessons: {},
+    pinnedLesson: null,
     tracks: { plus: newTrack(), minus: newTrack() },
     facts: {},
     days: {},
@@ -109,7 +127,7 @@ function prune(days: Record<string, DayRecord>, today: string): Record<string, D
   return Object.fromEntries(Object.entries(days).filter(([d]) => d >= oldest));
 }
 
-function bumpStreak(s: Learner['streak'], today: string): Learner['streak'] {
+export function bumpStreak(s: Learner['streak'], today: string): Learner['streak'] {
   if (s.last === today) return s;
   const yesterday = daysAgoString(1, new Date(`${today}T12:00:00`));
   const current = s.last === yesterday ? s.current + 1 : 1;

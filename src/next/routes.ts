@@ -6,4 +6,7 @@ export const ROUTES = {
   grownUps: '/next/grown-ups',
   more: '/next/more',
   start: '/next/start',
+  lesson: (id: string) => `/next/lesson/${id}`,
+  /** Every model, for the people building them. Not linked from her screens. */
+  gallery: '/next/gallery',
 } as const;
