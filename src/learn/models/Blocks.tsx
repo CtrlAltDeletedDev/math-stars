@@ -89,7 +89,8 @@ export default function Blocks({ state, onChange, size = 'big' }: ModelProps<'bl
   const leavingOnes = useLeaving(ones);
   const shownOnes = trading ? ones : leavingOnes;
 
-  const tensSlots = Math.max(tens, 1, live ? Math.min(maxTens, 10) : Math.min(state.maxTens ?? 0, 10));
+  // Room for a few rods (more as she adds them), so the mat is not a sea of empty space.
+  const tensSlots = Math.max(tens + (live && tens < maxTens ? 1 : 0), live ? Math.min(maxTens, 4) : 2);
   const groups = ones > 10 || state.canTrade || (live && maxOnesOf(state) > 10) ? 2 : 1;
   const L = layout(tensSlots, groups);
   const box = svgBox(L.vbW, L.vbH, size === 'small' ? 0.55 : 1.45);

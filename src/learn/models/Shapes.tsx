@@ -136,7 +136,7 @@ export default function Shapes({ state, onChange, size = 'big' }: ModelProps<'sh
 
   return (
     <div role={live ? 'group' : 'img'} aria-label={label}
-      style={{ display: 'grid', gridTemplateColumns: `repeat(${c}, minmax(0, ${cell}px))`, gap, justifyContent: 'center', width: c * cell + (c - 1) * gap, maxWidth: '100%', touchAction: 'manipulation' }}>
+      style={{ display: 'grid', gridTemplateColumns: `repeat(${c}, minmax(0, ${cell}px))`, gap, justifyContent: 'center', maxWidth: '100%', touchAction: 'manipulation' }}>
       <ModelStyles />
       {state.items.map((name, i) => {
         const on = picked.has(i);

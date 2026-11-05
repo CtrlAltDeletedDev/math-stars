@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { STAGES, TRACKS, TrackId, ceilingFor, topStage } from './stages';
 import { SKILLS_BY_ID } from '@/data/skills';
 import { ceilingFor as oldCeiling } from '@/data/grades';
@@ -265,15 +265,36 @@ describe('a child the path has to find', () => {
   }
 
   it('reaches her level within a few walks and settles there', () => {
+    // Seeded, so the same ten children are simulated every run: a random
+    // test that fails one run in fifty is worse than none.
+    let seed = 20261105;
+    const rng = () => {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const spy = vi.spyOn(Math, 'random').mockImplementation(rng);
+    try {
+    const reached: number[] = [];
     for (let run = 0; run < 10; run++) {
       const { l, firstReached } = simulate(5, 15);
       expect(firstReached, 'found her level').toBeGreaterThan(0);
-      // About five answers a stone on each track at 95%: five stones in under
-      // eight walks of ten, i.e. two or three days for a brand-new child.
-      expect(firstReached).toBeLessThanOrEqual(80);
+      reached.push(firstReached);
+      // No child, however unlucky, is left climbing for most of two weeks.
+      expect(firstReached).toBeLessThanOrEqual(120);
       expect(standingOn(l, 'plus')).toBeGreaterThanOrEqual(4);
       expect(standingOn(l, 'plus')).toBeLessThanOrEqual(6);
       expect(passedStones(l).plus.has(4)).toBe(true);
+    }
+    // About five answers a stone on each track at 95%: the typical child is
+    // there in about seven walks of ten -- two or three days for a new child.
+    // Asserted on the median, not every run, because single runs are random
+    // and an unlucky one past 80 made this fail about once in twelve.
+    const median = [...reached].sort((a, b) => a - b)[5];
+    expect(median).toBeLessThanOrEqual(70);
+    } finally {
+      spy.mockRestore();
     }
   });
 });

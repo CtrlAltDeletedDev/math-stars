@@ -33,11 +33,14 @@ function useUnwrapped(angle: number): number {
 }
 
 function HourHand() {
-  return <path d={`M${CX - 7.5},${CX + 12} L${CX - 6},${CX - HOUR_LEN + 10} Q${CX},${CX - HOUR_LEN - 4} ${CX + 6},${CX - HOUR_LEN + 10} L${CX + 7.5},${CX + 12} Z`} fill={HOUR_COLOUR} />;
+  return <path d={`M${CX - 7.5},${CX + 12} L${CX - 6},${CX - HOUR_LEN + 10} Q${CX},${CX - HOUR_LEN - 4} ${CX + 6},${CX - HOUR_LEN + 10} L${CX + 7.5},${CX + 12} Z`}
+    fill={HOUR_COLOUR} stroke="#FFFDF6" strokeWidth={1.6} paintOrder="stroke" />;
 }
 
 function MinuteHand() {
-  return <path d={`M${CX - 4},${CX + 16} L${CX - 2.6},${CX - MIN_LEN + 8} Q${CX},${CX - MIN_LEN - 3} ${CX + 2.6},${CX - MIN_LEN + 8} L${CX + 4},${CX + 16} Z`} fill={MINUTE_COLOUR} />;
+  // Thin, with a white edge, so a number it crosses still reads either side of it.
+  return <path d={`M${CX - 3.6},${CX + 16} L${CX - 1.8},${CX - MIN_LEN + 6} Q${CX},${CX - MIN_LEN - 3} ${CX + 1.8},${CX - MIN_LEN + 6} L${CX + 3.6},${CX + 16} Z`}
+    fill={MINUTE_COLOUR} stroke="#FFFDF6" strokeWidth={1.6} paintOrder="stroke" />;
 }
 
 /** The face, numbers and marks: everything but the hands. */

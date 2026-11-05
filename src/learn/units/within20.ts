@@ -3,7 +3,7 @@ import { Lesson, Unit } from '../types';
 import {
   crossFrame, crossHint, crossedCells, diffItem, frame, frameHint, frames2, hopGoal, hopHint, inFrame, line,
   missingSub, onBond, onFrame, bond, bondHint, placed, randomInt, sameAsItem, sumItem, trayCount,
-  trueOrFalse, weighted, FrameState, range,
+  trueOrFalse, weighted, FrameState, range, moveCounters,
 } from './helpers-arith';
 
 // Unit: Adding and taking away to 20.
@@ -19,6 +19,9 @@ const either = (x: number, y: number): [number, number] => (Math.random() < 0.5 
 
 /** The two numbers of a sum in their own frames: how the make-a-ten lessons picture a + b. */
 const apart = (a: number, b: number): FrameState => frames2([a, 0], [0, b]);
+
+/** The same, ready for her to move counters between the frames. */
+const toMove = (a: number, b: number): FrameState => frames2([a, 0], [0, b], { tray: { a: 0, b: 0 } });
 
 // --- 1. Teen numbers take away ------------------------------------------------
 
@@ -172,9 +175,9 @@ const ADD_NINE: Lesson = {
       type: 'do',
       say: 'Your turn: 9 plus 7. Move 1 counter up to fill the ten.',
       caption: '9 + 7',
-      model: apart(9, 7),
+      model: toMove(9, 7),
       goal: fillFrameGoal(0, 16),
-      solution: frames2([9, 1], [0, 6]),
+      solution: moveCounters(toMove(9, 7), [16], [9]),
       hint: moveHint(0, 16),
       then: 'A full ten and 6 more. 10 plus 6 is 16, so 9 plus 7 is 16.',
     },
@@ -182,9 +185,9 @@ const ADD_NINE: Lesson = {
       type: 'do',
       say: 'Now 6 plus 9. Which frame is almost full? Fill that ten.',
       caption: '6 + 9',
-      model: apart(6, 9),
+      model: toMove(6, 9),
       goal: fillFrameGoal(1, 15),
-      solution: frames2([5, 0], [1, 9]),
+      solution: moveCounters(toMove(6, 9), [5], [19]),
       hint: frameHint((s) => (inFrame(s, 0) === 10
         ? 'That works, but the 9 is closer. Fill the frame with 9 in it.'
         : moveHint(1, 15)(s))),
@@ -225,9 +228,9 @@ const MAKE_TEN: Lesson = {
       type: 'do',
       say: 'Your turn: 7 plus 6. Move counters up until the first frame is full.',
       caption: '7 + 6',
-      model: apart(7, 6),
+      model: toMove(7, 6),
       goal: fillFrameGoal(0, 13),
-      solution: frames2([7, 3], [0, 3]),
+      solution: moveCounters(toMove(7, 6), [15, 14, 13], [7, 8, 9]),
       hint: moveHint(0, 13),
       then: '7 needed 3. That left 3 more. 10 and 3 make 13.',
     },
@@ -235,9 +238,9 @@ const MAKE_TEN: Lesson = {
       type: 'do',
       say: '6 plus 8. Fill the frame that is closer to 10.',
       caption: '6 + 8',
-      model: apart(6, 8),
+      model: toMove(6, 8),
       goal: fillFrameGoal(1, 14),
-      solution: frames2([4, 0], [2, 8]),
+      solution: moveCounters(toMove(6, 8), [5, 4], [18, 19]),
       hint: frameHint((s) => (inFrame(s, 0) === 10
         ? 'That works too, but 8 is closer to 10. Fill the frame with 8 in it.'
         : moveHint(1, 14)(s))),
@@ -363,7 +366,7 @@ const CHOOSE_A_WAY: Lesson = {
         const ones = c.filter((i) => i >= 10).length;
         if (ones < 7) return `Cross out all the ones in the second frame first. ${7 - ones} to go.`;
         if (c.length < 8) return 'Now cross out 1 from the full ten.';
-        if (c.length > 8) return 'That is too many crossed out. Start again and cross out 8.';
+        if (c.length > 8) return 'That is too many crossed out. Tap a crossed one to bring it back.';
         return 'Count the ones you crossed out.';
       }),
       then: '7 ones took us to 10, and 1 more is 9. 17 take away 8 is 9.',

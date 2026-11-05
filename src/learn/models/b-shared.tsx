@@ -28,6 +28,7 @@ const CSS = `
 .mb-btn { transition: transform .12s ease, box-shadow .12s ease, opacity .2s; }
 .mb-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 ${C.line} !important; }
 .mb-tap { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mb-tap:focus, .mb-btn:focus { outline: none; }
 .mb-tap:focus-visible, .mb-btn:focus-visible { outline: 3px solid ${C.navy}; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .mb-pop, .mb-drop, .mb-bump, .mb-rod, .mb-ring, .mb-wiggle, .mb-glow { animation: none !important; }

@@ -132,7 +132,7 @@ export default function Measure({ state, onChange, size = 'big' }: ModelProps<'m
   return (
     <div style={{ maxWidth: '100%', touchAction: 'manipulation' }}>
       <ModelStyles />
-      <svg viewBox={`0 0 ${vbW} ${vbH}`} {...svgBox(vbW, vbH, size === 'small' ? Math.min(0.5, 150 / vbW) : 1.12)} role={live ? 'group' : 'img'} aria-label={label}>
+      <svg viewBox={`0 0 ${vbW} ${vbH}`} {...svgBox(vbW, vbH, size === 'small' ? Math.min(0.5, 150 / vbW) : 1.3)} role={live ? 'group' : 'img'} aria-label={label}>
         {/* A table edge to rest on. */}
         <rect x={4} y={UNIT_Y - 6} width={vbW - 8} height={UNIT_H + 12} rx={10} fill={C.paperDeep} />
         {[PAD, PAD + objW].map((gx) => (

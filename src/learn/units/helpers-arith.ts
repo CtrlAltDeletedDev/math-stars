@@ -164,7 +164,7 @@ export function crossHint(n: number): Hint {
     const c = crossedCount(s);
     if (c === 0) return `Tap a counter to cross it out. Cross out ${n}.`;
     if (c < n) return `You crossed out ${c}. Cross out ${n - c} more.`;
-    if (c > n) return `That is too many crossed out. Start again and cross out ${n}.`;
+    if (c > n) return `That is too many crossed out. Tap a crossed one to bring it back.`;
     return 'Count the ones you crossed out.';
   });
 }
@@ -325,4 +325,17 @@ export function bare(item: Item): Item {
 /** "How many?" about a figure that is part of the question (it stays in the check). */
 export function howMany(id: string, say: string, figure: ModelState, answer: number, hint: string): Item {
   return { id, say, prompt: 'How many?', answer: String(answer), input: 'number', figure, hint };
+}
+
+/**
+ * The frame after counters are moved from cells `from` to cells `to`, pair by
+ * pair: what tapping a counter (back to the tray) and then an empty cell does.
+ * Use it with a frame that has a tray, even an empty one: with no tray a
+ * removed counter vanishes and empty cells have an endless supply, so
+ * "moving" could be done by adding instead.
+ */
+export function moveCounters(s: FrameState, from: number[], to: number[]): FrameState {
+  const cells = [...s.cells];
+  from.forEach((f, k) => { cells[to[k]] = cells[f]; cells[f] = null; });
+  return { ...s, cells };
 }

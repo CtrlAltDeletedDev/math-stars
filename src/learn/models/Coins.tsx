@@ -60,6 +60,9 @@ export function Coin({ value, px }: { value: number; px: number }) {
   );
 }
 
+/** Bank coins are a little smaller than the tray's, so all four fit across a phone. */
+const BANK = 0.82;
+
 function describe(tray: number[]): string {
   if (!tray.length) return 'No coins';
   const counts = new Map<number, number>();
@@ -86,7 +89,8 @@ export default function Coins({ state, onChange, size = 'big' }: ModelProps<'coi
 
   return (
     <div role={live ? 'group' : 'img'} aria-label={label}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: small ? 6 : 12, width: small ? 150 : 400, maxWidth: '100%', touchAction: 'manipulation' }}>
+      // A grid track of minmax(0, W): as wide as W where there is room, and free to shrink in a narrow tile or phone.
+      style={{ display: 'grid', gridTemplateColumns: `minmax(0, ${small ? 150 : 400}px)`, justifyContent: 'center', gap: small ? 6 : 12, maxWidth: '100%', touchAction: 'manipulation' }}>
       <ModelStyles />
       {totalPill}
       <div style={{
@@ -108,11 +112,11 @@ export default function Coins({ state, onChange, size = 'big' }: ModelProps<'coi
       </div>
 
       {live && state.bank && state.bank.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', alignItems: 'center', padding: '10px 8px', borderRadius: 24, background: '#EAF3FA' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', alignItems: 'center', padding: '10px 6px', borderRadius: 24, background: '#EAF3FA' }}>
           {state.bank.map((v, i) => (
             <button key={i} className="mb-btn" aria-label={`Add a ${coinName(v)}`} onClick={() => onChange!(addCoin(state, v))}
-              style={{ ...bigButton(coinPx(v, 0.88) + 14), width: coinPx(v, 0.88) + 14, height: coinPx(25, 0.88) + 14, padding: 0, borderRadius: 22, background: '#fff' }}>
-              <Coin value={v} px={coinPx(v, 0.88)} />
+              style={{ ...bigButton(coinPx(v, BANK) + 10), width: coinPx(v, BANK) + 10, height: coinPx(25, BANK) + 12, padding: 0, borderRadius: 22, background: '#fff' }}>
+              <Coin value={v} px={coinPx(v, BANK)} />
             </button>
           ))}
         </div>

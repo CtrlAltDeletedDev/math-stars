@@ -6,6 +6,7 @@ import { UNIT as add10 } from './add10';
 import { UNIT as sub10 } from './sub10';
 import { UNIT as within20 } from './within20';
 import { crossedCount, placed, topRow, bottomRow } from './helpers-arith';
+import { bondSplit, countObject, moveSplit, tapNumberLine, tapTenFrameCell, tenFrameCells } from '../models/logic-a';
 
 // The arithmetic units, checked harder than the course harness does: every
 // answer is worked out again from the question alone, every "do" solution must
@@ -112,44 +113,51 @@ function rightChoice(item: Item): string | null {
   return null;
 }
 
-/** Can a sequence of her taps get from `from` to `to`? */
+/**
+ * Replay her taps through the models' own logic (models/logic-a.ts) and check
+ * they land exactly on the solution: removals, then placements (the tray gives
+ * its first colour first), crosses, hops, counting taps, bond moves.
+ */
 function reachable(from: ModelState, to: ModelState): string | null {
   if (from.model === 'tenFrame' && to.model === 'tenFrame') {
-    if (from.frames !== to.frames || from.cells.length !== to.cells.length) return 'frame count changed';
-    for (const c of ['a', 'b'] as const) {
-      const before = from.cells.filter((x) => x === c).length + (from.tray?.[c] ?? 0);
-      const after = to.cells.filter((x) => x === c).length + (to.tray?.[c] ?? 0);
-      if (before !== after) return `colour ${c}: ${before} counters became ${after}`;
+    if (from.frames !== to.frames || !!from.takeAway !== !!to.takeAway) return 'frame changed';
+    const want = tenFrameCells(to);
+    let s = from;
+    for (const [i, c] of tenFrameCells(from).entries()) if (c && c !== want[i] && !from.takeAway) s = tapTenFrameCell(s, i);
+    for (const colour of ['a', 'b'] as const) {
+      for (const [i, c] of want.entries()) if (c === colour && tenFrameCells(s)[i] === null) s = tapTenFrameCell(s, i);
     }
-    if ((to.crossed?.length ?? 0) > (from.crossed?.length ?? 0) && !from.takeAway) return 'crossed out without takeAway';
-    if (!!from.takeAway !== !!to.takeAway) return 'takeAway changed';
+    const crossedNow = new Set(s.crossed ?? []);
+    const crossedWant = new Set(to.crossed ?? []);
+    for (const i of new Set([...crossedNow, ...crossedWant])) if (crossedNow.has(i) !== crossedWant.has(i)) s = tapTenFrameCell(s, i);
+    if (JSON.stringify(tenFrameCells(s)) !== JSON.stringify(want)) return `cells: got ${JSON.stringify(tenFrameCells(s))}`;
+    const sortNums = (xs?: number[]) => [...(xs ?? [])].sort((x, y) => x - y).join();
+    if (sortNums(s.crossed) !== sortNums(to.crossed)) return `crossed: got ${sortNums(s.crossed)}`;
+    if (JSON.stringify(s.tray ?? null) !== JSON.stringify(to.tray ?? null)) return `tray: got ${JSON.stringify(s.tray)}`;
     return null;
   }
   if (from.model === 'numberLine' && to.model === 'numberLine') {
     if (from.min !== to.min || from.max !== to.max) return 'line changed';
-    if (from.start !== null && from.start !== to.start) return 'start changed';
     if (to.start === null) return 'no start';
+    let s = from;
+    if (s.start === null) s = tapNumberLine(s, to.start);
     if (from.path.some((p, i) => to.path[i] !== p)) return 'earlier hops undone';
-    let at = to.start;
-    for (const p of to.path) {
-      if (Math.abs(p - at) !== 1) return `hop from ${at} to ${p}`;
-      if (p < to.min || p > to.max) return `hop off the line to ${p}`;
-      at = p;
-    }
+    for (const p of to.path.slice(from.path.length)) s = tapNumberLine(s, p);
+    if (s.start !== to.start || s.path.join() !== to.path.join()) return `got start ${s.start}, path ${s.path}`;
     return null;
   }
   if (from.model === 'objects' && to.model === 'objects') {
     if (from.count !== to.count || from.emoji !== to.emoji) return 'objects changed';
-    if (from.counted.some((x, i) => to.counted[i] !== x)) return 'earlier taps undone';
-    if (to.counted.some((x) => x < 0 || x >= to.count)) return 'tapped something not there';
-    return null;
+    let s = from;
+    for (const i of to.counted.slice(from.counted.length)) s = countObject(s, i);
+    return s.counted.join() === to.counted.join() ? null : `counted: got ${s.counted}`;
   }
   if (from.model === 'bond' && to.model === 'bond') {
-    if (from.whole !== to.whole || !from.counters) return 'bond changed, or has no counters to move';
-    const w = to.whole ?? 0;
-    if (to.split === undefined || to.split < 0 || to.split > w) return 'split out of range';
-    if (to.parts[0] !== null && to.parts[0] !== to.split) return 'left part does not match split';
-    if (to.parts[1] !== null && to.parts[1] !== w - to.split) return 'right part does not match split';
+    if (from.whole !== to.whole || !from.counters || to.split === undefined) return 'bond changed, or has no counters to move';
+    let s = from;
+    for (let guard = 0; bondSplit(s) !== to.split && guard < 50; guard++) s = moveSplit(s, bondSplit(s) > to.split ? 0 : 1);
+    if (s.split !== to.split) return `split: got ${s.split}`;
+    if (to.parts.some((p, i) => p !== null && p !== s.parts[i])) return `parts: got ${s.parts}`;
     return null;
   }
   return `cannot move a ${from.model}`;
