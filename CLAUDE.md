@@ -7,11 +7,11 @@ saying otherwise.
 
 ## Two apps, for now: the Number Path rebuild
 
-`src/core/` + `src/next/` are the new app ("Number Path"), mounted at `/#/next` and opened on a
-device once a grown-up flips the switch (old Parent screen → "Use the new version on this device",
-stored in `mathstars_shell`). The old app below still runs everything else, and the new app's
-"More games" door opens the old topic screens. The plan is to make the new app the default once
-she has used it for a week, then delete the old shell (see the PR that added this).
+`src/core/` + `src/next/` are the new app ("Number Path"), mounted at `/#/next`. **It is the
+default:** the old Home redirects to it unless a grown-up chose "Go back to the old version on
+this device" (`mathstars_shell = 'old'`; `usesNewApp()` in `src/next/store.ts`). The old app below
+still runs the old topic screens, which the new app's "More games" door opens. Deleting the old
+shell is the next phase.
 
 Rules for the new app:
 

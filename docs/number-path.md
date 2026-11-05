@@ -3,19 +3,16 @@
 A rebuild of the app around one thing: plain plus and minus sums that slowly get harder, with
 a path she can see and a grown-ups screen that tells you exactly where she is.
 
-## Turning it on
+## Opening it
 
-It runs alongside the old app until you're happy with it.
+The new app is what opens. The first time it runs on a device, her place on adding and taking
+away comes across from the old app, along with her friend, her grade, her streak, and the facts
+she's been practising.
 
-1. Open the app on her iPad, the way she always does (the Netlify address).
-2. Triple-tap **Math Stars!** on the old home screen, answer the sum, and tap
-   **Use the new version on this device**.
-3. From then on, that device opens the new app. Her place on adding and taking away comes
-   across, along with her friend, her grade, her streak, and the facts she's been practising.
-
-Going back: open the grown-ups screen in the new app and tap **Go back to the old version on
-this device**. The old app's save is never changed by the new one, so it is exactly as she left
-it. From the day you switch, each app keeps its own progress.
+Going back: open the grown-ups screen and tap **Go back to the old version on this device**.
+The old app's save is never changed by the new one, so it is exactly as she left it. Its
+Parent screen has a button to switch to the new one again. From the first day on the new app,
+each keeps its own progress.
 
 ## What she sees
 
